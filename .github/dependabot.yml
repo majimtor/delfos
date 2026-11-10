@@ -1,0 +1,12 @@
+# Grouped weekly updates, one pull request per ecosystem.
+# Gradle, npm and Docker entries are added together with their manifests.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"
