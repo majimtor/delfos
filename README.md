@@ -45,6 +45,14 @@ git config core.hooksPath .githooks
 Markdown is checked with `markdownlint-cli2`; the configuration lives in
 `.markdownlint-cli2.yaml`.
 
+The Kotlin builds use the Gradle wrapper at the repository root and provision
+the JDK they declare, so no Java installation is needed beyond one that can
+start Gradle (Java 17 or newer):
+
+```sh
+./gradlew -p shared check
+```
+
 ## Licence
 
 MIT. See [LICENSE](LICENSE).
