@@ -8,6 +8,8 @@ import org.springframework.data.domain.Limit
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import jakarta.persistence.LockModeType
+import org.springframework.data.jpa.repository.Lock
 
 interface AccountRepository : JpaRepository<AccountEntity, UUID> {
     fun findByUsernameIgnoreCase(username: String): AccountEntity?
@@ -20,6 +22,11 @@ interface SessionRepository : JpaRepository<SessionEntity, UUID> {
 interface SurveyRepository : JpaRepository<SurveyEntity, UUID> {
     fun findByIdAndOwnerId(id: UUID, ownerId: UUID): SurveyEntity?
     fun findByPublicId(publicId: String): SurveyEntity?
+
+    /** The survey row locked for the rest of the transaction, so a response quota is never exceeded by concurrent submissions. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select s from SurveyEntity s where s.publicId = :publicId")
+    fun lockByPublicId(@Param("publicId") publicId: String): SurveyEntity?
 
     /** First page of a manager's surveys, most recently updated first; the id breaks ties for a stable keyset. */
     @Query("select s from SurveyEntity s where s.ownerId = :ownerId and s.status in :statuses order by s.updatedAt desc, s.id desc")
