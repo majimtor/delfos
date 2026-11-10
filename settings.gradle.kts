@@ -3,3 +3,4 @@
 rootProject.name = "delfos"
 
 includeBuild("shared")
+includeBuild("api")

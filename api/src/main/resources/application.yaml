@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: delfos-api
+  datasource:
+    # Every value comes from the environment; a missing variable stops startup naming it.
+    url: ${DELFOS_DB_URL}
+    username: ${DELFOS_DB_USERNAME}
+    password: ${DELFOS_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: ${PORT:8080}
+  error:
+    whitelabel:
+      enabled: false
+    include-message: never
+    include-stacktrace: never
+    include-exception: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
