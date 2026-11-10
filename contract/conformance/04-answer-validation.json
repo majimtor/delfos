@@ -1,0 +1,490 @@
+{
+  "suite": "answer-validation",
+  "description": "Shape and limit checks of answers, unknown and duplicate questions, and missing required answers.",
+  "definition": {
+    "questions": [
+      {
+        "key": "v1",
+        "type": "SINGLE_CHOICE",
+        "text": "Pick one",
+        "required": true,
+        "options": [
+          {
+            "key": "o1",
+            "label": "O1"
+          },
+          {
+            "key": "o2",
+            "label": "O2"
+          }
+        ]
+      },
+      {
+        "key": "v2",
+        "type": "MULTIPLE_CHOICE",
+        "text": "Pick two or three",
+        "required": false,
+        "options": [
+          {
+            "key": "m1",
+            "label": "M1"
+          },
+          {
+            "key": "m2",
+            "label": "M2"
+          },
+          {
+            "key": "m3",
+            "label": "M3"
+          },
+          {
+            "key": "m4",
+            "label": "M4"
+          }
+        ],
+        "minSelections": 2,
+        "maxSelections": 3
+      },
+      {
+        "key": "v3",
+        "type": "TEXT",
+        "text": "Up to five characters",
+        "required": false,
+        "maxLength": 5
+      },
+      {
+        "key": "v4",
+        "type": "NUMBER",
+        "text": "Any number",
+        "required": false
+      },
+      {
+        "key": "v5",
+        "type": "SCALE",
+        "text": "Rate it",
+        "required": true,
+        "max": 5
+      }
+    ],
+    "rules": [
+      {
+        "targetQuestionKey": "v5",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "v1",
+            "operator": "EQUALS",
+            "value": {
+              "optionKey": "o1"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "an answer to an unknown question",
+      "answers": [
+        {
+          "questionKey": "zz",
+          "text": "x"
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "v1",
+          "v2",
+          "v3",
+          "v4"
+        ],
+        "errors": [
+          {
+            "path": "answers[0].questionKey",
+            "code": "UNKNOWN_QUESTION"
+          }
+        ],
+        "missingRequiredQuestionKeys": [
+          "v1"
+        ]
+      }
+    },
+    {
+      "name": "two answers to the same question: the second is a duplicate",
+      "answers": [
+        {
+          "questionKey": "v4",
+          "number": 1
+        },
+        {
+          "questionKey": "v4",
+          "number": 2
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "v1",
+          "v2",
+          "v3",
+          "v4"
+        ],
+        "errors": [
+          {
+            "path": "answers[1].questionKey",
+            "code": "DUPLICATE"
+          }
+        ],
+        "missingRequiredQuestionKeys": [
+          "v1"
+        ]
+      }
+    },
+    {
+      "name": "a value of the wrong kind for the question type",
+      "answers": [
+        {
+          "questionKey": "v1",
+          "number": 3
+        },
+        {
+          "questionKey": "v3",
+          "optionKey": "o1"
+        },
+        {
+          "questionKey": "v4",
+          "text": "3"
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "v1",
+          "v2",
+          "v3",
+          "v4"
+        ],
+        "errors": [
+          {
+            "path": "answers[0]",
+            "code": "ANSWER_TYPE_MISMATCH"
+          },
+          {
+            "path": "answers[1]",
+            "code": "ANSWER_TYPE_MISMATCH"
+          },
+          {
+            "path": "answers[2]",
+            "code": "ANSWER_TYPE_MISMATCH"
+          }
+        ],
+        "missingRequiredQuestionKeys": [
+          "v1"
+        ]
+      }
+    },
+    {
+      "name": "two value fields, or none, in one answer",
+      "answers": [
+        {
+          "questionKey": "v4",
+          "number": 1,
+          "text": "a"
+        },
+        {
+          "questionKey": "v3"
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "v1",
+          "v2",
+          "v3",
+          "v4"
+        ],
+        "errors": [
+          {
+            "path": "answers[0]",
+            "code": "ANSWER_TYPE_MISMATCH"
+          },
+          {
+            "path": "answers[1]",
+            "code": "ANSWER_TYPE_MISMATCH"
+          }
+        ],
+        "missingRequiredQuestionKeys": [
+          "v1"
+        ]
+      }
+    },
+    {
+      "name": "unknown options in single and multiple choice",
+      "answers": [
+        {
+          "questionKey": "v1",
+          "optionKey": "o9"
+        },
+        {
+          "questionKey": "v2",
+          "optionKeys": [
+            "m1",
+            "m9"
+          ]
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "v1",
+          "v2",
+          "v3",
+          "v4"
+        ],
+        "errors": [
+          {
+            "path": "answers[0].optionKey",
+            "code": "UNKNOWN_OPTION"
+          },
+          {
+            "path": "answers[1].optionKeys[1]",
+            "code": "UNKNOWN_OPTION"
+          }
+        ],
+        "missingRequiredQuestionKeys": [
+          "v1"
+        ]
+      }
+    },
+    {
+      "name": "a repeated option is reported once, at its second occurrence",
+      "answers": [
+        {
+          "questionKey": "v2",
+          "optionKeys": [
+            "m1",
+            "m1",
+            "m2"
+          ]
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "v1",
+          "v2",
+          "v3",
+          "v4"
+        ],
+        "errors": [
+          {
+            "path": "answers[0].optionKeys[1]",
+            "code": "DUPLICATE_OPTION"
+          }
+        ],
+        "missingRequiredQuestionKeys": [
+          "v1"
+        ]
+      }
+    },
+    {
+      "name": "fewer selections than the minimum",
+      "answers": [
+        {
+          "questionKey": "v2",
+          "optionKeys": [
+            "m1"
+          ]
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "v1",
+          "v2",
+          "v3",
+          "v4"
+        ],
+        "errors": [
+          {
+            "path": "answers[0].optionKeys",
+            "code": "TOO_FEW_SELECTIONS",
+            "params": {
+              "min": 2
+            }
+          }
+        ],
+        "missingRequiredQuestionKeys": [
+          "v1"
+        ]
+      }
+    },
+    {
+      "name": "more selections than the maximum",
+      "answers": [
+        {
+          "questionKey": "v2",
+          "optionKeys": [
+            "m1",
+            "m2",
+            "m3",
+            "m4"
+          ]
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "v1",
+          "v2",
+          "v3",
+          "v4"
+        ],
+        "errors": [
+          {
+            "path": "answers[0].optionKeys",
+            "code": "TOO_MANY_SELECTIONS",
+            "params": {
+              "max": 3
+            }
+          }
+        ],
+        "missingRequiredQuestionKeys": [
+          "v1"
+        ]
+      }
+    },
+    {
+      "name": "text length is counted in code points: six n-tildes exceed five",
+      "answers": [
+        {
+          "questionKey": "v3",
+          "text": "ññññññ"
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "v1",
+          "v2",
+          "v3",
+          "v4"
+        ],
+        "errors": [
+          {
+            "path": "answers[0].text",
+            "code": "TOO_LONG",
+            "params": {
+              "max": 5
+            }
+          }
+        ],
+        "missingRequiredQuestionKeys": [
+          "v1"
+        ]
+      }
+    },
+    {
+      "name": "five n-tildes fit",
+      "answers": [
+        {
+          "questionKey": "v3",
+          "text": "ñññññ"
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "v1",
+          "v2",
+          "v3",
+          "v4"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": [
+          "v1"
+        ]
+      }
+    },
+    {
+      "name": "a required question that becomes visible is missing until answered",
+      "answers": [
+        {
+          "questionKey": "v1",
+          "optionKey": "o1"
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "v1",
+          "v2",
+          "v3",
+          "v4",
+          "v5"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": [
+          "v5"
+        ]
+      }
+    },
+    {
+      "name": "a complete valid response",
+      "answers": [
+        {
+          "questionKey": "v1",
+          "optionKey": "o1"
+        },
+        {
+          "questionKey": "v2",
+          "optionKeys": [
+            "m1",
+            "m2"
+          ]
+        },
+        {
+          "questionKey": "v3",
+          "text": "hola"
+        },
+        {
+          "questionKey": "v4",
+          "number": -3.25
+        },
+        {
+          "questionKey": "v5",
+          "number": 5
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "v1",
+          "v2",
+          "v3",
+          "v4",
+          "v5"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "a hidden question with an invalid value reports only that it is hidden",
+      "answers": [
+        {
+          "questionKey": "v1",
+          "optionKey": "o2"
+        },
+        {
+          "questionKey": "v5",
+          "number": 9
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "v1",
+          "v2",
+          "v3",
+          "v4"
+        ],
+        "errors": [
+          {
+            "path": "answers[1]",
+            "code": "HIDDEN_QUESTION_ANSWERED"
+          }
+        ],
+        "missingRequiredQuestionKeys": []
+      }
+    }
+  ]
+}

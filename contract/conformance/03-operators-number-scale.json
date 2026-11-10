@@ -1,0 +1,434 @@
+{
+  "suite": "operators-number-scale",
+  "description": "Every operator of NUMBER and SCALE sources, IS_ANSWERED on TEXT, and the per-type answer checks of numbers.",
+  "definition": {
+    "questions": [
+      {
+        "key": "n1",
+        "type": "NUMBER",
+        "text": "Age",
+        "required": false,
+        "min": 0,
+        "max": 120,
+        "integerOnly": true
+      },
+      {
+        "key": "s1",
+        "type": "SCALE",
+        "text": "Mood today",
+        "required": false,
+        "min": 1,
+        "max": 7
+      },
+      {
+        "key": "x1",
+        "type": "TEXT",
+        "text": "A note",
+        "required": false,
+        "maxLength": 50
+      },
+      {
+        "key": "t_eq",
+        "type": "TEXT",
+        "text": "Shown when age EQ 18",
+        "required": false
+      },
+      {
+        "key": "t_ne",
+        "type": "TEXT",
+        "text": "Shown when age NE 18",
+        "required": false
+      },
+      {
+        "key": "t_gt",
+        "type": "TEXT",
+        "text": "Shown when age GT 18",
+        "required": false
+      },
+      {
+        "key": "t_gte",
+        "type": "TEXT",
+        "text": "Shown when age GTE 18",
+        "required": false
+      },
+      {
+        "key": "t_lt",
+        "type": "TEXT",
+        "text": "Shown when age LT 18",
+        "required": false
+      },
+      {
+        "key": "t_lte",
+        "type": "TEXT",
+        "text": "Shown when age LTE 18",
+        "required": false
+      },
+      {
+        "key": "t_between",
+        "type": "TEXT",
+        "text": "Shown when mood BETWEEN 3 and 5",
+        "required": false
+      },
+      {
+        "key": "t_text",
+        "type": "TEXT",
+        "text": "Shown when the note IS_ANSWERED",
+        "required": false
+      },
+      {
+        "key": "t_text_not",
+        "type": "TEXT",
+        "text": "Shown when the note IS_NOT_ANSWERED",
+        "required": false
+      }
+    ],
+    "rules": [
+      {
+        "targetQuestionKey": "t_eq",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "n1",
+            "operator": "EQ",
+            "value": {
+              "number": 18
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "t_ne",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "n1",
+            "operator": "NE",
+            "value": {
+              "number": 18
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "t_gt",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "n1",
+            "operator": "GT",
+            "value": {
+              "number": 18
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "t_gte",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "n1",
+            "operator": "GTE",
+            "value": {
+              "number": 18
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "t_lt",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "n1",
+            "operator": "LT",
+            "value": {
+              "number": 18
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "t_lte",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "n1",
+            "operator": "LTE",
+            "value": {
+              "number": 18
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "t_between",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "s1",
+            "operator": "BETWEEN",
+            "value": {
+              "min": 3,
+              "max": 5
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "t_text",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "x1",
+            "operator": "IS_ANSWERED"
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "t_text_not",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "x1",
+            "operator": "IS_NOT_ANSWERED"
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "unanswered: only the IS_NOT_ANSWERED target is shown",
+      "answers": [],
+      "expected": {
+        "visibleQuestionKeys": [
+          "n1",
+          "s1",
+          "x1",
+          "t_text_not"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "equal to the operand: EQ, GTE and LTE hold",
+      "answers": [
+        {
+          "questionKey": "n1",
+          "number": 18
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "n1",
+          "s1",
+          "x1",
+          "t_eq",
+          "t_gte",
+          "t_lte",
+          "t_text_not"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "below the operand: NE, LT and LTE hold; 17.0 is an integer",
+      "answers": [
+        {
+          "questionKey": "n1",
+          "number": 17.0
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "n1",
+          "s1",
+          "x1",
+          "t_ne",
+          "t_lt",
+          "t_lte",
+          "t_text_not"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "above the operand with a scale inside the range and a note",
+      "answers": [
+        {
+          "questionKey": "n1",
+          "number": 19
+        },
+        {
+          "questionKey": "s1",
+          "number": 3
+        },
+        {
+          "questionKey": "x1",
+          "text": "hi"
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "n1",
+          "s1",
+          "x1",
+          "t_ne",
+          "t_gt",
+          "t_gte",
+          "t_between",
+          "t_text"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "BETWEEN is inclusive at the upper bound",
+      "answers": [
+        {
+          "questionKey": "s1",
+          "number": 5
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "n1",
+          "s1",
+          "x1",
+          "t_between",
+          "t_text_not"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "BETWEEN fails outside the range",
+      "answers": [
+        {
+          "questionKey": "s1",
+          "number": 6
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "n1",
+          "s1",
+          "x1",
+          "t_text_not"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "a non-integer where integers are required is an error and counts as unanswered",
+      "answers": [
+        {
+          "questionKey": "n1",
+          "number": 18.5
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "n1",
+          "s1",
+          "x1",
+          "t_text_not"
+        ],
+        "errors": [
+          {
+            "path": "answers[0].number",
+            "code": "NOT_INTEGER"
+          }
+        ],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "a number outside the configured bounds",
+      "answers": [
+        {
+          "questionKey": "n1",
+          "number": 200
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "n1",
+          "s1",
+          "x1",
+          "t_text_not"
+        ],
+        "errors": [
+          {
+            "path": "answers[0].number",
+            "code": "OUT_OF_RANGE",
+            "params": {
+              "min": 0,
+              "max": 120
+            }
+          }
+        ],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "a scale value outside its range",
+      "answers": [
+        {
+          "questionKey": "s1",
+          "number": 8
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "n1",
+          "s1",
+          "x1",
+          "t_text_not"
+        ],
+        "errors": [
+          {
+            "path": "answers[0].number",
+            "code": "OUT_OF_RANGE",
+            "params": {
+              "min": 1,
+              "max": 7
+            }
+          }
+        ],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "a scale value must be an integer",
+      "answers": [
+        {
+          "questionKey": "s1",
+          "number": 2.5
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "n1",
+          "s1",
+          "x1",
+          "t_text_not"
+        ],
+        "errors": [
+          {
+            "path": "answers[0].number",
+            "code": "NOT_INTEGER"
+          }
+        ],
+        "missingRequiredQuestionKeys": []
+      }
+    }
+  ]
+}

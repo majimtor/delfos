@@ -1,0 +1,1657 @@
+openapi: 3.0.3
+info:
+  title: Delfos API
+  version: 0.1.0
+  description: |
+    HTTP API of Delfos, a survey platform with conditional logic, versioned
+    definitions and live results.
+
+    This document is the single source of truth for the API: server
+    interfaces, client types and request validation are generated from it.
+    The running server serves this file at `/api/openapi.yaml` and a
+    documentation page at `/api/docs`.
+
+    Conventions:
+    - Errors use Problem Details (RFC 9457) with a stable `code`. Field-level
+      errors carry a JSON path and a stable code; clients translate codes.
+    - Every list is paginated with an opaque `cursor` and a bounded `limit`.
+    - Managers authenticate with an opaque session token, sent either in the
+      `__Host-session` cookie (browsers) or as a bearer token (other
+      clients). Mutating requests authenticated by cookie must also carry the
+      `X-Delfos-Client` header. Respondent operations under `/public` carry no
+      authentication.
+    - Question and option keys are stable identifiers within a survey; they
+      survive new versions and identify the same question for aggregation.
+  license:
+    name: MIT
+    url: https://github.com/majimtor/delfos/blob/main/LICENSE
+
+servers:
+  - url: https://api.delfos.manuelalejandro.com/api/v1
+    description: Public demo
+
+tags:
+  - name: health
+    description: Liveness of the API.
+  - name: auth
+    description: Manager sessions.
+  - name: surveys
+    description: Surveys owned by the authenticated manager and their lifecycle.
+  - name: drafts
+    description: The editable draft version of a survey.
+  - name: versions
+    description: Read access to the versions of a survey.
+  - name: results
+    description: Aggregated results and raw responses.
+  - name: public
+    description: Answering a published survey; no authentication.
+
+security:
+  - sessionCookie: []
+  - sessionToken: []
+
+paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Check that the API answers
+      operationId: getHealth
+      security: []
+      responses:
+        "200":
+          description: The API is up.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /auth/sessions:
+    post:
+      tags: [auth]
+      summary: Log in and create a session
+      operationId: createSession
+      description: |
+        Verifies the credentials and creates a session. With `transport`
+        `COOKIE` the token is set in the `__Host-session` cookie and omitted
+        from the body; with `BEARER` it is returned in the body once and never
+        again. A session expires after 30 minutes without use and 12 hours
+        after creation.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/ClientHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSessionRequest"
+      responses:
+        "201":
+          description: Session created.
+          headers:
+            Set-Cookie:
+              description: Present with `transport` `COOKIE`; `__Host-session`, `HttpOnly`, `Secure`, `SameSite=Strict`.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Wrong credentials or disabled account. `code` is `INVALID_CREDENTIALS` or `ACCOUNT_DISABLED`.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /auth/sessions/current:
+    delete:
+      tags: [auth]
+      summary: Log out
+      operationId: deleteCurrentSession
+      description: Revokes the session that authenticates the request and clears the cookie when one was used.
+      parameters:
+        - $ref: "#/components/parameters/ClientHeader"
+      responses:
+        "204":
+          description: Session revoked.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Describe the authenticated manager
+      operationId: getMe
+      responses:
+        "200":
+          description: The account behind the session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /surveys:
+    get:
+      tags: [surveys]
+      summary: List the manager's surveys
+      operationId: listSurveys
+      parameters:
+        - name: status
+          in: query
+          description: Only surveys in this status.
+          schema:
+            $ref: "#/components/schemas/SurveyStatus"
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of surveys, most recently updated first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveyPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [surveys]
+      summary: Create a survey
+      operationId: createSurvey
+      description: Creates the survey in `DRAFT` status with an empty draft version 1.
+      parameters:
+        - $ref: "#/components/parameters/ClientHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSurveyRequest"
+      responses:
+        "201":
+          description: Survey created.
+          headers:
+            Location:
+              description: URL of the new survey.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Survey"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /surveys/{surveyId}:
+    parameters:
+      - $ref: "#/components/parameters/SurveyId"
+    get:
+      tags: [surveys]
+      summary: Get a survey
+      operationId: getSurvey
+      responses:
+        "200":
+          description: The survey.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Survey"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [surveys]
+      summary: Update title, description or settings
+      operationId: updateSurvey
+      description: Only the fields present in the body change. Language and respondent mode are fixed at creation.
+      parameters:
+        - $ref: "#/components/parameters/ClientHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSurveyRequest"
+      responses:
+        "200":
+          description: The updated survey.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Survey"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [surveys]
+      summary: Delete a survey with its versions and responses
+      operationId: deleteSurvey
+      parameters:
+        - $ref: "#/components/parameters/ClientHeader"
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /surveys/{surveyId}/publish:
+    parameters:
+      - $ref: "#/components/parameters/SurveyId"
+    post:
+      tags: [surveys]
+      summary: Publish the draft version
+      operationId: publishSurvey
+      description: |
+        Validates the draft, which must have at least one question and valid
+        rules, makes it the published version, marks the previously published
+        version as superseded and sets the survey to `PUBLISHED`.
+      parameters:
+        - $ref: "#/components/parameters/ClientHeader"
+      responses:
+        "200":
+          description: The survey after publication.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Survey"
+        "400":
+          description: The draft is not publishable. `code` is `VALIDATION_ERROR`; `errors` lists every problem.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: The survey is closed (`INVALID_STATE_TRANSITION`) or has no draft (`NO_DRAFT`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+
+  /surveys/{surveyId}/close:
+    parameters:
+      - $ref: "#/components/parameters/SurveyId"
+    post:
+      tags: [surveys]
+      summary: Close a published survey
+      operationId: closeSurvey
+      description: A closed survey accepts no more responses and cannot be reopened; results stay available.
+      parameters:
+        - $ref: "#/components/parameters/ClientHeader"
+      responses:
+        "200":
+          description: The closed survey.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Survey"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /surveys/{surveyId}/versions:
+    parameters:
+      - $ref: "#/components/parameters/SurveyId"
+    get:
+      tags: [versions]
+      summary: List the versions of a survey
+      operationId: listVersions
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of version summaries, highest number first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /surveys/{surveyId}/versions/{versionNumber}:
+    parameters:
+      - $ref: "#/components/parameters/SurveyId"
+      - $ref: "#/components/parameters/VersionNumber"
+    get:
+      tags: [versions]
+      summary: Get the definition of a version
+      operationId: getVersion
+      responses:
+        "200":
+          description: The version with its questions and rules.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveyVersion"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /surveys/{surveyId}/draft:
+    parameters:
+      - $ref: "#/components/parameters/SurveyId"
+    get:
+      tags: [drafts]
+      summary: Get the draft version
+      operationId: getDraft
+      responses:
+        "200":
+          description: The draft.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveyVersion"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Unknown survey (`NOT_FOUND`) or no draft (`NO_DRAFT`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+    put:
+      tags: [drafts]
+      summary: Replace the questions and rules of the draft
+      operationId: replaceDraft
+      description: |
+        Validates the whole definition and saves it only when it is valid;
+        otherwise nothing changes and every error is returned at once. Keys
+        of existing questions and options must be kept to preserve identity
+        across versions; new questions and options may omit `key` and receive
+        one from the server. The order of the arrays is the order of the
+        survey.
+      parameters:
+        - $ref: "#/components/parameters/ClientHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DraftDefinition"
+      responses:
+        "200":
+          description: The saved draft, with server-assigned keys.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveyVersion"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Unknown survey (`NOT_FOUND`) or no draft (`NO_DRAFT`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    post:
+      tags: [drafts]
+      summary: Create a draft from the published version
+      operationId: createDraft
+      description: Copies the published version into a new draft with the next number, keeping every key.
+      parameters:
+        - $ref: "#/components/parameters/ClientHeader"
+      responses:
+        "201":
+          description: The new draft.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveyVersion"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: A draft already exists (`DRAFT_ALREADY_EXISTS`) or the survey is closed (`INVALID_STATE_TRANSITION`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+
+  /surveys/{surveyId}/versions/{versionNumber}/results:
+    parameters:
+      - $ref: "#/components/parameters/SurveyId"
+      - $ref: "#/components/parameters/VersionNumber"
+    get:
+      tags: [results]
+      summary: Aggregated results of one version
+      operationId: getVersionResults
+      description: Clients poll this operation with `If-None-Match`; the server answers `304` while nothing changed.
+      parameters:
+        - $ref: "#/components/parameters/IfNoneMatch"
+      responses:
+        "200":
+          description: The aggregates.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionResults"
+        "304":
+          $ref: "#/components/responses/NotModified"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /surveys/{surveyId}/results:
+    parameters:
+      - $ref: "#/components/parameters/SurveyId"
+    get:
+      tags: [results]
+      summary: Aggregated results across comparable questions of all versions
+      operationId: getComparableResults
+      description: |
+        Aggregates every response of the survey for the questions that are
+        comparable across versions: same key, same type and, for choice
+        types, the same option keys. Questions that exist in only some
+        versions or changed shape are listed with `comparable` false and no
+        aggregates.
+      parameters:
+        - name: scope
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [comparable]
+        - $ref: "#/components/parameters/IfNoneMatch"
+      responses:
+        "200":
+          description: The aggregates.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComparableResults"
+        "304":
+          $ref: "#/components/responses/NotModified"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /surveys/{surveyId}/versions/{versionNumber}/responses:
+    parameters:
+      - $ref: "#/components/parameters/SurveyId"
+      - $ref: "#/components/parameters/VersionNumber"
+    get:
+      tags: [results]
+      summary: List the responses of a version
+      operationId: listResponses
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of responses with their answers, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponsePage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /surveys/{surveyId}/versions/{versionNumber}/answers:
+    parameters:
+      - $ref: "#/components/parameters/SurveyId"
+      - $ref: "#/components/parameters/VersionNumber"
+    get:
+      tags: [results]
+      summary: List the answers to one question
+      operationId: listAnswers
+      description: Used by the results page to page through text answers, which are not aggregated.
+      parameters:
+        - name: questionKey
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/Key"
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of answers, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnswerPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /public/surveys/{publicId}:
+    parameters:
+      - $ref: "#/components/parameters/PublicId"
+    get:
+      tags: [public]
+      summary: Get a published survey to answer it
+      operationId: getPublicSurvey
+      description: Returns the currently published version. A closed survey is returned with `acceptingResponses` false; a survey that was never published is not found.
+      security: []
+      responses:
+        "200":
+          description: The survey and its published definition.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicSurvey"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /public/surveys/{publicId}/evaluations:
+    parameters:
+      - $ref: "#/components/parameters/PublicId"
+    post:
+      tags: [public]
+      summary: Evaluate visibility and validity of partial answers
+      operationId: evaluateAnswers
+      description: |
+        A pure function: given a version number and the answers so far, returns
+        which questions are visible, the errors in the answers given, and the
+        visible required questions that have no valid answer yet. Nothing is
+        stored. Clients call it as answers change.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvaluationRequest"
+      responses:
+        "200":
+          description: The evaluation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: The version is not answerable (`VERSION_NOT_ANSWERABLE`), for example a draft.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /public/surveys/{publicId}/responses:
+    parameters:
+      - $ref: "#/components/parameters/PublicId"
+    post:
+      tags: [public]
+      summary: Submit a complete response
+      operationId: submitResponse
+      description: |
+        Validates the answers against the version with the same rules as the
+        evaluation, including one valid answer for every visible required
+        question, and stores the response. A superseded version of a
+        published survey is still accepted so that a respondent who loaded it
+        before a new publication can submit.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitResponseRequest"
+      responses:
+        "201":
+          description: Response stored.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmittedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: The survey is not accepting responses (`SURVEY_NOT_ACCEPTING_RESPONSES`), its quota is reached (`RESPONSE_QUOTA_REACHED`) or the version is not answerable (`VERSION_NOT_ANSWERABLE`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "413":
+          description: The body exceeds the size limit (`PAYLOAD_TOO_LARGE`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: __Host-session
+      description: Opaque session token for browsers. Mutating requests must also send `X-Delfos-Client`.
+    sessionToken:
+      type: http
+      scheme: bearer
+      description: The same opaque session token as a bearer credential, for mobile clients and tools.
+
+  parameters:
+    SurveyId:
+      name: surveyId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    VersionNumber:
+      name: versionNumber
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+    PublicId:
+      name: publicId
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/PublicId"
+    Cursor:
+      name: cursor
+      in: query
+      description: Opaque cursor from `nextCursor` of the previous page.
+      schema:
+        type: string
+        maxLength: 512
+    Limit:
+      name: limit
+      in: query
+      description: Page size.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        default: 20
+    IfNoneMatch:
+      name: If-None-Match
+      in: header
+      description: The `ETag` of the last representation received.
+      schema:
+        type: string
+    ClientHeader:
+      name: X-Delfos-Client
+      in: header
+      description: Required on mutating requests authenticated with the session cookie, as a CSRF defence; any value is accepted. Not needed with a bearer token.
+      schema:
+        type: string
+        maxLength: 32
+
+  headers:
+    ETag:
+      description: Changes whenever the aggregates change.
+      schema:
+        type: string
+    RetryAfter:
+      description: Seconds to wait before retrying.
+      schema:
+        type: integer
+        format: int32
+
+  responses:
+    BadRequest:
+      description: The body or the parameters are invalid. `code` is `VALIDATION_ERROR` with field errors, or `MALFORMED_REQUEST` when the body cannot be parsed.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    Unauthorized:
+      description: No valid session (`UNAUTHENTICATED`).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    Forbidden:
+      description: The cookie-authenticated request lacks the client header (`CSRF_REJECTED`).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    NotFound:
+      description: The resource does not exist or belongs to another manager (`NOT_FOUND`).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    Conflict:
+      description: The operation is not allowed in the current state (`INVALID_STATE_TRANSITION`).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    TooManyRequests:
+      description: Rate limit exceeded (`RATE_LIMITED`).
+      headers:
+        Retry-After:
+          $ref: "#/components/headers/RetryAfter"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    NotModified:
+      description: Nothing changed since the `ETag` sent in `If-None-Match`.
+      headers:
+        ETag:
+          $ref: "#/components/headers/ETag"
+
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [UP]
+
+    Key:
+      type: string
+      description: Stable identifier of a question or an option within a survey.
+      minLength: 1
+      maxLength: 64
+      pattern: "^[A-Za-z0-9][A-Za-z0-9_-]*$"
+
+    PublicId:
+      type: string
+      description: Opaque, URL-safe identifier of a survey for respondents, generated by the server.
+      minLength: 8
+      maxLength: 32
+      pattern: "^[A-Za-z0-9_-]+$"
+
+    Language:
+      type: string
+      description: Language of the survey content.
+      enum: [es, en]
+
+    SurveyStatus:
+      type: string
+      enum: [DRAFT, PUBLISHED, CLOSED]
+
+    RespondentMode:
+      type: string
+      description: "`ANONYMOUS`: anyone with the link may answer. `INVITED`: single-use invitation tokens (not yet available)."
+      enum: [ANONYMOUS, INVITED]
+
+    VersionStatus:
+      type: string
+      enum: [DRAFT, PUBLISHED, SUPERSEDED]
+
+    QuestionType:
+      type: string
+      enum: [SINGLE_CHOICE, MULTIPLE_CHOICE, TEXT, NUMBER, SCALE]
+
+    CreateSessionRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 64
+        password:
+          type: string
+          minLength: 1
+          maxLength: 256
+        transport:
+          type: string
+          description: Where the token travels afterwards. Defaults to `COOKIE`.
+          enum: [COOKIE, BEARER]
+          default: COOKIE
+
+    Session:
+      type: object
+      required: [accountId, username, isAdmin, expiresAt]
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        username:
+          type: string
+        isAdmin:
+          type: boolean
+        expiresAt:
+          type: string
+          format: date-time
+          description: Absolute expiry; idle expiry is 30 minutes after the last request.
+        token:
+          type: string
+          description: Present only with `transport` `BEARER`.
+
+    Me:
+      type: object
+      required: [accountId, username, isAdmin, sessionExpiresAt]
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        username:
+          type: string
+        isAdmin:
+          type: boolean
+        sessionExpiresAt:
+          type: string
+          format: date-time
+
+    CreateSurveyRequest:
+      type: object
+      required: [title, language]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        language:
+          $ref: "#/components/schemas/Language"
+        respondentMode:
+          $ref: "#/components/schemas/RespondentMode"
+        closesAt:
+          type: string
+          format: date-time
+          description: The survey closes automatically at this time.
+        maxResponses:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100000
+          description: The survey closes automatically when this many responses exist.
+
+    UpdateSurveyRequest:
+      type: object
+      description: Fields absent from the body keep their value; a field set to `null` is cleared.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+          nullable: true
+        closesAt:
+          type: string
+          format: date-time
+          nullable: true
+        maxResponses:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100000
+          nullable: true
+
+    Survey:
+      type: object
+      required: [id, publicId, title, language, status, respondentMode, responseCount, hasDraft, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        publicId:
+          $ref: "#/components/schemas/PublicId"
+        title:
+          type: string
+        description:
+          type: string
+        language:
+          $ref: "#/components/schemas/Language"
+        status:
+          $ref: "#/components/schemas/SurveyStatus"
+        respondentMode:
+          $ref: "#/components/schemas/RespondentMode"
+        closesAt:
+          type: string
+          format: date-time
+        maxResponses:
+          type: integer
+          format: int32
+        responseCount:
+          type: integer
+          format: int32
+          description: Responses across all versions.
+        publishedVersionNumber:
+          type: integer
+          format: int32
+          description: Absent while nothing is published.
+        hasDraft:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SurveyPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Survey"
+        nextCursor:
+          type: string
+          description: Absent on the last page.
+
+    VersionSummary:
+      type: object
+      required: [number, status, questionCount, responseCount, createdAt]
+      properties:
+        number:
+          type: integer
+          format: int32
+        status:
+          $ref: "#/components/schemas/VersionStatus"
+        questionCount:
+          type: integer
+          format: int32
+        responseCount:
+          type: integer
+          format: int32
+        createdAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+
+    VersionPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/VersionSummary"
+        nextCursor:
+          type: string
+
+    OptionInput:
+      type: object
+      required: [label]
+      properties:
+        key:
+          $ref: "#/components/schemas/Key"
+        label:
+          type: string
+          minLength: 1
+          maxLength: 200
+
+    Option:
+      allOf:
+        - $ref: "#/components/schemas/OptionInput"
+        - type: object
+          required: [key]
+
+    QuestionInput:
+      type: object
+      description: |
+        A question of a version. The fields that apply depend on `type`:
+        `options`, for `SINGLE_CHOICE` and `MULTIPLE_CHOICE` (2 to 50);
+        `minSelections` and `maxSelections`, for `MULTIPLE_CHOICE`;
+        `maxLength` and `multiline`, for `TEXT`; `min`, `max` and
+        `integerOnly`, for `NUMBER`; `min` (default 1), `max` (3 to 10),
+        `minLabel` and `maxLabel`, for `SCALE`. A field that does not apply
+        to the type is rejected with `INVALID_VALUE`.
+      required: [type, text]
+      properties:
+        key:
+          $ref: "#/components/schemas/Key"
+        type:
+          $ref: "#/components/schemas/QuestionType"
+        text:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        required:
+          type: boolean
+          default: false
+        options:
+          type: array
+          minItems: 2
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/OptionInput"
+        minSelections:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 50
+          description: Minimum options a respondent must select. Defaults to 1.
+        maxSelections:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 50
+          description: Maximum options a respondent may select. Defaults to the number of options.
+        maxLength:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 2000
+          description: Maximum length of a text answer in Unicode code points. Defaults to 500.
+        multiline:
+          type: boolean
+          default: false
+        min:
+          type: number
+          format: double
+          description: Lower bound of a `NUMBER` answer (optional) or of a `SCALE` (default 1).
+        max:
+          type: number
+          format: double
+          description: Upper bound of a `NUMBER` answer (optional) or of a `SCALE` (3 to 10, required).
+        integerOnly:
+          type: boolean
+          default: false
+        minLabel:
+          type: string
+          maxLength: 100
+        maxLabel:
+          type: string
+          maxLength: 100
+
+    Question:
+      allOf:
+        - $ref: "#/components/schemas/QuestionInput"
+        - type: object
+          required: [key, required]
+          properties:
+            options:
+              type: array
+              items:
+                $ref: "#/components/schemas/Option"
+
+    MatchMode:
+      type: string
+      description: "`ALL`: every condition must hold. `ANY`: at least one."
+      enum: [ALL, ANY]
+
+    ConditionOperator:
+      type: string
+      description: |
+        Operators by source question type. `SINGLE_CHOICE`: `EQUALS`,
+        `NOT_EQUALS`, `IN`. `MULTIPLE_CHOICE`: `INCLUDES_ANY`, `INCLUDES_ALL`,
+        `EXCLUDES`. `NUMBER` and `SCALE`: `EQ`, `NE`, `GT`, `GTE`, `LT`, `LTE`,
+        `BETWEEN`. Every type: `IS_ANSWERED`, `IS_NOT_ANSWERED`. A comparison
+        on an unanswered or hidden source question is false; `IS_NOT_ANSWERED`
+        is true.
+      enum:
+        - EQUALS
+        - NOT_EQUALS
+        - IN
+        - INCLUDES_ANY
+        - INCLUDES_ALL
+        - EXCLUDES
+        - EQ
+        - NE
+        - GT
+        - GTE
+        - LT
+        - LTE
+        - BETWEEN
+        - IS_ANSWERED
+        - IS_NOT_ANSWERED
+
+    ConditionValue:
+      type: object
+      description: |
+        The operand of a condition; exactly one shape applies per operator.
+        `optionKey`: `EQUALS`, `NOT_EQUALS`. `optionKeys`: `IN`,
+        `INCLUDES_ANY`, `INCLUDES_ALL`, `EXCLUDES`. `number`: `EQ`, `NE`,
+        `GT`, `GTE`, `LT`, `LTE`. `min` and `max` (inclusive): `BETWEEN`.
+        `IS_ANSWERED` and `IS_NOT_ANSWERED` take no value.
+      properties:
+        optionKey:
+          $ref: "#/components/schemas/Key"
+        optionKeys:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/Key"
+        number:
+          type: number
+          format: double
+        min:
+          type: number
+          format: double
+        max:
+          type: number
+          format: double
+
+    Condition:
+      type: object
+      required: [sourceQuestionKey, operator]
+      properties:
+        sourceQuestionKey:
+          $ref: "#/components/schemas/Key"
+        operator:
+          $ref: "#/components/schemas/ConditionOperator"
+        value:
+          $ref: "#/components/schemas/ConditionValue"
+
+    VisibilityRule:
+      type: object
+      description: |
+        Decides whether `targetQuestionKey` is shown. Conditions may only
+        reference questions that precede the target, so cycles cannot exist.
+        A question has at most one rule; a question without a rule is always
+        visible. A hidden question counts as unanswered for later rules and
+        must not be answered.
+      required: [targetQuestionKey, match, conditions]
+      properties:
+        targetQuestionKey:
+          $ref: "#/components/schemas/Key"
+        match:
+          $ref: "#/components/schemas/MatchMode"
+        conditions:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/Condition"
+
+    DraftDefinition:
+      type: object
+      required: [questions, rules]
+      properties:
+        questions:
+          type: array
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/QuestionInput"
+        rules:
+          type: array
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/VisibilityRule"
+
+    SurveyVersion:
+      type: object
+      required: [number, status, createdAt, questions, rules]
+      properties:
+        number:
+          type: integer
+          format: int32
+        status:
+          $ref: "#/components/schemas/VersionStatus"
+        createdAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Question"
+        rules:
+          type: array
+          items:
+            $ref: "#/components/schemas/VisibilityRule"
+
+    Answer:
+      type: object
+      description: |
+        The answer to one question; exactly one value field applies per
+        question type. `optionKey`: `SINGLE_CHOICE`. `optionKeys`:
+        `MULTIPLE_CHOICE`. `number`: `NUMBER` and `SCALE`. `text`: `TEXT`. An
+        unanswered question has no `Answer`.
+      required: [questionKey]
+      properties:
+        questionKey:
+          $ref: "#/components/schemas/Key"
+        optionKey:
+          $ref: "#/components/schemas/Key"
+        optionKeys:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/Key"
+        number:
+          type: number
+          format: double
+        text:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+    EvaluationRequest:
+      type: object
+      required: [versionNumber, answers]
+      properties:
+        versionNumber:
+          type: integer
+          format: int32
+          minimum: 1
+        answers:
+          type: array
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/Answer"
+
+    EvaluationResult:
+      type: object
+      required: [visibleQuestionKeys, errors, missingRequiredQuestionKeys]
+      properties:
+        visibleQuestionKeys:
+          type: array
+          description: Keys of the visible questions, in survey order.
+          items:
+            $ref: "#/components/schemas/Key"
+        errors:
+          type: array
+          description: Problems with the answers given; an answer with an error is ignored when evaluating rules.
+          items:
+            $ref: "#/components/schemas/FieldError"
+        missingRequiredQuestionKeys:
+          type: array
+          description: Visible required questions without a valid answer. Submitting now would fail with `MISSING_REQUIRED_ANSWER` for each.
+          items:
+            $ref: "#/components/schemas/Key"
+
+    SubmitResponseRequest:
+      type: object
+      required: [versionNumber, answers]
+      properties:
+        versionNumber:
+          type: integer
+          format: int32
+          minimum: 1
+          description: The version the respondent answered; the published one or a superseded one of a published survey.
+        answers:
+          type: array
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/Answer"
+
+    SubmittedResponse:
+      type: object
+      required: [responseId, submittedAt]
+      properties:
+        responseId:
+          type: string
+          format: uuid
+        submittedAt:
+          type: string
+          format: date-time
+
+    PublicSurvey:
+      type: object
+      required: [publicId, title, language, status, acceptingResponses, version]
+      properties:
+        publicId:
+          $ref: "#/components/schemas/PublicId"
+        title:
+          type: string
+        description:
+          type: string
+        language:
+          $ref: "#/components/schemas/Language"
+        status:
+          $ref: "#/components/schemas/SurveyStatus"
+        acceptingResponses:
+          type: boolean
+          description: False when the survey is closed or its quota is reached.
+        closesAt:
+          type: string
+          format: date-time
+        version:
+          $ref: "#/components/schemas/SurveyVersion"
+
+    OptionCount:
+      type: object
+      required: [key, label, count]
+      properties:
+        key:
+          $ref: "#/components/schemas/Key"
+        label:
+          type: string
+        count:
+          type: integer
+          format: int32
+
+    NumberStats:
+      type: object
+      required: [count, mean, min, max]
+      properties:
+        count:
+          type: integer
+          format: int32
+        mean:
+          type: number
+          format: double
+        min:
+          type: number
+          format: double
+        max:
+          type: number
+          format: double
+
+    ValueCount:
+      type: object
+      required: [value, count]
+      properties:
+        value:
+          type: integer
+          format: int32
+        count:
+          type: integer
+          format: int32
+
+    QuestionResult:
+      type: object
+      description: |
+        Aggregates of one question. `options` for choice types; `number` for
+        `NUMBER` and `SCALE`; `distribution` for `SCALE`; text answers are
+        only counted and listed through the answers operation.
+      required: [key, text, type, answerCount]
+      properties:
+        key:
+          $ref: "#/components/schemas/Key"
+        text:
+          type: string
+        type:
+          $ref: "#/components/schemas/QuestionType"
+        answerCount:
+          type: integer
+          format: int32
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/OptionCount"
+        number:
+          $ref: "#/components/schemas/NumberStats"
+        distribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValueCount"
+        comparable:
+          type: boolean
+          description: Only in comparable results; false when the question cannot be aggregated across versions.
+        versionNumbers:
+          type: array
+          description: Only in comparable results; the versions that contain this question.
+          items:
+            type: integer
+            format: int32
+
+    VersionResults:
+      type: object
+      required: [surveyId, versionNumber, responseCount, computedAt, questions]
+      properties:
+        surveyId:
+          type: string
+          format: uuid
+        versionNumber:
+          type: integer
+          format: int32
+        responseCount:
+          type: integer
+          format: int32
+        computedAt:
+          type: string
+          format: date-time
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionResult"
+
+    ComparableResults:
+      type: object
+      required: [surveyId, versionNumbers, responseCount, computedAt, questions]
+      properties:
+        surveyId:
+          type: string
+          format: uuid
+        versionNumbers:
+          type: array
+          items:
+            type: integer
+            format: int32
+        responseCount:
+          type: integer
+          format: int32
+          description: Responses across the listed versions.
+        computedAt:
+          type: string
+          format: date-time
+        questions:
+          type: array
+          description: Every question of every version, by first appearance, with `comparable` set.
+          items:
+            $ref: "#/components/schemas/QuestionResult"
+
+    ResponseRecord:
+      type: object
+      required: [id, versionNumber, submittedAt, answers]
+      properties:
+        id:
+          type: string
+          format: uuid
+        versionNumber:
+          type: integer
+          format: int32
+        submittedAt:
+          type: string
+          format: date-time
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Answer"
+
+    ResponsePage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseRecord"
+        nextCursor:
+          type: string
+
+    AnswerRecord:
+      type: object
+      required: [responseId, submittedAt, answer]
+      properties:
+        responseId:
+          type: string
+          format: uuid
+        submittedAt:
+          type: string
+          format: date-time
+        answer:
+          $ref: "#/components/schemas/Answer"
+
+    AnswerPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerRecord"
+        nextCursor:
+          type: string
+
+    ProblemCode:
+      type: string
+      description: Stable machine-readable error code; the contract of errors.
+      enum:
+        - VALIDATION_ERROR
+        - MALFORMED_REQUEST
+        - UNAUTHENTICATED
+        - INVALID_CREDENTIALS
+        - ACCOUNT_DISABLED
+        - CSRF_REJECTED
+        - NOT_FOUND
+        - NO_DRAFT
+        - DRAFT_ALREADY_EXISTS
+        - INVALID_STATE_TRANSITION
+        - VERSION_NOT_ANSWERABLE
+        - SURVEY_NOT_ACCEPTING_RESPONSES
+        - RESPONSE_QUOTA_REACHED
+        - PAYLOAD_TOO_LARGE
+        - RATE_LIMITED
+        - INTERNAL_ERROR
+
+    FieldErrorCode:
+      type: string
+      description: |
+        Stable code of a field-level error. Shape and limits: `REQUIRED`,
+        `UNKNOWN_FIELD`, `INVALID_FORMAT`, `INVALID_VALUE`, `TOO_SHORT`,
+        `TOO_LONG`, `OUT_OF_RANGE`, `NOT_INTEGER`, `TOO_FEW_ITEMS`,
+        `TOO_MANY_ITEMS`, `DUPLICATE`. Definition: `NO_QUESTIONS`,
+        `UNKNOWN_QUESTION`, `UNKNOWN_OPTION`, `SELF_REFERENCE`,
+        `FORWARD_REFERENCE`, `OPERATOR_TYPE_MISMATCH`, `VALUE_TYPE_MISMATCH`,
+        `DUPLICATE_RULE`, `EMPTY_CONDITIONS`. Answers: `MISSING_REQUIRED_ANSWER`,
+        `HIDDEN_QUESTION_ANSWERED`, `ANSWER_TYPE_MISMATCH`, `DUPLICATE_OPTION`,
+        `TOO_FEW_SELECTIONS`, `TOO_MANY_SELECTIONS`.
+      enum:
+        - REQUIRED
+        - UNKNOWN_FIELD
+        - INVALID_FORMAT
+        - INVALID_VALUE
+        - TOO_SHORT
+        - TOO_LONG
+        - OUT_OF_RANGE
+        - NOT_INTEGER
+        - TOO_FEW_ITEMS
+        - TOO_MANY_ITEMS
+        - DUPLICATE
+        - NO_QUESTIONS
+        - UNKNOWN_QUESTION
+        - UNKNOWN_OPTION
+        - SELF_REFERENCE
+        - FORWARD_REFERENCE
+        - OPERATOR_TYPE_MISMATCH
+        - VALUE_TYPE_MISMATCH
+        - DUPLICATE_RULE
+        - EMPTY_CONDITIONS
+        - MISSING_REQUIRED_ANSWER
+        - HIDDEN_QUESTION_ANSWERED
+        - ANSWER_TYPE_MISMATCH
+        - DUPLICATE_OPTION
+        - TOO_FEW_SELECTIONS
+        - TOO_MANY_SELECTIONS
+
+    FieldError:
+      type: object
+      required: [path, code]
+      properties:
+        path:
+          type: string
+          description: JSON path of the offending element, with zero-based indexes, for example `rules[2].conditions[0].sourceQuestionKey` or `answers[3].number`. For `MISSING_REQUIRED_ANSWER` it is `answers` and `params.questionKey` names the question.
+          maxLength: 256
+        code:
+          $ref: "#/components/schemas/FieldErrorCode"
+        params:
+          type: object
+          description: Values a client needs to render the message, for example `min` and `max` for `OUT_OF_RANGE`, or `sourcePosition` and `targetPosition` (one-based) for `FORWARD_REFERENCE`.
+          additionalProperties: true
+
+    Problem:
+      type: object
+      description: Problem Details (RFC 9457) with a stable `code`. `title` and `detail` are English developer text and are never shown to end users.
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: "`urn:delfos:problem:` followed by the code in kebab case."
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          description: Path of the request.
+        code:
+          $ref: "#/components/schemas/ProblemCode"
+        errors:
+          type: array
+          description: Present with `VALIDATION_ERROR`.
+          items:
+            $ref: "#/components/schemas/FieldError"
