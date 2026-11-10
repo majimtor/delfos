@@ -6,8 +6,10 @@ spring-boot = "4.1.2"
 openapi-generator = "7.27.0"
 # JUnit follows the version managed by Spring Boot so both builds test on the same platform.
 junit = "6.0.3"
+jackson-databind-nullable = "0.2.13"
 
 [libraries]
+jackson-databind-nullable = { module = "org.openapitools:jackson-databind-nullable", version.ref = "jackson-databind-nullable" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }

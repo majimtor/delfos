@@ -35,6 +35,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-flyway")
     implementation("tools.jackson.module:jackson-module-kotlin")
+    // JsonNullable: lets a PATCH body distinguish an absent field from a null one.
+    implementation(libs.jackson.databind.nullable)
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     runtimeOnly("org.flywaydb:flyway-database-postgresql")
     runtimeOnly("org.postgresql:postgresql")
@@ -85,7 +87,7 @@ openApiGenerate {
             "exceptionHandler" to "false",
             "gradleBuildFile" to "false",
             "useBeanValidation" to "true",
-            "openApiNullable" to "false",
+            "openApiNullable" to "true",
             "enumPropertyNaming" to "UPPERCASE",
             "serializableModel" to "false",
         ),
