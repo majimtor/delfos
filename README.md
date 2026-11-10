@@ -51,7 +51,10 @@ start Gradle (Java 17 or newer):
 
 ```sh
 ./gradlew -p shared check
+./gradlew -p api check
 ```
+
+The API tests start PostgreSQL 18 in a container, so Docker must be running.
 
 ## Licence
 
