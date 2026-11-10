@@ -2,3 +2,8 @@
 .env
 .env.*
 !.env.example
+
+# Build outputs and tool caches
+build/
+.gradle/
+.kotlin/
