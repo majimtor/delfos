@@ -21,6 +21,13 @@ import org.springframework.web.context.request.WebRequest
 import org.springframework.web.method.annotation.HandlerMethodValidationException
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
 import org.springframework.web.servlet.resource.NoResourceFoundException
+import tools.jackson.core.JacksonException
+import tools.jackson.databind.exc.InvalidFormatException
+import tools.jackson.databind.exc.InvalidNullException
+import tools.jackson.databind.exc.MismatchedInputException
+import tools.jackson.databind.exc.PropertyBindingException
+import tools.jackson.databind.exc.UnrecognizedPropertyException
+import tools.jackson.databind.exc.ValueInstantiationException
 
 /**
  * Turns every failure into the single error shape of the contract. The built-in exceptions of
@@ -40,15 +47,22 @@ class ApiExceptionHandler : ResponseEntityExceptionHandler() {
         request: WebRequest,
     ): ResponseEntity<Any>? {
         val errors = fieldErrorsOf(ex)
-        val (code, detail) = when (ex) {
-            is NoResourceFoundException -> ProblemCode.NOT_FOUND to "No resource at this path."
-            is HttpMessageNotReadableException -> ProblemCode.MALFORMED_REQUEST to "The request body could not be read."
-            is MethodArgumentNotValidException, is HandlerMethodValidationException, is MissingServletRequestParameterException ->
+        val (code, detail) = when {
+            ex is NoResourceFoundException -> ProblemCode.NOT_FOUND to "No resource at this path."
+            ex is HttpMessageNotReadableException && errors.isEmpty() -> ProblemCode.MALFORMED_REQUEST to "The request body could not be read."
+            ex is HttpMessageNotReadableException || ex is MethodArgumentNotValidException ||
+                ex is HandlerMethodValidationException || ex is MissingServletRequestParameterException ->
                 ProblemCode.VALIDATION_ERROR to "${errors.size} fields are invalid."
             else -> Problems.codeFor(statusCode) to (HttpStatus.resolve(statusCode.value())?.reasonPhrase ?: "Request rejected.")
         }
         val problem = Problems.of(statusCode, code, detail, instanceOf(request), errors.takeIf { it.isNotEmpty() })
         return ResponseEntity.status(statusCode).headers(headers).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(problem)
+    }
+
+    @ExceptionHandler(ApiProblemException::class)
+    fun handleProblem(ex: ApiProblemException, request: WebRequest): ResponseEntity<ProblemDetail> {
+        val problem = Problems.of(ex.status, ex.code, ex.detail, instanceOf(request), ex.errors)
+        return ResponseEntity.status(ex.status).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(problem)
     }
 
     @ExceptionHandler(Exception::class)
@@ -61,6 +75,7 @@ class ApiExceptionHandler : ResponseEntityExceptionHandler() {
     private fun instanceOf(request: WebRequest): String? = (request as? ServletWebRequest)?.request?.requestURI
 
     private fun fieldErrorsOf(ex: Exception): List<FieldError> = when (ex) {
+        is HttpMessageNotReadableException -> listOfNotNull(bindingErrorOf(ex))
         is MethodArgumentNotValidException -> ex.bindingResult.fieldErrors.map { it.toFieldError() }
         is HandlerMethodValidationException -> ex.parameterValidationResults.flatMap { result ->
             result.resolvableErrors.map { error ->
@@ -75,6 +90,31 @@ class ApiExceptionHandler : ResponseEntityExceptionHandler() {
     }
 
     private fun SpringFieldError.toFieldError(): FieldError = FieldError(path = field, code = codeOf(code))
+
+    /**
+     * A body that parses as JSON but does not bind to the DTO is a field error with the JSON path,
+     * not a malformed request: a missing non-null field, an unknown field or a value of the wrong
+     * kind. A body that is not JSON yields no field error and stays malformed.
+     */
+    private fun bindingErrorOf(ex: HttpMessageNotReadableException): FieldError? {
+        val cause = generateSequence<Throwable>(ex) { it.cause }.filterIsInstance<JacksonException>().firstOrNull() ?: return null
+        val code = when (cause) {
+            is InvalidNullException -> FieldErrorCode.REQUIRED
+            is UnrecognizedPropertyException -> FieldErrorCode.UNKNOWN_FIELD
+            is InvalidFormatException -> if (cause.targetType?.isEnum == true) FieldErrorCode.INVALID_VALUE else FieldErrorCode.INVALID_FORMAT
+            // A generated enum rejects an unknown value from its creator.
+            is ValueInstantiationException, is MismatchedInputException -> FieldErrorCode.INVALID_VALUE
+            else -> return null
+        }
+        return FieldError(path = jsonPathOf(cause), code = code)
+    }
+
+    private fun jsonPathOf(ex: JacksonException): String {
+        val segments = ex.path.map { ref -> ref.propertyName ?: ref.index.takeIf { it >= 0 }?.let { "[$it]" } ?: "" }
+        val property = (ex as? PropertyBindingException)?.propertyName ?: (ex as? InvalidNullException)?.propertyName?.simpleName
+        val all = if (property != null && segments.lastOrNull() != property) segments + property else segments
+        return all.filter { it.isNotEmpty() }.joinToString("") { if (it.startsWith("[")) it else ".$it" }.trimStart('.')
+    }
 
     /** Maps a Bean Validation constraint name to the stable field error code of the contract. */
     private fun codeOf(constraint: String?): FieldErrorCode = when (constraint?.substringBefore('.')) {

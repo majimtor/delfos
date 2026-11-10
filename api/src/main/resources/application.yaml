@@ -17,6 +17,9 @@ spring:
       enabled: true
   jackson:
     default-property-inclusion: non_null
+    deserialization:
+      # Unknown fields are rejected, as the engineering rules require.
+      fail-on-unknown-properties: true
 
 server:
   port: ${PORT:8080}
@@ -26,6 +29,10 @@ server:
     include-message: never
     include-stacktrace: never
     include-exception: false
+
+delfos:
+  # Origin of the web client, for CORS. Empty means same-origin only.
+  web-origin: ${DELFOS_WEB_ORIGIN:}
 
 management:
   endpoints:
