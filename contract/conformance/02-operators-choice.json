@@ -1,0 +1,333 @@
+{
+  "suite": "operators-choice",
+  "description": "Every operator of SINGLE_CHOICE and MULTIPLE_CHOICE sources, including their result on unanswered sources.",
+  "definition": {
+    "questions": [
+      {
+        "key": "c1",
+        "type": "SINGLE_CHOICE",
+        "text": "Favourite colour",
+        "required": false,
+        "options": [
+          {
+            "key": "red",
+            "label": "Red"
+          },
+          {
+            "key": "green",
+            "label": "Green"
+          },
+          {
+            "key": "blue",
+            "label": "Blue"
+          }
+        ]
+      },
+      {
+        "key": "c2",
+        "type": "MULTIPLE_CHOICE",
+        "text": "Toppings",
+        "required": false,
+        "options": [
+          {
+            "key": "a",
+            "label": "A"
+          },
+          {
+            "key": "b",
+            "label": "B"
+          },
+          {
+            "key": "c",
+            "label": "C"
+          },
+          {
+            "key": "d",
+            "label": "D"
+          }
+        ],
+        "minSelections": 1,
+        "maxSelections": 3
+      },
+      {
+        "key": "t_eq",
+        "type": "TEXT",
+        "text": "Shown when colour EQUALS red",
+        "required": false
+      },
+      {
+        "key": "t_ne",
+        "type": "TEXT",
+        "text": "Shown when colour NOT_EQUALS red",
+        "required": false
+      },
+      {
+        "key": "t_in",
+        "type": "TEXT",
+        "text": "Shown when colour IN green, blue",
+        "required": false
+      },
+      {
+        "key": "t_any",
+        "type": "TEXT",
+        "text": "Shown when toppings INCLUDES_ANY a, b",
+        "required": false
+      },
+      {
+        "key": "t_all",
+        "type": "TEXT",
+        "text": "Shown when toppings INCLUDES_ALL a, b",
+        "required": false
+      },
+      {
+        "key": "t_exc",
+        "type": "TEXT",
+        "text": "Shown when toppings EXCLUDES d",
+        "required": false
+      },
+      {
+        "key": "t_ans",
+        "type": "TEXT",
+        "text": "Shown when colour IS_ANSWERED and toppings IS_NOT_ANSWERED",
+        "required": false
+      }
+    ],
+    "rules": [
+      {
+        "targetQuestionKey": "t_eq",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "c1",
+            "operator": "EQUALS",
+            "value": {
+              "optionKey": "red"
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "t_ne",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "c1",
+            "operator": "NOT_EQUALS",
+            "value": {
+              "optionKey": "red"
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "t_in",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "c1",
+            "operator": "IN",
+            "value": {
+              "optionKeys": [
+                "green",
+                "blue"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "t_any",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "c2",
+            "operator": "INCLUDES_ANY",
+            "value": {
+              "optionKeys": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "t_all",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "c2",
+            "operator": "INCLUDES_ALL",
+            "value": {
+              "optionKeys": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "t_exc",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "c2",
+            "operator": "EXCLUDES",
+            "value": {
+              "optionKeys": [
+                "d"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "t_ans",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "c1",
+            "operator": "IS_ANSWERED"
+          },
+          {
+            "sourceQuestionKey": "c2",
+            "operator": "IS_NOT_ANSWERED"
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "unanswered sources: every comparison is false, including NOT_EQUALS and EXCLUDES",
+      "answers": [],
+      "expected": {
+        "visibleQuestionKeys": [
+          "c1",
+          "c2"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "EQUALS holds, NOT_EQUALS and IN fail; IS_ANSWERED with IS_NOT_ANSWERED holds",
+      "answers": [
+        {
+          "questionKey": "c1",
+          "optionKey": "red"
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "c1",
+          "c2",
+          "t_eq",
+          "t_ans"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "NOT_EQUALS and IN hold; INCLUDES_ANY and EXCLUDES hold with a single selection",
+      "answers": [
+        {
+          "questionKey": "c1",
+          "optionKey": "green"
+        },
+        {
+          "questionKey": "c2",
+          "optionKeys": [
+            "a"
+          ]
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "c1",
+          "c2",
+          "t_ne",
+          "t_in",
+          "t_any",
+          "t_exc"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "INCLUDES_ALL holds and EXCLUDES fails when d is selected",
+      "answers": [
+        {
+          "questionKey": "c2",
+          "optionKeys": [
+            "a",
+            "b",
+            "d"
+          ]
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "c1",
+          "c2",
+          "t_any",
+          "t_all"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "a selection outside the operand sets: INCLUDES fail, EXCLUDES holds",
+      "answers": [
+        {
+          "questionKey": "c2",
+          "optionKeys": [
+            "c"
+          ]
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "c1",
+          "c2",
+          "t_exc"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "selection order does not matter",
+      "answers": [
+        {
+          "questionKey": "c1",
+          "optionKey": "blue"
+        },
+        {
+          "questionKey": "c2",
+          "optionKeys": [
+            "b",
+            "a"
+          ]
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "c1",
+          "c2",
+          "t_ne",
+          "t_in",
+          "t_any",
+          "t_all",
+          "t_exc"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    }
+  ]
+}

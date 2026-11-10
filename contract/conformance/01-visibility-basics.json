@@ -1,0 +1,440 @@
+{
+  "suite": "visibility-basics",
+  "description": "Rules with ALL and ANY, chained visibility, hidden questions counting as unanswered, and required questions only when visible.",
+  "definition": {
+    "questions": [
+      {
+        "key": "q1",
+        "type": "SINGLE_CHOICE",
+        "text": "Do you own a car?",
+        "required": true,
+        "options": [
+          {
+            "key": "yes",
+            "label": "Yes"
+          },
+          {
+            "key": "no",
+            "label": "No"
+          }
+        ]
+      },
+      {
+        "key": "q2",
+        "type": "SINGLE_CHOICE",
+        "text": "Which fuel does it use?",
+        "required": false,
+        "options": [
+          {
+            "key": "petrol",
+            "label": "Petrol"
+          },
+          {
+            "key": "diesel",
+            "label": "Diesel"
+          },
+          {
+            "key": "electric",
+            "label": "Electric"
+          }
+        ]
+      },
+      {
+        "key": "q3",
+        "type": "NUMBER",
+        "text": "How many kilometres a year?",
+        "required": false,
+        "min": 0,
+        "max": 200000,
+        "integerOnly": true
+      },
+      {
+        "key": "q4",
+        "type": "TEXT",
+        "text": "Why not?",
+        "required": false,
+        "maxLength": 200
+      },
+      {
+        "key": "q5",
+        "type": "SCALE",
+        "text": "How satisfied are you with public transport?",
+        "required": true,
+        "min": 1,
+        "max": 5,
+        "minLabel": "Not at all",
+        "maxLabel": "Very"
+      },
+      {
+        "key": "q6",
+        "type": "TEXT",
+        "text": "Any comment on charging?",
+        "required": false,
+        "maxLength": 300
+      },
+      {
+        "key": "q7",
+        "type": "TEXT",
+        "text": "Any other comment about your car situation?",
+        "required": false,
+        "maxLength": 300
+      },
+      {
+        "key": "q8",
+        "type": "TEXT",
+        "text": "Why did you skip the first question?",
+        "required": false,
+        "maxLength": 300
+      }
+    ],
+    "rules": [
+      {
+        "targetQuestionKey": "q2",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "q1",
+            "operator": "EQUALS",
+            "value": {
+              "optionKey": "yes"
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "q3",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "q1",
+            "operator": "EQUALS",
+            "value": {
+              "optionKey": "yes"
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "q4",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "q1",
+            "operator": "EQUALS",
+            "value": {
+              "optionKey": "no"
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "q6",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "q2",
+            "operator": "EQUALS",
+            "value": {
+              "optionKey": "electric"
+            }
+          },
+          {
+            "sourceQuestionKey": "q3",
+            "operator": "GTE",
+            "value": {
+              "number": 10000
+            }
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "q7",
+        "match": "ANY",
+        "conditions": [
+          {
+            "sourceQuestionKey": "q2",
+            "operator": "IS_ANSWERED"
+          },
+          {
+            "sourceQuestionKey": "q4",
+            "operator": "IS_ANSWERED"
+          }
+        ]
+      },
+      {
+        "targetQuestionKey": "q8",
+        "match": "ALL",
+        "conditions": [
+          {
+            "sourceQuestionKey": "q1",
+            "operator": "IS_NOT_ANSWERED"
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "no answers: questions without a rule and IS_NOT_ANSWERED targets are visible",
+      "answers": [],
+      "expected": {
+        "visibleQuestionKeys": [
+          "q1",
+          "q5",
+          "q8"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": [
+          "q1",
+          "q5"
+        ]
+      }
+    },
+    {
+      "name": "yes opens the car questions and closes the skip question",
+      "answers": [
+        {
+          "questionKey": "q1",
+          "optionKey": "yes"
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "q1",
+          "q2",
+          "q3",
+          "q5"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": [
+          "q5"
+        ]
+      }
+    },
+    {
+      "name": "ALL rule holds when both conditions hold",
+      "answers": [
+        {
+          "questionKey": "q1",
+          "optionKey": "yes"
+        },
+        {
+          "questionKey": "q2",
+          "optionKey": "electric"
+        },
+        {
+          "questionKey": "q3",
+          "number": 15000
+        },
+        {
+          "questionKey": "q5",
+          "number": 4
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "q1",
+          "q2",
+          "q3",
+          "q5",
+          "q6",
+          "q7"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "ALL rule fails when one condition fails",
+      "answers": [
+        {
+          "questionKey": "q1",
+          "optionKey": "yes"
+        },
+        {
+          "questionKey": "q2",
+          "optionKey": "electric"
+        },
+        {
+          "questionKey": "q3",
+          "number": 5000
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "q1",
+          "q2",
+          "q3",
+          "q5",
+          "q7"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": [
+          "q5"
+        ]
+      }
+    },
+    {
+      "name": "no opens the alternative branch; ANY rule holds through the second condition",
+      "answers": [
+        {
+          "questionKey": "q1",
+          "optionKey": "no"
+        },
+        {
+          "questionKey": "q4",
+          "text": "Too expensive"
+        },
+        {
+          "questionKey": "q5",
+          "number": 2
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "q1",
+          "q4",
+          "q5",
+          "q7"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "an answer to a hidden question is an error and does not count",
+      "answers": [
+        {
+          "questionKey": "q1",
+          "optionKey": "no"
+        },
+        {
+          "questionKey": "q2",
+          "optionKey": "petrol"
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "q1",
+          "q4",
+          "q5"
+        ],
+        "errors": [
+          {
+            "path": "answers[1]",
+            "code": "HIDDEN_QUESTION_ANSWERED"
+          }
+        ],
+        "missingRequiredQuestionKeys": [
+          "q5"
+        ]
+      }
+    },
+    {
+      "name": "hidden answers never satisfy a later rule, even when their raw values would",
+      "answers": [
+        {
+          "questionKey": "q1",
+          "optionKey": "no"
+        },
+        {
+          "questionKey": "q2",
+          "optionKey": "electric"
+        },
+        {
+          "questionKey": "q3",
+          "number": 20000
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "q1",
+          "q4",
+          "q5"
+        ],
+        "errors": [
+          {
+            "path": "answers[1]",
+            "code": "HIDDEN_QUESTION_ANSWERED"
+          },
+          {
+            "path": "answers[2]",
+            "code": "HIDDEN_QUESTION_ANSWERED"
+          }
+        ],
+        "missingRequiredQuestionKeys": [
+          "q5"
+        ]
+      }
+    },
+    {
+      "name": "an invalid answer is reported and ignored by the rules that depend on it",
+      "answers": [
+        {
+          "questionKey": "q1",
+          "optionKey": "yes"
+        },
+        {
+          "questionKey": "q2",
+          "optionKey": "electric"
+        },
+        {
+          "questionKey": "q3",
+          "number": 20000.5
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "q1",
+          "q2",
+          "q3",
+          "q5",
+          "q7"
+        ],
+        "errors": [
+          {
+            "path": "answers[2].number",
+            "code": "NOT_INTEGER"
+          }
+        ],
+        "missingRequiredQuestionKeys": [
+          "q5"
+        ]
+      }
+    },
+    {
+      "name": "a required visible question with an invalid answer is both an error and missing",
+      "answers": [
+        {
+          "questionKey": "q1",
+          "optionKey": "yes"
+        },
+        {
+          "questionKey": "q5",
+          "number": 7
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "q1",
+          "q2",
+          "q3",
+          "q5"
+        ],
+        "errors": [
+          {
+            "path": "answers[1].number",
+            "code": "OUT_OF_RANGE",
+            "params": {
+              "min": 1,
+              "max": 5
+            }
+          }
+        ],
+        "missingRequiredQuestionKeys": [
+          "q5"
+        ]
+      }
+    }
+  ]
+}

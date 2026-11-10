@@ -1,0 +1,1003 @@
+{
+  "suite": "definition-validation",
+  "description": "Validation of a draft definition. Every error is reported at once. Mode \"save\" applies to saving a draft; mode \"publish\" adds the checks of publication.",
+  "cases": [
+    {
+      "name": "a valid definition has no errors",
+      "mode": "publish",
+      "definition": {
+        "questions": [
+          {
+            "key": "q1",
+            "type": "SINGLE_CHOICE",
+            "text": "Do you own a car?",
+            "required": true,
+            "options": [
+              {
+                "key": "yes",
+                "label": "Yes"
+              },
+              {
+                "key": "no",
+                "label": "No"
+              }
+            ]
+          },
+          {
+            "key": "q2",
+            "type": "SINGLE_CHOICE",
+            "text": "Which fuel does it use?",
+            "required": false,
+            "options": [
+              {
+                "key": "petrol",
+                "label": "Petrol"
+              },
+              {
+                "key": "diesel",
+                "label": "Diesel"
+              },
+              {
+                "key": "electric",
+                "label": "Electric"
+              }
+            ]
+          },
+          {
+            "key": "q3",
+            "type": "NUMBER",
+            "text": "How many kilometres a year?",
+            "required": false,
+            "min": 0,
+            "max": 200000,
+            "integerOnly": true
+          },
+          {
+            "key": "q4",
+            "type": "TEXT",
+            "text": "Why not?",
+            "required": false,
+            "maxLength": 200
+          },
+          {
+            "key": "q5",
+            "type": "SCALE",
+            "text": "How satisfied are you with public transport?",
+            "required": true,
+            "min": 1,
+            "max": 5,
+            "minLabel": "Not at all",
+            "maxLabel": "Very"
+          },
+          {
+            "key": "q6",
+            "type": "TEXT",
+            "text": "Any comment on charging?",
+            "required": false,
+            "maxLength": 300
+          },
+          {
+            "key": "q7",
+            "type": "TEXT",
+            "text": "Any other comment about your car situation?",
+            "required": false,
+            "maxLength": 300
+          },
+          {
+            "key": "q8",
+            "type": "TEXT",
+            "text": "Why did you skip the first question?",
+            "required": false,
+            "maxLength": 300
+          }
+        ],
+        "rules": [
+          {
+            "targetQuestionKey": "q2",
+            "match": "ALL",
+            "conditions": [
+              {
+                "sourceQuestionKey": "q1",
+                "operator": "EQUALS",
+                "value": {
+                  "optionKey": "yes"
+                }
+              }
+            ]
+          },
+          {
+            "targetQuestionKey": "q3",
+            "match": "ALL",
+            "conditions": [
+              {
+                "sourceQuestionKey": "q1",
+                "operator": "EQUALS",
+                "value": {
+                  "optionKey": "yes"
+                }
+              }
+            ]
+          },
+          {
+            "targetQuestionKey": "q4",
+            "match": "ALL",
+            "conditions": [
+              {
+                "sourceQuestionKey": "q1",
+                "operator": "EQUALS",
+                "value": {
+                  "optionKey": "no"
+                }
+              }
+            ]
+          },
+          {
+            "targetQuestionKey": "q6",
+            "match": "ALL",
+            "conditions": [
+              {
+                "sourceQuestionKey": "q2",
+                "operator": "EQUALS",
+                "value": {
+                  "optionKey": "electric"
+                }
+              },
+              {
+                "sourceQuestionKey": "q3",
+                "operator": "GTE",
+                "value": {
+                  "number": 10000
+                }
+              }
+            ]
+          },
+          {
+            "targetQuestionKey": "q7",
+            "match": "ANY",
+            "conditions": [
+              {
+                "sourceQuestionKey": "q2",
+                "operator": "IS_ANSWERED"
+              },
+              {
+                "sourceQuestionKey": "q4",
+                "operator": "IS_ANSWERED"
+              }
+            ]
+          },
+          {
+            "targetQuestionKey": "q8",
+            "match": "ALL",
+            "conditions": [
+              {
+                "sourceQuestionKey": "q1",
+                "operator": "IS_NOT_ANSWERED"
+              }
+            ]
+          }
+        ]
+      },
+      "expectedErrors": []
+    },
+    {
+      "name": "an empty draft can be saved but not published",
+      "mode": "publish",
+      "definition": {
+        "questions": [],
+        "rules": []
+      },
+      "expectedErrors": [
+        {
+          "path": "questions",
+          "code": "NO_QUESTIONS"
+        }
+      ]
+    },
+    {
+      "name": "an empty draft can be saved",
+      "mode": "save",
+      "definition": {
+        "questions": [],
+        "rules": []
+      },
+      "expectedErrors": []
+    },
+    {
+      "name": "a rule without conditions",
+      "definition": {
+        "questions": [
+          {
+            "key": "a",
+            "type": "TEXT",
+            "text": "A",
+            "required": false
+          },
+          {
+            "key": "b",
+            "type": "TEXT",
+            "text": "B",
+            "required": false
+          }
+        ],
+        "rules": [
+          {
+            "targetQuestionKey": "b",
+            "match": "ALL",
+            "conditions": []
+          }
+        ]
+      },
+      "expectedErrors": [
+        {
+          "path": "rules[0].conditions",
+          "code": "EMPTY_CONDITIONS"
+        }
+      ]
+    },
+    {
+      "name": "unknown target and unknown source",
+      "definition": {
+        "questions": [
+          {
+            "key": "a",
+            "type": "TEXT",
+            "text": "A",
+            "required": false
+          },
+          {
+            "key": "b",
+            "type": "TEXT",
+            "text": "B",
+            "required": false
+          }
+        ],
+        "rules": [
+          {
+            "targetQuestionKey": "zz",
+            "match": "ALL",
+            "conditions": [
+              {
+                "sourceQuestionKey": "a",
+                "operator": "IS_ANSWERED"
+              }
+            ]
+          },
+          {
+            "targetQuestionKey": "b",
+            "match": "ALL",
+            "conditions": [
+              {
+                "sourceQuestionKey": "yy",
+                "operator": "IS_ANSWERED"
+              }
+            ]
+          }
+        ]
+      },
+      "expectedErrors": [
+        {
+          "path": "rules[0].targetQuestionKey",
+          "code": "UNKNOWN_QUESTION"
+        },
+        {
+          "path": "rules[1].conditions[0].sourceQuestionKey",
+          "code": "UNKNOWN_QUESTION"
+        }
+      ]
+    },
+    {
+      "name": "a rule that references its own target",
+      "definition": {
+        "questions": [
+          {
+            "key": "a",
+            "type": "TEXT",
+            "text": "A",
+            "required": false
+          }
+        ],
+        "rules": [
+          {
+            "targetQuestionKey": "a",
+            "match": "ALL",
+            "conditions": [
+              {
+                "sourceQuestionKey": "a",
+                "operator": "IS_ANSWERED"
+              }
+            ]
+          }
+        ]
+      },
+      "expectedErrors": [
+        {
+          "path": "rules[0].conditions[0].sourceQuestionKey",
+          "code": "SELF_REFERENCE"
+        }
+      ]
+    },
+    {
+      "name": "a rule that references a later question",
+      "definition": {
+        "questions": [
+          {
+            "key": "a",
+            "type": "TEXT",
+            "text": "A",
+            "required": false
+          },
+          {
+            "key": "b",
+            "type": "TEXT",
+            "text": "B",
+            "required": false
+          },
+          {
+            "key": "c",
+            "type": "NUMBER",
+            "text": "C",
+            "required": false
+          }
+        ],
+        "rules": [
+          {
+            "targetQuestionKey": "a",
+            "match": "ALL",
+            "conditions": [
+              {
+                "sourceQuestionKey": "c",
+                "operator": "GT",
+                "value": {
+                  "number": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "expectedErrors": [
+        {
+          "path": "rules[0].conditions[0].sourceQuestionKey",
+          "code": "FORWARD_REFERENCE",
+          "params": {
+            "sourcePosition": 3,
+            "targetPosition": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "operators that do not apply to the source type",
+      "definition": {
+        "questions": [
+          {
+            "key": "s",
+            "type": "SINGLE_CHOICE",
+            "text": "S",
+            "required": false,
+            "options": [
+              {
+                "key": "x",
+                "label": "X"
+              },
+              {
+                "key": "y",
+                "label": "Y"
+              }
+            ]
+          },
+          {
+            "key": "m",
+            "type": "MULTIPLE_CHOICE",
+            "text": "M",
+            "required": false,
+            "options": [
+              {
+                "key": "x",
+                "label": "X"
+              },
+              {
+                "key": "y",
+                "label": "Y"
+              }
+            ]
+          },
+          {
+            "key": "t",
+            "type": "TEXT",
+            "text": "T",
+            "required": false
+          },
+          {
+            "key": "z",
+            "type": "TEXT",
+            "text": "Z",
+            "required": false
+          }
+        ],
+        "rules": [
+          {
+            "targetQuestionKey": "z",
+            "match": "ANY",
+            "conditions": [
+              {
+                "sourceQuestionKey": "s",
+                "operator": "GT",
+                "value": {
+                  "number": 1
+                }
+              },
+              {
+                "sourceQuestionKey": "s",
+                "operator": "INCLUDES_ANY",
+                "value": {
+                  "optionKeys": [
+                    "x"
+                  ]
+                }
+              },
+              {
+                "sourceQuestionKey": "m",
+                "operator": "EQUALS",
+                "value": {
+                  "optionKey": "x"
+                }
+              },
+              {
+                "sourceQuestionKey": "t",
+                "operator": "EQ",
+                "value": {
+                  "number": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "expectedErrors": [
+        {
+          "path": "rules[0].conditions[0].operator",
+          "code": "OPERATOR_TYPE_MISMATCH",
+          "params": {
+            "sourceType": "SINGLE_CHOICE"
+          }
+        },
+        {
+          "path": "rules[0].conditions[1].operator",
+          "code": "OPERATOR_TYPE_MISMATCH",
+          "params": {
+            "sourceType": "SINGLE_CHOICE"
+          }
+        },
+        {
+          "path": "rules[0].conditions[2].operator",
+          "code": "OPERATOR_TYPE_MISMATCH",
+          "params": {
+            "sourceType": "MULTIPLE_CHOICE"
+          }
+        },
+        {
+          "path": "rules[0].conditions[3].operator",
+          "code": "OPERATOR_TYPE_MISMATCH",
+          "params": {
+            "sourceType": "TEXT"
+          }
+        }
+      ]
+    },
+    {
+      "name": "operands of the wrong shape for the operator",
+      "definition": {
+        "questions": [
+          {
+            "key": "s",
+            "type": "SINGLE_CHOICE",
+            "text": "S",
+            "required": false,
+            "options": [
+              {
+                "key": "x",
+                "label": "X"
+              },
+              {
+                "key": "y",
+                "label": "Y"
+              }
+            ]
+          },
+          {
+            "key": "n",
+            "type": "NUMBER",
+            "text": "N",
+            "required": false
+          },
+          {
+            "key": "z",
+            "type": "TEXT",
+            "text": "Z",
+            "required": false
+          }
+        ],
+        "rules": [
+          {
+            "targetQuestionKey": "z",
+            "match": "ANY",
+            "conditions": [
+              {
+                "sourceQuestionKey": "s",
+                "operator": "EQUALS",
+                "value": {
+                  "number": 1
+                }
+              },
+              {
+                "sourceQuestionKey": "s",
+                "operator": "IS_ANSWERED",
+                "value": {
+                  "optionKey": "x"
+                }
+              },
+              {
+                "sourceQuestionKey": "n",
+                "operator": "BETWEEN",
+                "value": {
+                  "min": 1
+                }
+              },
+              {
+                "sourceQuestionKey": "n",
+                "operator": "GT",
+                "value": {
+                  "optionKey": "x"
+                }
+              },
+              {
+                "sourceQuestionKey": "n",
+                "operator": "BETWEEN",
+                "value": {
+                  "min": 5,
+                  "max": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "expectedErrors": [
+        {
+          "path": "rules[0].conditions[0].value",
+          "code": "VALUE_TYPE_MISMATCH"
+        },
+        {
+          "path": "rules[0].conditions[1].value",
+          "code": "VALUE_TYPE_MISMATCH"
+        },
+        {
+          "path": "rules[0].conditions[2].value",
+          "code": "VALUE_TYPE_MISMATCH"
+        },
+        {
+          "path": "rules[0].conditions[3].value",
+          "code": "VALUE_TYPE_MISMATCH"
+        },
+        {
+          "path": "rules[0].conditions[4].value",
+          "code": "VALUE_TYPE_MISMATCH"
+        }
+      ]
+    },
+    {
+      "name": "operands that name options the source does not have",
+      "definition": {
+        "questions": [
+          {
+            "key": "s",
+            "type": "SINGLE_CHOICE",
+            "text": "S",
+            "required": false,
+            "options": [
+              {
+                "key": "red",
+                "label": "Red"
+              },
+              {
+                "key": "green",
+                "label": "Green"
+              }
+            ]
+          },
+          {
+            "key": "z",
+            "type": "TEXT",
+            "text": "Z",
+            "required": false
+          },
+          {
+            "key": "w",
+            "type": "TEXT",
+            "text": "W",
+            "required": false
+          }
+        ],
+        "rules": [
+          {
+            "targetQuestionKey": "z",
+            "match": "ALL",
+            "conditions": [
+              {
+                "sourceQuestionKey": "s",
+                "operator": "EQUALS",
+                "value": {
+                  "optionKey": "nope"
+                }
+              }
+            ]
+          },
+          {
+            "targetQuestionKey": "w",
+            "match": "ALL",
+            "conditions": [
+              {
+                "sourceQuestionKey": "s",
+                "operator": "IN",
+                "value": {
+                  "optionKeys": [
+                    "red",
+                    "nope"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "expectedErrors": [
+        {
+          "path": "rules[0].conditions[0].value.optionKey",
+          "code": "UNKNOWN_OPTION"
+        },
+        {
+          "path": "rules[1].conditions[0].value.optionKeys[1]",
+          "code": "UNKNOWN_OPTION"
+        }
+      ]
+    },
+    {
+      "name": "two rules for the same question",
+      "definition": {
+        "questions": [
+          {
+            "key": "a",
+            "type": "TEXT",
+            "text": "A",
+            "required": false
+          },
+          {
+            "key": "b",
+            "type": "TEXT",
+            "text": "B",
+            "required": false
+          }
+        ],
+        "rules": [
+          {
+            "targetQuestionKey": "b",
+            "match": "ALL",
+            "conditions": [
+              {
+                "sourceQuestionKey": "a",
+                "operator": "IS_ANSWERED"
+              }
+            ]
+          },
+          {
+            "targetQuestionKey": "b",
+            "match": "ALL",
+            "conditions": [
+              {
+                "sourceQuestionKey": "a",
+                "operator": "IS_NOT_ANSWERED"
+              }
+            ]
+          }
+        ]
+      },
+      "expectedErrors": [
+        {
+          "path": "rules[1].targetQuestionKey",
+          "code": "DUPLICATE_RULE"
+        }
+      ]
+    },
+    {
+      "name": "duplicate question and option keys",
+      "definition": {
+        "questions": [
+          {
+            "key": "a",
+            "type": "SINGLE_CHOICE",
+            "text": "A",
+            "required": false,
+            "options": [
+              {
+                "key": "x",
+                "label": "X"
+              },
+              {
+                "key": "x",
+                "label": "X again"
+              }
+            ]
+          },
+          {
+            "key": "a",
+            "type": "TEXT",
+            "text": "A again",
+            "required": false
+          }
+        ],
+        "rules": []
+      },
+      "expectedErrors": [
+        {
+          "path": "questions[0].options[1].key",
+          "code": "DUPLICATE"
+        },
+        {
+          "path": "questions[1].key",
+          "code": "DUPLICATE"
+        }
+      ]
+    },
+    {
+      "name": "choice questions need two to fifty options; other types take none",
+      "definition": {
+        "questions": [
+          {
+            "key": "a",
+            "type": "SINGLE_CHOICE",
+            "text": "A",
+            "required": false,
+            "options": [
+              {
+                "key": "x",
+                "label": "X"
+              }
+            ]
+          },
+          {
+            "key": "b",
+            "type": "MULTIPLE_CHOICE",
+            "text": "B",
+            "required": false
+          },
+          {
+            "key": "c",
+            "type": "TEXT",
+            "text": "C",
+            "required": false,
+            "options": [
+              {
+                "key": "x",
+                "label": "X"
+              },
+              {
+                "key": "y",
+                "label": "Y"
+              }
+            ]
+          }
+        ],
+        "rules": []
+      },
+      "expectedErrors": [
+        {
+          "path": "questions[0].options",
+          "code": "TOO_FEW_ITEMS",
+          "params": {
+            "min": 2
+          }
+        },
+        {
+          "path": "questions[1].options",
+          "code": "REQUIRED"
+        },
+        {
+          "path": "questions[2].options",
+          "code": "INVALID_VALUE"
+        }
+      ]
+    },
+    {
+      "name": "selection limits must be ordered and within the options",
+      "definition": {
+        "questions": [
+          {
+            "key": "a",
+            "type": "MULTIPLE_CHOICE",
+            "text": "A",
+            "required": false,
+            "options": [
+              {
+                "key": "x",
+                "label": "X"
+              },
+              {
+                "key": "y",
+                "label": "Y"
+              },
+              {
+                "key": "z",
+                "label": "Z"
+              }
+            ],
+            "minSelections": 3,
+            "maxSelections": 2
+          },
+          {
+            "key": "b",
+            "type": "MULTIPLE_CHOICE",
+            "text": "B",
+            "required": false,
+            "options": [
+              {
+                "key": "x",
+                "label": "X"
+              },
+              {
+                "key": "y",
+                "label": "Y"
+              }
+            ],
+            "maxSelections": 5
+          }
+        ],
+        "rules": []
+      },
+      "expectedErrors": [
+        {
+          "path": "questions[0].minSelections",
+          "code": "INVALID_VALUE"
+        },
+        {
+          "path": "questions[1].maxSelections",
+          "code": "INVALID_VALUE"
+        }
+      ]
+    },
+    {
+      "name": "number bounds must be ordered",
+      "definition": {
+        "questions": [
+          {
+            "key": "a",
+            "type": "NUMBER",
+            "text": "A",
+            "required": false,
+            "min": 10,
+            "max": 1
+          }
+        ],
+        "rules": []
+      },
+      "expectedErrors": [
+        {
+          "path": "questions[0].max",
+          "code": "INVALID_VALUE"
+        }
+      ]
+    },
+    {
+      "name": "a scale needs a maximum between 3 and 10 and a minimum of 0 or 1",
+      "definition": {
+        "questions": [
+          {
+            "key": "a",
+            "type": "SCALE",
+            "text": "A",
+            "required": false
+          },
+          {
+            "key": "b",
+            "type": "SCALE",
+            "text": "B",
+            "required": false,
+            "max": 12
+          },
+          {
+            "key": "c",
+            "type": "SCALE",
+            "text": "C",
+            "required": false,
+            "min": 2,
+            "max": 5
+          },
+          {
+            "key": "d",
+            "type": "SCALE",
+            "text": "D",
+            "required": false,
+            "min": 0,
+            "max": 10
+          }
+        ],
+        "rules": []
+      },
+      "expectedErrors": [
+        {
+          "path": "questions[0].max",
+          "code": "REQUIRED"
+        },
+        {
+          "path": "questions[1].max",
+          "code": "OUT_OF_RANGE",
+          "params": {
+            "min": 3,
+            "max": 10
+          }
+        },
+        {
+          "path": "questions[2].min",
+          "code": "OUT_OF_RANGE",
+          "params": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "configuration fields that do not belong to the type",
+      "definition": {
+        "questions": [
+          {
+            "key": "a",
+            "type": "TEXT",
+            "text": "A",
+            "required": false,
+            "integerOnly": true
+          },
+          {
+            "key": "b",
+            "type": "NUMBER",
+            "text": "B",
+            "required": false,
+            "maxLength": 10
+          },
+          {
+            "key": "c",
+            "type": "SINGLE_CHOICE",
+            "text": "C",
+            "required": false,
+            "options": [
+              {
+                "key": "x",
+                "label": "X"
+              },
+              {
+                "key": "y",
+                "label": "Y"
+              }
+            ],
+            "minSelections": 1
+          }
+        ],
+        "rules": []
+      },
+      "expectedErrors": [
+        {
+          "path": "questions[0].integerOnly",
+          "code": "INVALID_VALUE"
+        },
+        {
+          "path": "questions[1].maxLength",
+          "code": "INVALID_VALUE"
+        },
+        {
+          "path": "questions[2].minSelections",
+          "code": "INVALID_VALUE"
+        }
+      ]
+    }
+  ]
+}
