@@ -75,9 +75,11 @@ paths:
       description: |
         Verifies the credentials and creates a session. With `transport`
         `COOKIE` the token is set in the `__Host-session` cookie and omitted
-        from the body; with `BEARER` it is returned in the body once and never
-        again. A session expires after 30 minutes without use and 12 hours
-        after creation.
+        from the body, and the request must carry `X-Delfos-Client` as a
+        defence against login CSRF; with `BEARER` the token is returned in the
+        body once and never again. A session expires after 30 minutes without
+        use and 12 hours after creation. Wrong credentials and unknown
+        usernames answer the same `INVALID_CREDENTIALS`.
       security: []
       parameters:
         - $ref: "#/components/parameters/ClientHeader"

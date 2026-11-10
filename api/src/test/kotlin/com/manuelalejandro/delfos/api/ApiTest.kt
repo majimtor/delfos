@@ -1,6 +1,7 @@
 package com.manuelalejandro.delfos.api
 
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.web.client.RestClient
@@ -22,6 +23,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer
         "DELFOS_DB_PASSWORD=set-by-testcontainers",
     ],
 )
+@Import(TestClockConfig::class)
 abstract class ApiTest {
 
     companion object {

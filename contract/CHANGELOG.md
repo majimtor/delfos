@@ -13,3 +13,9 @@ release, breaking changes are allowed and recorded here.
   answers, and the public operations to read, evaluate and answer a survey.
 - Problem Details error shape with stable `code` and field errors.
 - Conformance suite for the visibility rules and the definition validator.
+
+### Changed
+
+- `createSession` documents that the cookie transport requires the
+  `X-Delfos-Client` header and that unknown usernames and wrong passwords
+  answer the same code.
