@@ -3,3 +3,5 @@ dist
 build
 src/api/schema.d.ts
 package-lock.json
+playwright-report
+test-results

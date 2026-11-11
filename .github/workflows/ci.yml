@@ -176,6 +176,78 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx --yes wrangler@4.160.0 deploy
 
+  e2e:
+    name: End-to-end path
+    runs-on: ubuntu-24.04
+    # The stranger's path through the built web against a locally seeded API, with axe on every
+    # page. PostgreSQL runs as a service container; the API runs from its boot jar.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: delfos
+          POSTGRES_USER: delfos
+          POSTGRES_PASSWORD: delfos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U delfos -d delfos"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+      - name: Build the API
+        run: ./gradlew -p api bootJar --no-daemon --console=plain
+      - name: Start the API with the demo seed
+        env:
+          DELFOS_DB_URL: jdbc:postgresql://localhost:5432/delfos
+          DELFOS_DB_USERNAME: delfos
+          DELFOS_DB_PASSWORD: delfos
+          DELFOS_SEED_ENABLED: "true"
+          DELFOS_SEED_RESET_TOKEN: e2e-reset-token
+          DELFOS_WEB_ORIGIN: http://localhost:5173
+        run: |
+          java -jar "$(ls api/build/libs/api-*.jar | grep -v plain)" > api.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:8080/actuator/health/readiness > /dev/null && exit 0
+            sleep 2
+          done
+          echo "The API did not become ready"; tail -50 api.log; exit 1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: web/.node-version
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+        working-directory: web
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: web
+      - name: Build the web
+        run: npm run build
+        working-directory: web
+      - name: Run the end-to-end path
+        run: npm run e2e
+        working-directory: web
+      - name: Keep the report and the API log
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: end-to-end
+          path: |
+            web/playwright-report
+            web/test-results
+            api.log
+          if-no-files-found: ignore
+
   docs:
     name: Markdown lint
     runs-on: ubuntu-24.04
