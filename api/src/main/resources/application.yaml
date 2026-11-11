@@ -33,6 +33,9 @@ server:
 delfos:
   # Origin of the web client, for CORS. Empty means same-origin only.
   web-origin: ${DELFOS_WEB_ORIGIN:}
+  seed:
+    # Applies the demo data at startup; running it again resets the demo.
+    enabled: ${DELFOS_SEED_ENABLED:false}
 
 management:
   endpoints:
