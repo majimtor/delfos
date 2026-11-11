@@ -5,6 +5,7 @@ import com.manuelalejandro.delfos.evaluation.FieldError
 import com.manuelalejandro.delfos.evaluation.FieldErrorCode
 import com.manuelalejandro.delfos.limits.PayloadTooLargeException
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
@@ -68,6 +69,18 @@ class ApiExceptionHandler : ResponseEntityExceptionHandler() {
     fun handleProblem(ex: ApiProblemException, request: WebRequest): ResponseEntity<ProblemDetail> {
         val problem = Problems.of(ex.status, ex.code, ex.detail, instanceOf(request), ex.errors)
         return ResponseEntity.status(ex.status).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(problem)
+    }
+
+    /**
+     * A database constraint rejected a change: the state moved under the request, typically a
+     * concurrent request on the same survey. The constraints are the last line; the services lock
+     * first, so this is rare and never a bug of the caller.
+     */
+    @ExceptionHandler(DataIntegrityViolationException::class)
+    fun handleIntegrity(ex: DataIntegrityViolationException, request: WebRequest): ResponseEntity<ProblemDetail> {
+        log.warn("Constraint violation: {}", ex.mostSpecificCause.message)
+        val problem = Problems.of(HttpStatus.CONFLICT, ProblemCode.INVALID_STATE_TRANSITION, "The change conflicts with the current state.", instanceOf(request))
+        return ResponseEntity.status(HttpStatus.CONFLICT).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(problem)
     }
 
     @ExceptionHandler(Exception::class)

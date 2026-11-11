@@ -20,7 +20,6 @@ import com.manuelalejandro.delfos.persistence.SurveyVersionRepository
 import java.time.Clock
 import java.time.Instant
 import java.util.UUID
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Limit
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -29,7 +28,9 @@ import org.springframework.transaction.annotation.Transactional
 /**
  * The survey aggregate as the contract describes it: a survey with at most one draft and one
  * published version, published versions immutable, and every operation scoped to the owner.
- * A survey of another manager is reported as not found, never as forbidden.
+ * A survey of another manager is reported as not found, never as forbidden. Every mutation locks
+ * the survey row first, so two requests that change the same survey run one after the other and
+ * each one sees the state the other left.
  */
 @Service
 class SurveyService(
@@ -85,7 +86,7 @@ class SurveyService(
 
     @Transactional
     fun update(ownerId: UUID, surveyId: UUID, request: UpdateSurveyRequest): SurveyEntity {
-        val survey = owned(ownerId, surveyId)
+        val survey = ownedForUpdate(ownerId, surveyId)
         request.title?.let { survey.title = it }
         if (request.description.isPresent) survey.description = request.description.get()
         if (request.closesAt.isPresent) survey.closesAt = request.closesAt.get()?.toInstant()
@@ -96,12 +97,12 @@ class SurveyService(
 
     @Transactional
     fun delete(ownerId: UUID, surveyId: UUID) {
-        surveys.delete(owned(ownerId, surveyId))
+        surveys.delete(ownedForUpdate(ownerId, surveyId))
     }
 
     @Transactional
     fun publish(ownerId: UUID, surveyId: UUID): SurveyEntity {
-        val survey = owned(ownerId, surveyId)
+        val survey = ownedForUpdate(ownerId, surveyId)
         if (survey.status == SurveyStatus.CLOSED) throw conflict(ProblemCode.INVALID_STATE_TRANSITION, "A closed survey cannot be published.")
         val draft = versions.findBySurveyIdAndStatus(surveyId, VersionStatus.DRAFT) ?: throw conflict(ProblemCode.NO_DRAFT, "The survey has no draft to publish.")
         val errors = DefinitionValidator.validate(DefinitionCodec.definitionOf(draft), ValidationMode.PUBLISH)
@@ -121,7 +122,7 @@ class SurveyService(
 
     @Transactional
     fun close(ownerId: UUID, surveyId: UUID): SurveyEntity {
-        val survey = owned(ownerId, surveyId)
+        val survey = ownedForUpdate(ownerId, surveyId)
         if (survey.status != SurveyStatus.PUBLISHED) throw conflict(ProblemCode.INVALID_STATE_TRANSITION, "Only a published survey can be closed.")
         survey.status = SurveyStatus.CLOSED
         survey.updatedAt = clock.instant()
@@ -156,7 +157,7 @@ class SurveyService(
 
     @Transactional
     fun replaceDraft(ownerId: UUID, surveyId: UUID, request: DraftDefinition): SurveyVersionEntity {
-        val survey = owned(ownerId, surveyId)
+        val survey = ownedForUpdate(ownerId, surveyId)
         val draft = draftOf(surveyId)
         val definition = DefinitionCodec.fromRequest(request)
         val errors = DefinitionValidator.validate(definition, ValidationMode.SAVE)
@@ -168,7 +169,7 @@ class SurveyService(
 
     @Transactional
     fun createDraft(ownerId: UUID, surveyId: UUID): SurveyVersionEntity {
-        val survey = owned(ownerId, surveyId)
+        val survey = ownedForUpdate(ownerId, surveyId)
         if (survey.status == SurveyStatus.CLOSED) throw conflict(ProblemCode.INVALID_STATE_TRANSITION, "A closed survey cannot be edited.")
         if (versions.findBySurveyIdAndStatus(surveyId, VersionStatus.DRAFT) != null) throw conflict(ProblemCode.DRAFT_ALREADY_EXISTS, "The survey already has a draft.")
         val published = versions.findBySurveyIdAndStatus(surveyId, VersionStatus.PUBLISHED) ?: throw conflict(ProblemCode.NO_DRAFT, "The survey has nothing to copy a draft from.")
@@ -211,7 +212,13 @@ class SurveyService(
             ?: throw ApiProblemException(HttpStatus.NOT_FOUND, ProblemCode.NO_DRAFT, "The survey has no draft.")
 
     private fun owned(ownerId: UUID, surveyId: UUID): SurveyEntity =
-        surveys.findByIdAndOwnerId(surveyId, ownerId) ?: throw ApiProblemException(HttpStatus.NOT_FOUND, ProblemCode.NOT_FOUND, "No such survey.")
+        surveys.findByIdAndOwnerId(surveyId, ownerId) ?: throw noSuchSurvey()
+
+    /** For mutations: the same lookup, holding the row lock until the transaction ends. */
+    private fun ownedForUpdate(ownerId: UUID, surveyId: UUID): SurveyEntity =
+        surveys.lockByIdAndOwnerId(surveyId, ownerId) ?: throw noSuchSurvey()
+
+    private fun noSuchSurvey() = ApiProblemException(HttpStatus.NOT_FOUND, ProblemCode.NOT_FOUND, "No such survey.")
 
     private fun conflict(code: ProblemCode, detail: String) = ApiProblemException(HttpStatus.CONFLICT, code, detail)
 
@@ -220,7 +227,7 @@ class SurveyService(
             val candidate = Identifiers.newPublicId()
             if (surveys.findByPublicId(candidate) == null) return candidate
         }
-        throw DataIntegrityViolationException("Could not generate a unique public id")
+        error("Could not generate a unique public id in $PUBLIC_ID_ATTEMPTS attempts")
     }
 
     private companion object {
