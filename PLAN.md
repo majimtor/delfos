@@ -337,15 +337,18 @@ Cloudflare zone, with automatic TLS on both providers; the API's record
 stays unproxied because Cloudflare's universal certificate covers
 first-level subdomains only.
 
-Cold start: 47 seconds measured after sleep. Mitigations, cumulative: a
-scheduled workflow requesting the liveness endpoint every ten minutes while
-the repository has activity, which keeps the instance awake within the
-free hours and does not touch the database so Neon can sleep; a wait
+Cold start: 47 seconds measured after sleep on the throwaway service and 95
+seconds on the deployed API on 2026-11-11, migration and seed included.
+Mitigations, cumulative: a scheduled workflow requesting the liveness
+endpoint every ten minutes from 06:00 to 24:00 UTC while the repository
+has activity, which keeps the instance awake eighteen hours a day, within
+the free hours, and does not touch the database so Neon can sleep; a wait
 screen in the web client while the API is unreachable, with retries; and,
 as an experiment with a trigger, a native image (section 18).
 
 Demo: fixed accounts from the seed, documented in the README; the seed
-reset daily by a scheduled workflow through a protected endpoint; abuse
+reset daily at 05:50 UTC by a scheduled workflow through a protected
+operation, and at every start of the instance; abuse
 contained by per-survey quotas, body size limits and an in-memory per-IP
 rate limiter that never persists the address. A reviewer arriving cold
 sees a landing page with two links (answer a sample survey, log in as a
@@ -412,9 +415,9 @@ slice has a definition of done that a stranger can verify.
 | Slice | Content | Hours (o / p / p) | Weeks at 10 h |
 | --- | --- | --- | --- |
 | S0 Foundations | Public repository with licence, plan, ADRs, rules; CI skeleton; branch protection; identity and signing checked; Dependabot; CodeQL | 8 / 12 / 18 | 1 / 1 / 2 |
-| S1a Answer a survey (public threshold) | Backend: domain, lifecycle, rules evaluator and validator with conformance suite, responses, results, sessions, authorization, contract with generated server, migrations, Spanish seed, API tests, Problem Details, pagination, rate limiting, health, logs. Web: public answer page with server-side evaluation, results page with polling, login, survey list with publish and close, wait screen, Spanish catalogue. Deploy: image with AOT cache, Render, Neon, Cloudflare, domains, keep-alive, README with accounts | 110 / 155 / 215 | 11 / 16 / 22 |
+| S1a Answer a survey (public threshold) | Backend: domain, lifecycle, rules evaluator and validator with conformance suite, responses, results, sessions, authorization, contract with generated server, migrations, Spanish seed, API tests, Problem Details, pagination, rate limiting, health, logs. Web: public answer page with server-side evaluation, results page with polling, login, survey list with publish and close, wait screen, Spanish catalogue. Deploy: image with AOT cache, Render, Neon, Cloudflare, domains, keep-alive, demo reset, README with accounts | 110 / 155 / 215 | 11 / 16 / 22 |
 | S1b Second language and polish | English catalogue and English seed surveys, accessibility audit of public pages, results distributions, end-to-end test, screenshots and a 60-second video linked from the README | 30 / 45 / 65 | 3 / 5 / 7 |
-| S2 Build surveys | Editor for questions, options and rules with inline validation errors; versioning flow (edit published creates draft, publish version 2); CSV export; demo reset workflow; `release-please` and version 1.0.0 | 60 / 85 / 120 | 6 / 9 / 12 |
+| S2 Build surveys | Editor for questions, options and rules with inline validation errors; versioning flow (edit published creates draft, publish version 2); CSV export; `release-please` and version 1.0.0 | 60 / 85 / 120 | 6 / 9 / 12 |
 | S3 Invitations, administration, live updates | Invited mode with single-use tokens; account management for administrators; server-sent events if the proxy test passes; XLSX export; installable manifest; known-issues document | 40 / 60 / 90 | 4 / 6 / 9 |
 | S4 Mobile | Shared module gains Android and iOS targets; local evaluator passing the conformance suite; Compose application to answer surveys and view results; APK on Releases by CI; iOS compiled on a macOS runner | 90 / 130 / 190 | 9 / 13 / 19 |
 | S5 Optional, by trigger | Aggregated PDF report, performance tests, mutation testing, native image experiment | 30 / 50 / 80 | 3 / 5 / 8 |
@@ -540,7 +543,7 @@ moment indicated, each with the recommended option first:
   S3 after the proxy test.
 - Native image: decide at S5 from the measured wake-up with the keep-alive
   running and not running.
-- Demo reset cadence: daily (recommended) or weekly. Decide at S2.
+- Demo reset cadence: daily, decided on 2026-11-11 with the reset workflow.
 
 ## 20. Architecture decision records
 

@@ -1,0 +1,26 @@
+name: Demo reset
+
+# Applies the demo seed again once a day through the protected operation of the API, just before
+# the keep-alive window opens so that the wake-up is paid once. The token lives in the repository
+# secrets and in the API's environment; it can do nothing but this.
+on:
+  schedule:
+    - cron: "50 5 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  reset:
+    name: Apply the demo seed again
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Call the reset operation
+        env:
+          RESET_TOKEN: ${{ secrets.DELFOS_SEED_RESET_TOKEN }}
+        run: >
+          curl --silent --show-error --fail --output /dev/null
+          --max-time 300 --retry 2 --retry-delay 30
+          --request POST
+          --header "Authorization: Bearer ${RESET_TOKEN}"
+          https://api.delfos.manuelalejandro.com/api/v1/demo/reset

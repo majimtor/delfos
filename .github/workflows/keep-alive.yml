@@ -1,0 +1,22 @@
+name: Keep-alive
+
+# Keeps the free API instance awake by requesting its liveness probe, which never touches the
+# database. Only from 06:00 to 23:59 UTC: eighteen hours a day stay well under the 750 free
+# instance hours a month, and the nightly sleep restarts the instance with a fresh seed.
+on:
+  schedule:
+    - cron: "*/10 6-23 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    name: Request the liveness probe
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Request the liveness probe
+        run: >
+          curl --silent --show-error --fail --output /dev/null
+          --max-time 150 --retry 2 --retry-delay 30
+          https://api.delfos.manuelalejandro.com/actuator/health/liveness

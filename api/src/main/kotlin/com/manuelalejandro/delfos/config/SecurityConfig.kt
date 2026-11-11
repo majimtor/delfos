@@ -49,6 +49,8 @@ class SecurityConfig {
             .authorizeHttpRequests {
                 it.requestMatchers("/api/v1/health", "/api/v1/public/**", "/actuator/health/**").permitAll()
                 it.requestMatchers(HttpMethod.POST, "/api/v1/auth/sessions").permitAll()
+                // The demo reset checks its own shared token; it is not a session.
+                it.requestMatchers(HttpMethod.POST, "/api/v1/demo/reset").permitAll()
                 it.anyRequest().authenticated()
             }
             .exceptionHandling { it.authenticationEntryPoint(ProblemEntryPoint(jsonMapper)) }

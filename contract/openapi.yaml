@@ -45,6 +45,8 @@ tags:
     description: Aggregated results and raw responses.
   - name: public
     description: Answering a published survey; no authentication.
+  - name: demo
+    description: Operations of the public demo.
 
 security:
   - sessionCookie: []
@@ -689,6 +691,36 @@ paths:
         "429":
           $ref: "#/components/responses/TooManyRequests"
 
+  /demo/reset:
+    post:
+      tags: [demo]
+      summary: Reset the demo data
+      operationId: resetDemo
+      description: |
+        Applies the demo seed again. The demo accounts are restored, everything
+        they own is removed and the sample surveys with their responses are
+        recreated. Available only on an instance configured with a reset token;
+        the public demo is reset this way once a day. Throttled like the login.
+      security:
+        - demoResetToken: []
+      responses:
+        "204":
+          description: Demo data reset.
+        "401":
+          description: The reset token is missing or wrong (`UNAUTHENTICATED`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: This instance has no reset token, so the operation does not exist (`NOT_FOUND`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
 components:
   securitySchemes:
     sessionCookie:
@@ -700,6 +732,10 @@ components:
       type: http
       scheme: bearer
       description: The same opaque session token as a bearer credential, for mobile clients and tools.
+    demoResetToken:
+      type: http
+      scheme: bearer
+      description: Shared secret of the demo reset, configured in the server environment; not a session.
 
   parameters:
     SurveyId:

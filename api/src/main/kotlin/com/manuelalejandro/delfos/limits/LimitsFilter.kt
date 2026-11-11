@@ -26,7 +26,7 @@ import tools.jackson.databind.json.JsonMapper
 class LimitsProperties(
     /** Requests per minute and client address on the public operations. */
     val publicPerMinute: Int = 120,
-    /** Login attempts per minute and client address. */
+    /** Login attempts per minute and client address; the demo reset shares this limit. */
     val loginPerMinute: Int = 10,
     /** Largest request body accepted, in bytes. */
     val maxBodyBytes: Long = 256 * 1024,
@@ -67,6 +67,7 @@ class LimitsFilter(
     private fun limitFor(request: HttpServletRequest): Int? = when {
         request.requestURI.startsWith("/api/v1/public/") -> properties.publicPerMinute
         request.requestURI == "/api/v1/auth/sessions" && request.method == HttpMethod.POST.name() -> properties.loginPerMinute
+        request.requestURI == "/api/v1/demo/reset" && request.method == HttpMethod.POST.name() -> properties.loginPerMinute
         else -> null
     }
 
