@@ -1,6 +1,7 @@
 import {
   AppBar,
   Box,
+  Button,
   Container,
   FormControl,
   InputLabel,
@@ -9,18 +10,22 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material'
-import { Link, Outlet } from 'react-router'
+import { Link, Outlet, useNavigate } from 'react-router'
 import { FormattedMessage, useIntl } from 'react-intl'
+import { useLogout, useSession } from '../features/auth/session'
 import { useLocale, type Locale } from '../i18n/locale'
 
 export function AppShell() {
   const { locale, setLocale } = useLocale()
   const intl = useIntl()
+  const session = useSession()
+  const logout = useLogout()
+  const navigate = useNavigate()
   const languageLabel = intl.formatMessage({ id: 'app.language', defaultMessage: 'Language' })
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <AppBar position="static" color="default" elevation={0} component="header">
-        <Toolbar>
+        <Toolbar sx={{ gap: 2 }}>
           <Typography
             variant="h6"
             component={Link}
@@ -29,6 +34,25 @@ export function AppShell() {
           >
             <FormattedMessage id="app.title" defaultMessage="Delfos" />
           </Typography>
+          {session.data && (
+            <>
+              <Button component={Link} to="/surveys" color="inherit">
+                <FormattedMessage id="app.nav.surveys" defaultMessage="My surveys" />
+              </Button>
+              <Typography variant="body2" color="text.secondary">
+                {session.data.username}
+              </Typography>
+              <Button
+                color="inherit"
+                onClick={() =>
+                  logout.mutate(undefined, { onSettled: () => navigate('/', { replace: true }) })
+                }
+                disabled={logout.isPending}
+              >
+                <FormattedMessage id="app.nav.logout" defaultMessage="Log out" />
+              </Button>
+            </>
+          )}
           <FormControl size="small" sx={{ minWidth: 120 }}>
             <InputLabel id="language-label">{languageLabel}</InputLabel>
             <Select

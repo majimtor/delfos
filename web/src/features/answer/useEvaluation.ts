@@ -8,15 +8,20 @@ export interface Evaluation {
   errors: QuestionError[]
   missingRequired: ReadonlySet<string>
   sent: Answer[]
+  /** True while the answers on screen differ from the ones last evaluated. */
   pending: boolean
 }
 
-const EMPTY: Evaluation = {
+interface Evaluated extends Omit<Evaluation, 'pending'> {
+  evaluatedFor: Answers | null
+}
+
+const EMPTY: Evaluated = {
   visible: new Set(),
   errors: [],
   missingRequired: new Set(),
   sent: [],
-  pending: true,
+  evaluatedFor: null,
 }
 
 /**
@@ -31,7 +36,7 @@ export function useEvaluation(
   answers: Answers,
   delayMs = 300,
 ): Evaluation {
-  const [evaluation, setEvaluation] = useState<Evaluation>(EMPTY)
+  const [evaluation, setEvaluation] = useState<Evaluated>(EMPTY)
   const visibleRef = useRef<ReadonlySet<string>>(new Set(questions.map((q) => q.key)))
   const requestRef = useRef(0)
 
@@ -39,7 +44,6 @@ export function useEvaluation(
     const request = ++requestRef.current
     const controller = new AbortController()
     const sent = answersToSend(questions, answers, visibleRef.current)
-    setEvaluation((previous) => ({ ...previous, pending: true }))
     const timer = setTimeout(async () => {
       const { data } = await api.POST('/public/surveys/{publicId}/evaluations', {
         params: { path: { publicId } },
@@ -54,7 +58,7 @@ export function useEvaluation(
         errors: attributeErrors(data.errors, sent),
         missingRequired: new Set(data.missingRequiredQuestionKeys),
         sent,
-        pending: false,
+        evaluatedFor: answers,
       })
     }, delayMs)
     return () => {
@@ -63,5 +67,5 @@ export function useEvaluation(
     }
   }, [publicId, versionNumber, questions, answers, delayMs])
 
-  return evaluation
+  return { ...evaluation, pending: evaluation.evaluatedFor !== answers }
 }
