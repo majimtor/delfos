@@ -352,7 +352,7 @@ operation, and at every start of the instance; abuse
 contained by per-survey quotas, body size limits and an in-memory per-IP
 rate limiter that never persists the address. A reviewer arriving cold
 sees a landing page with two links (answer a sample survey, log in as a
-manager) and a note that the instance may take up to a minute to wake.
+manager) and a note that the instance may take up to two minutes to wake.
 
 Autonomous mode: `docker compose up` starts PostgreSQL 18 and the same
 image with the same seed; there is no switch and no second code path,

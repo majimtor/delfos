@@ -15,7 +15,7 @@ interface Props {
 
 /**
  * Shows an honest waiting screen until the API answers. The demo sleeps after fifteen minutes
- * without traffic and takes up to a minute to wake, which this screen explains instead of
+ * without traffic and takes up to two minutes to wake, which this screen explains instead of
  * letting the first request fail silently.
  */
 export function WaitForApi({
@@ -73,7 +73,7 @@ export function WaitForApi({
           <Typography>
             <FormattedMessage
               id="wait.body"
-              defaultMessage="The demo sleeps when nobody uses it and takes up to a minute to start. Please wait."
+              defaultMessage="The demo sleeps when nobody uses it and takes up to two minutes to start. Please wait."
             />
           </Typography>
           {elapsed > 0 && (

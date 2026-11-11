@@ -13,7 +13,7 @@ answer from the web or from a mobile application.
 - API: <https://api.delfos.manuelalejandro.com/api/v1/health>
 
 The demo runs on free tiers: the API sleeps after fifteen minutes without
-traffic and takes up to a minute and a half to wake outside the hours when
+traffic and takes up to two minutes to wake outside the hours when
 the keep-alive workflow keeps it up (06:00 to 24:00 UTC); the web shows a
 wait screen meanwhile. The demo data is reset every day and at every start
 of the API. Log in with the accounts listed under [Demo data](#demo-data);

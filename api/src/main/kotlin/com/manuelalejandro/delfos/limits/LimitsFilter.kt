@@ -37,8 +37,9 @@ class PayloadTooLargeException(limit: Long) : RuntimeException("The request body
 
 /**
  * The first filter of every request: rejects bodies above the size limit and throttles the
- * public operations and the login per client address, before authentication and before any
- * handler. The address comes from the proxy headers when the server runs behind one.
+ * public operations and the login per client address, each kind in its own window, before
+ * authentication and before any handler. The address comes from the proxy headers when the
+ * server runs behind one.
  */
 class LimitsFilter(
     private val properties: LimitsProperties,
@@ -52,9 +53,10 @@ class LimitsFilter(
             reject(request, response, HttpStatus.CONTENT_TOO_LARGE, ProblemCode.PAYLOAD_TOO_LARGE, "The request body exceeds ${properties.maxBodyBytes} bytes.")
             return
         }
-        val limit = limitFor(request)
-        if (limit != null) {
-            val decision = limiter.check(request.remoteAddr, limit)
+        val kind = kindOf(request)
+        if (kind != null) {
+            // One window per kind and address, so answering a survey never spends the login attempts.
+            val decision = limiter.check("${kind.name}:${request.remoteAddr}", limitOf(kind))
             if (!decision.allowed) {
                 response.setHeader(HttpHeaders.RETRY_AFTER, decision.retryAfterSeconds.toString())
                 reject(request, response, HttpStatus.TOO_MANY_REQUESTS, ProblemCode.RATE_LIMITED, "Too many requests; retry after ${decision.retryAfterSeconds} seconds.")
@@ -64,11 +66,18 @@ class LimitsFilter(
         chain.doFilter(CappedRequest(request, properties.maxBodyBytes), response)
     }
 
-    private fun limitFor(request: HttpServletRequest): Int? = when {
-        request.requestURI.startsWith("/api/v1/public/") -> properties.publicPerMinute
-        request.requestURI == "/api/v1/auth/sessions" && request.method == HttpMethod.POST.name() -> properties.loginPerMinute
-        request.requestURI == "/api/v1/demo/reset" && request.method == HttpMethod.POST.name() -> properties.loginPerMinute
+    private enum class Kind { PUBLIC, LOGIN }
+
+    private fun kindOf(request: HttpServletRequest): Kind? = when {
+        request.requestURI.startsWith("/api/v1/public/") -> Kind.PUBLIC
+        request.requestURI == "/api/v1/auth/sessions" && request.method == HttpMethod.POST.name() -> Kind.LOGIN
+        request.requestURI == "/api/v1/demo/reset" && request.method == HttpMethod.POST.name() -> Kind.LOGIN
         else -> null
+    }
+
+    private fun limitOf(kind: Kind): Int = when (kind) {
+        Kind.PUBLIC -> properties.publicPerMinute
+        Kind.LOGIN -> properties.loginPerMinute
     }
 
     private fun reject(request: HttpServletRequest, response: HttpServletResponse, status: HttpStatus, code: ProblemCode, detail: String) {
