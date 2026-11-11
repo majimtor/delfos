@@ -12,4 +12,6 @@ export const api = createClient<paths>({
   baseUrl: `${apiBaseUrl}/api/v1`,
   credentials: 'include',
   headers: clientHeader,
+  // Resolved per call, so a test can replace the global fetch after this module loaded.
+  fetch: (request) => globalThis.fetch(request),
 })
