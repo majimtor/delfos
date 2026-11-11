@@ -1,0 +1,38 @@
+# The whole system on one machine: `docker compose -f deploy/compose.yaml up --build`.
+# PostgreSQL listens on 5433 on the host so it never collides with a local server on 5432.
+# The credentials are placeholders for this throwaway local database only.
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: delfos
+      POSTGRES_USER: delfos
+      POSTGRES_PASSWORD: delfos
+    ports:
+      - "5433:5432"
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U delfos -d delfos"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    environment:
+      DELFOS_DB_URL: jdbc:postgresql://db:5432/delfos
+      DELFOS_DB_USERNAME: delfos
+      DELFOS_DB_PASSWORD: delfos
+      DELFOS_SEED_ENABLED: "true"
+      DELFOS_WEB_ORIGIN: http://localhost:5173
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

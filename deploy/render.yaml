@@ -1,0 +1,23 @@
+# Render Blueprint for the API. The database is Neon; its credentials are set in the Render
+# dashboard, never here. The service deploys from main only when the checks pass.
+services:
+  - type: web
+    name: delfos-api
+    runtime: docker
+    region: frankfurt
+    plan: free
+    dockerfilePath: ./deploy/Dockerfile
+    dockerContext: .
+    autoDeployTrigger: checksPass
+    healthCheckPath: /actuator/health/liveness
+    envVars:
+      - key: DELFOS_DB_URL
+        sync: false
+      - key: DELFOS_DB_USERNAME
+        sync: false
+      - key: DELFOS_DB_PASSWORD
+        sync: false
+      - key: DELFOS_SEED_ENABLED
+        value: "true"
+      - key: DELFOS_WEB_ORIGIN
+        value: https://delfos.manuelalejandro.com
