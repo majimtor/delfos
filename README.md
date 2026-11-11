@@ -32,6 +32,25 @@ accounts when the first slice ships.
 | `mobile/` | Android-first application | Kotlin, Compose Multiplatform |
 | `contract/` | OpenAPI contract and conformance cases | YAML, JSON |
 
+## Demo data
+
+With `DELFOS_SEED_ENABLED=true` the API applies the demo data at startup and
+resets it on every start: three accounts and the sample surveys in Spanish.
+The accounts are fictitious and their password is public on purpose.
+
+| Account | Password | Role |
+| --- | --- | --- |
+| `demo-manager` | `delfos-demo` | Owns the sample surveys |
+| `demo-manager-2` | `delfos-demo` | Owns one survey, to show that managers only see their own |
+| `demo-admin` | `delfos-demo` | Manager with the administrator flag |
+
+Sample surveys of `demo-manager`: an unpublished draft, a published survey
+with the five question types and every rule operator (40 responses), a
+survey with a superseded first version and a published second one (25
+responses across both), and a closed survey (20 responses). The published
+ones can be answered at `/api/v1/public/surveys/demo-movilidad` and
+`/api/v1/public/surveys/demo-servicio`.
+
 ## Working on the repository
 
 After cloning, point Git at the versioned hooks and install

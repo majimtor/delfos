@@ -17,7 +17,6 @@ import com.manuelalejandro.delfos.persistence.SurveyVersionEntity
 import com.manuelalejandro.delfos.persistence.SurveyVersionRepository
 import com.manuelalejandro.delfos.survey.DefinitionCodec
 import java.time.Clock
-import java.util.UUID
 import kotlinx.serialization.json.JsonPrimitive
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -32,7 +31,7 @@ class PublicSurveyService(
     private val surveys: SurveyRepository,
     private val versions: SurveyVersionRepository,
     private val responses: SurveyResponseRepository,
-    private val answers: AnswerStore,
+    private val writer: ResponseWriter,
     private val clock: Clock,
 ) {
 
@@ -70,10 +69,7 @@ class PublicSurveyService(
         val errors = evaluation.errors + missing
         if (errors.isNotEmpty()) throw ApiProblemException(HttpStatus.BAD_REQUEST, ProblemCode.VALIDATION_ERROR, "${errors.size} fields are invalid.", errors)
 
-        // Flushed so the answers inserted with SQL below can reference the row in the same transaction.
-        val response = responses.saveAndFlush(SurveyResponseEntity(UUID.randomUUID(), version.id, submittedAt = clock.instant()))
-        val typeByKey = definition.questions.associate { it.key to it.type }
-        answers.insertAll(response.id, givenAnswers.map { AnswerStore.TypedAnswer(it, typeByKey.getValue(it.questionKey)) })
+        val response = writer.store(version.id, definition, givenAnswers, clock.instant())
         survey.maxResponses?.let { quota -> if (responses.countBySurveyId(survey.id) >= quota) close(survey) }
         return Submitted(response)
     }
