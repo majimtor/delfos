@@ -27,7 +27,8 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 /**
- * The demo data: three fixed accounts and the sample surveys of the plan, in Spanish. Seeding is
+ * The demo data: three fixed accounts and the sample surveys of the plan, in Spanish and in
+ * English. Seeding is
  * idempotent by stable identifiers: accounts are upserted, everything they own is removed and the
  * sample surveys are recreated, so running it again is the reset. Enabled at startup with
  * `DELFOS_SEED_ENABLED=true`; the local compose and the public demo set it, tests call it directly,
@@ -80,6 +81,31 @@ class DemoSeed(
             respond(v1, DemoSurveys.privateSurvey, count = 5, seed = 5)
             survey.status = SurveyStatus.PUBLISHED
         }
+        recreate("reading-en", manager.id, "Reading habits", "Unpublished draft, to try the editor.", "demo-reading", language = "en") { survey ->
+            version(survey, 1, EnglishDemoSurveys.readingDraft, VersionStatus.DRAFT)
+        }
+        recreate("mobility-en", manager.id, "Urban mobility", "The five question types and every rule operator, with twenty responses.", "demo-mobility", language = "en") { survey ->
+            val v1 = version(survey, 1, EnglishDemoSurveys.mobility, VersionStatus.PUBLISHED)
+            respond(v1, EnglishDemoSurveys.mobility, count = 20, seed = 11, texts = EnglishDemoSurveys.texts)
+            survey.status = SurveyStatus.PUBLISHED
+        }
+        recreate("service-en", manager.id, "Service satisfaction", "Two versions: the first superseded, the second published, with responses in both.", "demo-service", language = "en") { survey ->
+            val v1 = version(survey, 1, EnglishDemoSurveys.serviceV1, VersionStatus.SUPERSEDED)
+            respond(v1, EnglishDemoSurveys.serviceV1, count = 8, seed = 12, daysAgo = 60..31, texts = EnglishDemoSurveys.texts)
+            val v2 = version(survey, 2, EnglishDemoSurveys.serviceV2, VersionStatus.PUBLISHED)
+            respond(v2, EnglishDemoSurveys.serviceV2, count = 6, seed = 13, texts = EnglishDemoSurveys.texts)
+            survey.status = SurveyStatus.PUBLISHED
+        }
+        recreate("meetup-en", manager.id, "Annual meetup", "A closed survey with its results.", "demo-meetup", language = "en") { survey ->
+            val v1 = version(survey, 1, EnglishDemoSurveys.meetup, VersionStatus.PUBLISHED)
+            respond(v1, EnglishDemoSurveys.meetup, count = 10, seed = 14, daysAgo = 90..40, texts = EnglishDemoSurveys.texts)
+            survey.status = SurveyStatus.CLOSED
+        }
+        recreate("remote-en", manager2.id, "Remote work in the team", "Belongs to another manager: demo-manager does not see it.", "demo-remote", language = "en") { survey ->
+            val v1 = version(survey, 1, EnglishDemoSurveys.privateSurvey, VersionStatus.PUBLISHED)
+            respond(v1, EnglishDemoSurveys.privateSurvey, count = 3, seed = 15, texts = EnglishDemoSurveys.texts)
+            survey.status = SurveyStatus.PUBLISHED
+        }
         log.info("Demo seed applied")
     }
 
@@ -97,11 +123,11 @@ class DemoSeed(
         }
     }
 
-    private fun recreate(name: String, ownerId: UUID, title: String, description: String, publicId: String, build: (SurveyEntity) -> Unit) {
+    private fun recreate(name: String, ownerId: UUID, title: String, description: String, publicId: String, language: String = "es", build: (SurveyEntity) -> Unit) {
         val id = stableId("survey:$name")
         surveys.findById(id).ifPresent { surveys.delete(it); surveys.flush() }
         val now = clock.instant()
-        val survey = surveys.save(SurveyEntity(id, publicId, ownerId, title, description, language = "es", createdAt = now.minus(Duration.ofDays(DAYS_BACK)), updatedAt = now))
+        val survey = surveys.save(SurveyEntity(id, publicId, ownerId, title, description, language = language, createdAt = now.minus(Duration.ofDays(DAYS_BACK)), updatedAt = now))
         build(survey)
     }
 
@@ -116,8 +142,8 @@ class DemoSeed(
         return versions.saveAndFlush(version)
     }
 
-    private fun respond(version: SurveyVersionEntity, definition: SurveyDefinition, count: Int, seed: Int, daysAgo: IntRange = 30..0) {
-        val generator = ResponseGenerator(definition, seed)
+    private fun respond(version: SurveyVersionEntity, definition: SurveyDefinition, count: Int, seed: Int, daysAgo: IntRange = 30..0, texts: List<String> = SPANISH_TEXTS) {
+        val generator = ResponseGenerator(definition, seed, texts)
         val random = Random(seed)
         val now = clock.instant()
         repeat(count) {

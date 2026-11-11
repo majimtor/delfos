@@ -14,7 +14,8 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: `http://localhost:${port}`,
-    locale: 'en-US',
+    // Spanish, the primary language, as ADR 0015 prescribes for the end-to-end path.
+    locale: 'es-ES',
     trace: 'retain-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],

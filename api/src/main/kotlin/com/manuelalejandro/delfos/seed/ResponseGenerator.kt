@@ -8,18 +8,25 @@ import com.manuelalejandro.delfos.evaluation.RulesEvaluator
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
+/** Free-text answers of the Spanish synthetic responses. */
+internal val SPANISH_TEXTS: List<String> = listOf(
+    "Sin comentarios.", "Todo correcto.", "Mejoraría la frecuencia.", "Muy satisfecho en general.",
+    "Depende del día.", "Prefiero no detallar.", "Buena experiencia.", "Podría ser mejor.",
+)
+
 /**
  * Deterministic synthetic responses: questions are answered in order, each one only when the
  * rules make it visible given the answers so far, so every generated response is valid.
  */
-class ResponseGenerator(private val definition: SurveyDefinition, seed: Int) {
+class ResponseGenerator(
+    private val definition: SurveyDefinition,
+    seed: Int,
+    /** Free-text answers to pick from, in the survey's language. */
+    private val texts: List<String> = SPANISH_TEXTS,
+) {
 
     private val random = Random(seed)
     private val evaluator = RulesEvaluator(definition)
-    private val texts = listOf(
-        "Sin comentarios.", "Todo correcto.", "Mejoraría la frecuencia.", "Muy satisfecho en general.",
-        "Depende del día.", "Prefiero no detallar.", "Buena experiencia.", "Podría ser mejor.",
-    )
 
     fun next(): List<Answer> {
         val answers = mutableListOf<Answer>()

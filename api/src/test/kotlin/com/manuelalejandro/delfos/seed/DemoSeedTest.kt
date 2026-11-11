@@ -24,7 +24,12 @@ class DemoSeedTest : ApiTest() {
 
         val manager = tokenOf(DemoSeed.MANAGER)
         val surveys = json.readTree(manager(HttpMethod.GET, "/api/v1/surveys", manager).body).get("items").values().associateBy { it.get("title").asString() }
-        assertThat(surveys.keys).containsExactlyInAnyOrder("Hábitos de lectura", "Movilidad urbana", "Satisfacción con el servicio", "Encuentro anual")
+        assertThat(surveys.keys).containsExactlyInAnyOrder(
+            "Hábitos de lectura", "Movilidad urbana", "Satisfacción con el servicio", "Encuentro anual",
+            "Reading habits", "Urban mobility", "Service satisfaction", "Annual meetup",
+        )
+        assertThat(surveys.getValue("Urban mobility").get("language").asString()).isEqualTo("en")
+        assertThat(surveys.getValue("Urban mobility").get("responseCount").asInt()).isEqualTo(20)
         assertThat(surveys.getValue("Hábitos de lectura").get("status").asString()).isEqualTo("DRAFT")
         assertThat(surveys.getValue("Movilidad urbana").get("responseCount").asInt()).isEqualTo(40)
         assertThat(surveys.getValue("Satisfacción con el servicio").get("responseCount").asInt()).isEqualTo(25)
@@ -45,8 +50,12 @@ class DemoSeedTest : ApiTest() {
         assertThat(public.statusCode).isEqualTo(HttpStatus.OK)
         assertThat(json.readTree(public.body).get("acceptingResponses").asBoolean()).isTrue()
 
+        val english = client.get().uri("/api/v1/public/surveys/demo-mobility").retrieve().toEntity(String::class.java)
+        assertThat(english.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(json.readTree(english.body).get("language").asString()).isEqualTo("en")
+
         val other = json.readTree(manager(HttpMethod.GET, "/api/v1/surveys", tokenOf(DemoSeed.MANAGER_2)).body).get("items")
-        assertThat(other.size()).isEqualTo(1)
+        assertThat(other.size()).isEqualTo(2)
         assertThat(json.readTree(manager(HttpMethod.GET, "/api/v1/auth/me", tokenOf(DemoSeed.ADMIN)).body).get("isAdmin").asBoolean()).isTrue()
     }
 
@@ -74,7 +83,10 @@ class DemoSeedTest : ApiTest() {
         assertThat(reset.statusCode).describedAs(reset.body).isEqualTo(HttpStatus.NO_CONTENT)
 
         val titles = json.readTree(manager(HttpMethod.GET, "/api/v1/surveys", manager).body).get("items").values().map { it.get("title").asString() }
-        assertThat(titles).containsExactlyInAnyOrder("Hábitos de lectura", "Movilidad urbana", "Satisfacción con el servicio", "Encuentro anual")
+        assertThat(titles).containsExactlyInAnyOrder(
+            "Hábitos de lectura", "Movilidad urbana", "Satisfacción con el servicio", "Encuentro anual",
+            "Reading habits", "Urban mobility", "Service satisfaction", "Annual meetup",
+        )
     }
 
     private fun manager(method: HttpMethod, path: String, bearer: String): ResponseEntity<String> =

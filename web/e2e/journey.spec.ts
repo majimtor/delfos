@@ -21,10 +21,10 @@ async function expectAccessible(page: Page, name: string) {
 
 async function login(page: Page, username: string) {
   await page.goto('/login')
-  await page.getByLabel('Username').fill(username)
-  await page.getByLabel('Password').fill(demoPassword)
-  await page.getByRole('button', { name: 'Enter' }).click()
-  await expect(page.getByRole('heading', { name: 'My surveys' })).toBeVisible()
+  await page.getByLabel('Usuario').fill(username)
+  await page.getByLabel('Contraseña').fill(demoPassword)
+  await page.getByRole('button', { name: 'Entrar' }).click()
+  await expect(page.getByRole('heading', { name: 'Mis encuestas' })).toBeVisible()
 }
 
 test.beforeAll(async ({ request }) => {
@@ -42,7 +42,7 @@ test('a stranger answers the sample survey, then manages it and watches the resu
     await page.goto('/')
     await expect(page.getByRole('heading', { name: 'Delfos' })).toBeVisible()
     await expectAccessible(page, 'the landing page')
-    await page.getByRole('link', { name: 'Answer a sample survey' }).click()
+    await page.getByRole('link', { name: 'Responder una encuesta de ejemplo' }).click()
     await expect(page.getByRole('heading', { name: 'Movilidad urbana' })).toBeVisible()
   })
 
@@ -68,8 +68,8 @@ test('a stranger answers the sample survey, then manages it and watches the resu
       .click()
     await licence.getByRole('radio', { name: 'Sí' }).check()
     await page.getByRole('spinbutton', { name: '¿Cuántos años llevas con carnet?' }).fill('3')
-    await page.getByRole('button', { name: 'Send my response' }).click()
-    await expect(page.getByRole('heading', { name: 'Thank you' })).toBeVisible()
+    await page.getByRole('button', { name: 'Enviar mi respuesta' }).click()
+    await expect(page.getByRole('heading', { name: 'Gracias' })).toBeVisible()
   })
 
   await test.step('the manager logs in and sees the new response counted', async () => {
@@ -87,22 +87,22 @@ test('a stranger answers the sample survey, then manages it and watches the resu
     const reading = page.getByRole('table', { name: 'surveys' }).getByRole('row', {
       name: /Hábitos de lectura/,
     })
-    await expect(reading).toContainText('Draft')
-    await reading.getByRole('button', { name: 'Publish' }).click()
-    await expect(reading).toContainText('Published')
-    await reading.getByRole('button', { name: 'Close' }).click()
-    await expect(reading).toContainText('Closed')
+    await expect(reading).toContainText('Borrador')
+    await reading.getByRole('button', { name: 'Publicar' }).click()
+    await expect(reading).toContainText('Publicada')
+    await reading.getByRole('button', { name: 'Cerrar' }).click()
+    await expect(reading).toContainText('Cerrada')
   })
 
   await test.step('the results page updates when a response arrives', async () => {
     await page
       .getByRole('table', { name: 'surveys' })
       .getByRole('row', { name: /Movilidad urbana/ })
-      .getByRole('link', { name: 'Results' })
+      .getByRole('link', { name: 'Resultados' })
       .click()
     await expect(page.getByRole('heading', { name: 'Movilidad urbana' })).toBeVisible()
-    const summary = page.getByRole('status').filter({ hasText: 'responses' })
-    await expect(summary).toContainText('41 responses')
+    const summary = page.getByRole('status').filter({ hasText: 'respuestas' })
+    await expect(summary).toContainText('41 respuestas')
     await expectAccessible(page, 'the results page')
 
     const submitted = await request.post(`${api}/api/v1/public/surveys/demo-movilidad/responses`, {
@@ -116,14 +116,15 @@ test('a stranger answers the sample survey, then manages it and watches the resu
       },
     })
     expect(submitted.status()).toBe(201)
-    await expect(summary).toContainText('42 responses', { timeout: 20_000 })
+    await expect(summary).toContainText('42 respuestas', { timeout: 20_000 })
   })
 })
 
 test('a manager sees only their own surveys', async ({ page }) => {
   await login(page, 'demo-manager-2')
   const table = page.getByRole('table', { name: 'surveys' })
-  await expect(table.getByRole('row')).toHaveCount(2)
+  await expect(table.getByRole('row')).toHaveCount(3)
   await expect(table).toContainText('Teletrabajo en el equipo')
+  await expect(table).toContainText('Remote work in the team')
   await expect(table).not.toContainText('Movilidad urbana')
 })

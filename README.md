@@ -62,15 +62,17 @@ The accounts are fictitious and their password is public on purpose.
 | `demo-manager-2` | `delfos-demo` | Owns one survey, to show that managers only see their own |
 | `demo-admin` | `delfos-demo` | Manager with the administrator flag |
 
-Sample surveys of `demo-manager`: an unpublished draft, a published survey
-with the five question types and every rule operator (40 responses), a
-survey with a superseded first version and a published second one (25
-responses across both), and a closed survey (20 responses). The published
-ones can be answered at `/s/demo-movilidad` and `/s/demo-servicio` on the
-web, or through `/api/v1/public/surveys/demo-movilidad` and
-`/api/v1/public/surveys/demo-servicio` on the API. Running the seed again
-is the reset: it removes everything the demo accounts own and recreates the
-sample surveys.
+Sample surveys of `demo-manager`, in Spanish: an unpublished draft, a
+published survey with the five question types and every rule operator (40
+responses), a survey with a superseded first version and a published second
+one (25 responses across both), and a closed survey (20 responses). The
+same four exist in English with fewer responses (`demo-reading`,
+`demo-mobility`, `demo-service` and `demo-meetup`), and `demo-manager-2`
+owns one survey in each language. The published ones can be answered at
+`/s/demo-movilidad` or `/s/demo-mobility` on the web, which offers the one
+in the interface language, or through `/api/v1/public/surveys/<public id>`
+on the API. Running the seed again is the reset: it removes everything the
+demo accounts own and recreates the sample surveys.
 
 ## Working on the repository
 
