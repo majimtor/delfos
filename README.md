@@ -87,6 +87,17 @@ start Gradle (Java 17 or newer):
 
 The API tests start PostgreSQL 18 in a container, so Docker must be running.
 
+The web client lives in `web/` and needs the Node version in `web/.node-version`:
+
+```sh
+cd web && npm ci && npm run check
+npm run dev
+```
+
+`npm run check` lints, checks formatting, verifies that both message
+catalogues match the code, runs the unit tests and builds. The development
+server expects the API at `http://localhost:8080`, or at `VITE_API_BASE_URL`.
+
 ## Licence
 
 MIT. See [LICENSE](LICENSE).

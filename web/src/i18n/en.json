@@ -1,0 +1,16 @@
+{
+  "app.language": "Language",
+  "app.language.en": "English",
+  "app.language.es": "Español",
+  "app.title": "Delfos",
+  "landing.answerSample": "Answer a sample survey",
+  "landing.lead": "Surveys with conditional logic, versions and live results.",
+  "landing.login": "Log in as a manager",
+  "notFound.home": "Back to the start",
+  "notFound.title": "This page does not exist",
+  "wait.body": "The demo sleeps when nobody uses it and takes up to a minute to start. Please wait.",
+  "wait.elapsed": "Waiting for {seconds} seconds.",
+  "wait.failed": "We could not reach the service.",
+  "wait.retry": "Retry",
+  "wait.title": "The service is waking up"
+}

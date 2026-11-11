@@ -1,0 +1,16 @@
+{
+  "app.title": "Delfos",
+  "app.language": "Idioma",
+  "app.language.es": "Español",
+  "app.language.en": "English",
+  "landing.lead": "Encuestas con lógica condicional, versiones y resultados en directo.",
+  "landing.answerSample": "Responder una encuesta de ejemplo",
+  "landing.login": "Entrar como gestor",
+  "wait.title": "El servicio se está despertando",
+  "wait.body": "La demostración duerme cuando nadie la usa y tarda hasta un minuto en arrancar. Espera un momento.",
+  "wait.elapsed": "Llevamos {seconds} segundos esperando.",
+  "wait.failed": "No hemos podido conectar con el servicio.",
+  "wait.retry": "Reintentar",
+  "notFound.title": "Esta página no existe",
+  "notFound.home": "Volver al inicio"
+}

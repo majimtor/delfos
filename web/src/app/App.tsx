@@ -1,0 +1,23 @@
+import { CssBaseline } from '@mui/material'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { RouterProvider } from 'react-router'
+import { WaitForApi } from '../components/WaitForApi'
+import { LocaleProvider } from '../i18n/LocaleProvider'
+import { router } from './router'
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
+})
+
+export function App() {
+  return (
+    <LocaleProvider>
+      <CssBaseline />
+      <QueryClientProvider client={queryClient}>
+        <WaitForApi>
+          <RouterProvider router={router} />
+        </WaitForApi>
+      </QueryClientProvider>
+    </LocaleProvider>
+  )
+}
