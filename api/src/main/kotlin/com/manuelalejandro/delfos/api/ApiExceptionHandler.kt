@@ -3,6 +3,7 @@ package com.manuelalejandro.delfos.api
 import com.manuelalejandro.delfos.api.generated.model.ProblemCode
 import com.manuelalejandro.delfos.evaluation.FieldError
 import com.manuelalejandro.delfos.evaluation.FieldErrorCode
+import com.manuelalejandro.delfos.limits.PayloadTooLargeException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -46,6 +47,10 @@ class ApiExceptionHandler : ResponseEntityExceptionHandler() {
         statusCode: HttpStatusCode,
         request: WebRequest,
     ): ResponseEntity<Any>? {
+        if (ex is HttpMessageNotReadableException && generateSequence<Throwable>(ex) { it.cause }.any { it is PayloadTooLargeException }) {
+            val problem = Problems.of(HttpStatus.CONTENT_TOO_LARGE, ProblemCode.PAYLOAD_TOO_LARGE, "The request body is too large.", instanceOf(request))
+            return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(problem)
+        }
         val errors = fieldErrorsOf(ex)
         val (code, detail) = when {
             ex is NoResourceFoundException -> ProblemCode.NOT_FOUND to "No resource at this path."

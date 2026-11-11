@@ -21,6 +21,9 @@ import org.testcontainers.postgresql.PostgreSQLContainer
         "DELFOS_DB_URL=set-by-testcontainers",
         "DELFOS_DB_USERNAME=set-by-testcontainers",
         "DELFOS_DB_PASSWORD=set-by-testcontainers",
+        // Functional tests log in freely from one address; throttling has its own context in LimitsTest.
+        "delfos.limits.login-per-minute=100000",
+        "delfos.limits.public-per-minute=100000",
     ],
 )
 @Import(TestClockConfig::class)
