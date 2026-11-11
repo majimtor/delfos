@@ -1,0 +1,114 @@
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Stack,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from '@mui/material'
+import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { FormattedMessage, FormattedTime } from 'react-intl'
+import { Link, useParams } from 'react-router'
+import { api } from '../../api/client'
+import { QuestionResultView } from './QuestionResultView'
+import { useResults, type Scope } from './useResults'
+
+export const RESULTS_POLL_INTERVAL_MS = 5_000
+
+export function ResultsPage({
+  pollIntervalMs = RESULTS_POLL_INTERVAL_MS,
+}: {
+  pollIntervalMs?: number
+}) {
+  const params = useParams()
+  const surveyId = params.surveyId ?? ''
+  const versionNumber = Number(params.versionNumber)
+  const [scope, setScope] = useState<Scope>('version')
+  const survey = useQuery({
+    queryKey: ['survey', surveyId],
+    queryFn: async () => {
+      const { data, response } = await api.GET('/surveys/{surveyId}', {
+        params: { path: { surveyId } },
+      })
+      if (!data) throw new Error(`unexpected status ${response.status}`)
+      return data
+    },
+  })
+  const results = useResults(surveyId, versionNumber, scope, pollIntervalMs)
+
+  if (survey.isPending || results.isPending) {
+    return (
+      <Box role="status" sx={{ py: 4, textAlign: 'center' }}>
+        <CircularProgress aria-hidden />
+      </Box>
+    )
+  }
+  if (survey.isError || results.isError) {
+    return (
+      <Alert severity="error">
+        <FormattedMessage
+          id="results.loadFailed"
+          defaultMessage="The results could not be loaded."
+        />
+      </Alert>
+    )
+  }
+
+  return (
+    <Stack spacing={3}>
+      <Box>
+        <Typography
+          variant="overline"
+          component={Link}
+          to="/surveys"
+          sx={{ textDecoration: 'none' }}
+        >
+          <FormattedMessage id="app.nav.surveys" defaultMessage="My surveys" />
+        </Typography>
+        <Typography variant="h4" component="h1" lang={survey.data.language}>
+          {survey.data.title}
+        </Typography>
+        <Typography color="text.secondary" role="status" aria-live="polite">
+          <FormattedMessage
+            id="results.summary"
+            defaultMessage="{count, plural, one {# response} other {# responses}} · updated at {time}"
+            values={{
+              count: results.data.responseCount,
+              time: <FormattedTime value={results.data.computedAt} timeStyle="medium" />,
+            }}
+          />
+        </Typography>
+      </Box>
+      <ToggleButtonGroup
+        exclusive
+        value={scope}
+        onChange={(_, next: Scope | null) => next && setScope(next)}
+        size="small"
+        aria-label="scope"
+      >
+        <ToggleButton value="version">
+          <FormattedMessage
+            id="results.scope.version"
+            defaultMessage="Version {number}"
+            values={{ number: versionNumber }}
+          />
+        </ToggleButton>
+        <ToggleButton value="comparable">
+          <FormattedMessage id="results.scope.comparable" defaultMessage="All versions" />
+        </ToggleButton>
+      </ToggleButtonGroup>
+      {results.data.questions.map((question) => (
+        <QuestionResultView
+          key={question.key}
+          result={question}
+          surveyId={surveyId}
+          versionNumber={versionNumber}
+          language={survey.data.language}
+          showVersions={scope === 'comparable'}
+        />
+      ))}
+    </Stack>
+  )
+}
