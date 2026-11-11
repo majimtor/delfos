@@ -9,9 +9,10 @@ import {
 } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { FormattedMessage, FormattedTime } from 'react-intl'
+import { FormattedMessage, FormattedTime, useIntl } from 'react-intl'
 import { Link, useParams } from 'react-router'
 import { api } from '../../api/client'
+import { usePageTitle } from '../../app/usePageTitle'
 import { QuestionResultView } from './QuestionResultView'
 import { useResults, type Scope } from './useResults'
 
@@ -37,6 +38,15 @@ export function ResultsPage({
     },
   })
   const results = useResults(surveyId, versionNumber, scope, pollIntervalMs)
+  const intl = useIntl()
+  usePageTitle(
+    survey.data
+      ? intl.formatMessage(
+          { id: 'results.pageTitle', defaultMessage: 'Results of {title}' },
+          { title: survey.data.title },
+        )
+      : null,
+  )
 
   if (survey.isPending || results.isPending) {
     return (

@@ -10,7 +10,8 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material'
-import { Link, Outlet, useNavigate } from 'react-router'
+import { useEffect, useRef } from 'react'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 import { FormattedMessage, useIntl } from 'react-intl'
 import { useLogout, useSession } from '../features/auth/session'
 import { useLocale, type Locale } from '../i18n/locale'
@@ -21,9 +22,26 @@ export function AppShell() {
   const session = useSession()
   const logout = useLogout()
   const navigate = useNavigate()
+  const location = useLocation()
+  const main = useRef<HTMLDivElement>(null)
+  const firstRender = useRef(true)
   const languageLabel = intl.formatMessage({ id: 'app.language', defaultMessage: 'Language' })
+
+  // A single-page application moves the content, not the focus: after each navigation the focus
+  // goes to the main region, so keyboard and screen-reader users start from the new page.
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false
+      return
+    }
+    main.current?.focus()
+  }, [location.pathname])
+
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <a href="#main" className="skip-link">
+        <FormattedMessage id="app.skipToContent" defaultMessage="Skip to content" />
+      </a>
       <AppBar position="static" color="default" elevation={0} component="header">
         <Toolbar sx={{ gap: 2 }}>
           <Typography
@@ -71,7 +89,14 @@ export function AppShell() {
           </FormControl>
         </Toolbar>
       </AppBar>
-      <Container component="main" maxWidth="md" sx={{ py: 4, flexGrow: 1 }}>
+      <Container
+        component="main"
+        id="main"
+        ref={main}
+        tabIndex={-1}
+        maxWidth="md"
+        sx={{ py: 4, flexGrow: 1, '&:focus': { outline: 'none' } }}
+      >
         <Outlet />
       </Container>
     </Box>

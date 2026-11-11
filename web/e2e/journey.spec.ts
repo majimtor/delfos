@@ -41,9 +41,16 @@ test('a stranger answers the sample survey, then manages it and watches the resu
   await test.step('the landing page leads to the sample survey', async () => {
     await page.goto('/')
     await expect(page.getByRole('heading', { name: 'Delfos' })).toBeVisible()
+    await expect(page).toHaveTitle('Delfos')
     await expectAccessible(page, 'the landing page')
+    // The first Tab stop skips the header, for keyboard users.
+    await page.keyboard.press('Tab')
+    await expect(page.getByRole('link', { name: 'Saltar al contenido' })).toBeFocused()
     await page.getByRole('link', { name: 'Responder una encuesta de ejemplo' }).click()
     await expect(page.getByRole('heading', { name: 'Movilidad urbana' })).toBeVisible()
+    await expect(page).toHaveTitle('Movilidad urbana · Delfos')
+    // After a navigation the focus starts from the main region, not from the top of the document.
+    await expect(page.getByRole('main')).toBeFocused()
   })
 
   const licence = page.getByRole('group', { name: '¿Tienes carnet de conducir?' })
@@ -76,6 +83,7 @@ test('a stranger answers the sample survey, then manages it and watches the resu
     await page.goto('/login')
     await expectAccessible(page, 'the login page')
     await login(page, 'demo-manager')
+    await expect(page).toHaveTitle('Mis encuestas · Delfos')
     await expectAccessible(page, 'the survey list')
     const mobility = page.getByRole('table', { name: 'surveys' }).getByRole('row', {
       name: /Movilidad urbana/,

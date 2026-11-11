@@ -30,6 +30,8 @@ export function QuestionField({ question, value, errors, missing, onChange }: Pr
   const intl = useIntl()
   const errorId = `${question.key}-error`
   const hintId = `${question.key}-hint`
+  const legendId = `${question.key}-legend`
+  const scaleLabelsId = `${question.key}-scale-labels`
   const messages = [
     ...errors.map((error) => errorMessage(intl, error)),
     ...(missing && errors.length === 0
@@ -50,28 +52,30 @@ export function QuestionField({ question, value, errors, missing, onChange }: Pr
     <>
       {question.text}
       {question.required && (
-        <Typography component="span" color="text.secondary" sx={{ ml: 1 }}>
-          <FormattedMessage id="answer.required" defaultMessage="(required)" />
-        </Typography>
+        <>
+          {' '}
+          <Typography component="span" color="text.secondary">
+            <FormattedMessage id="answer.required" defaultMessage="(required)" />
+          </Typography>
+        </>
       )}
     </>
   )
 
   return (
-    <FormControl
-      component="fieldset"
-      fullWidth
-      error={hasError}
-      sx={{ mb: 3 }}
-      aria-describedby={describedBy}
-    >
-      <FormLabel component="legend" sx={{ mb: 1 }}>
+    <FormControl component="fieldset" fullWidth error={hasError} sx={{ mb: 3 }}>
+      <FormLabel component="legend" id={legendId} sx={{ mb: 1 }}>
         {label}
       </FormLabel>
+      {/* Hints and errors are attached to the control itself, which is what assistive technology reads. */}
       {question.type === 'SINGLE_CHOICE' && (
         <RadioGroup
           value={value?.optionKey ?? ''}
           onChange={(event) => onChange({ optionKey: event.target.value })}
+          aria-labelledby={legendId}
+          aria-describedby={describedBy}
+          aria-invalid={hasError || undefined}
+          aria-required={question.required || undefined}
         >
           {question.options?.map((option) => (
             <FormControlLabel
@@ -84,7 +88,7 @@ export function QuestionField({ question, value, errors, missing, onChange }: Pr
         </RadioGroup>
       )}
       {question.type === 'MULTIPLE_CHOICE' && (
-        <FormGroup>
+        <FormGroup role="group" aria-labelledby={legendId} aria-describedby={describedBy}>
           {question.options?.map((option) => {
             const selected = value?.optionKeys ?? []
             const checked = selected.includes(option.key)
@@ -116,7 +120,12 @@ export function QuestionField({ question, value, errors, missing, onChange }: Pr
           multiline={question.multiline ?? false}
           minRows={question.multiline ? 3 : undefined}
           slotProps={{
-            htmlInput: { maxLength: question.maxLength ?? 500, 'aria-label': question.text },
+            htmlInput: {
+              maxLength: question.maxLength ?? 500,
+              'aria-label': question.text,
+              'aria-describedby': describedBy,
+              'aria-required': question.required || undefined,
+            },
           }}
           error={hasError}
         />
@@ -134,6 +143,8 @@ export function QuestionField({ question, value, errors, missing, onChange }: Pr
               max: question.max,
               step: question.integerOnly ? 1 : 'any',
               'aria-label': question.text,
+              'aria-describedby': describedBy,
+              'aria-required': question.required || undefined,
             },
           }}
           error={hasError}
@@ -149,6 +160,11 @@ export function QuestionField({ question, value, errors, missing, onChange }: Pr
               if (next !== null) onChange({ number: next })
             }}
             aria-label={question.text}
+            aria-describedby={
+              [describedBy, question.minLabel || question.maxLabel ? scaleLabelsId : null]
+                .filter(Boolean)
+                .join(' ') || undefined
+            }
           >
             {scaleValues(question).map((n) => (
               <ToggleButton key={n} value={n} aria-label={String(n)}>
@@ -157,7 +173,12 @@ export function QuestionField({ question, value, errors, missing, onChange }: Pr
             ))}
           </ToggleButtonGroup>
           {(question.minLabel || question.maxLabel) && (
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography
+              id={scaleLabelsId}
+              variant="caption"
+              color="text.secondary"
+              sx={{ mt: 0.5 }}
+            >
               {question.minLabel ?? ''} · {question.maxLabel ?? ''}
             </Typography>
           )}

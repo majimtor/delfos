@@ -57,27 +57,32 @@ export function WaitForApi({
   if (status === 'ready') return <>{children}</>
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8, textAlign: 'center' }} role="status" aria-live="polite">
-      <Typography variant="h5" component="h1" gutterBottom>
-        {status === 'failed' ? (
-          <FormattedMessage id="wait.failed" defaultMessage="We could not reach the service." />
-        ) : (
-          <FormattedMessage id="wait.title" defaultMessage="The service is waking up" />
-        )}
-      </Typography>
-      {status === 'probing' && (
-        <>
-          <Box sx={{ my: 3 }}>
-            <CircularProgress aria-hidden />
-          </Box>
+    <Container maxWidth="sm" sx={{ py: 8, textAlign: 'center' }}>
+      {/* The title and the explanation are announced once; the counter below is visual only. */}
+      <div role="status" aria-live="polite">
+        <Typography variant="h5" component="h1" gutterBottom>
+          {status === 'failed' ? (
+            <FormattedMessage id="wait.failed" defaultMessage="We could not reach the service." />
+          ) : (
+            <FormattedMessage id="wait.title" defaultMessage="The service is waking up" />
+          )}
+        </Typography>
+        {status === 'probing' && (
           <Typography>
             <FormattedMessage
               id="wait.body"
               defaultMessage="The demo sleeps when nobody uses it and takes up to two minutes to start. Please wait."
             />
           </Typography>
+        )}
+      </div>
+      {status === 'probing' && (
+        <>
+          <Box sx={{ my: 3 }}>
+            <CircularProgress aria-hidden />
+          </Box>
           {elapsed > 0 && (
-            <Typography color="text.secondary" sx={{ mt: 1 }}>
+            <Typography color="text.secondary" sx={{ mt: 1 }} aria-hidden>
               <FormattedMessage
                 id="wait.elapsed"
                 defaultMessage="Waiting for {seconds} seconds."

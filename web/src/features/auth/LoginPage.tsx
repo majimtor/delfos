@@ -2,6 +2,7 @@ import { Alert, Button, Stack, TextField, Typography } from '@mui/material'
 import { useForm } from 'react-hook-form'
 import { FormattedMessage, useIntl } from 'react-intl'
 import { Navigate, useNavigate, useSearchParams } from 'react-router'
+import { usePageTitle } from '../../app/usePageTitle'
 import { LoginError, useLogin, useSession } from './session'
 
 interface Credentials {
@@ -17,6 +18,7 @@ export function LoginPage() {
   const login = useLogin()
   const form = useForm<Credentials>({ defaultValues: { username: '', password: '' } })
   const next = params.get('next') ?? '/surveys'
+  usePageTitle(intl.formatMessage({ id: 'login.title', defaultMessage: 'Log in' }))
 
   if (session.data) return <Navigate to={next} replace />
 
