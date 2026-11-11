@@ -1,0 +1,10 @@
+.git
+.github
+docs
+web
+mobile
+**/build
+**/.gradle
+**/.kotlin
+**/node_modules
+*.md

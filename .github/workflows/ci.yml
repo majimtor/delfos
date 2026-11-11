@@ -107,6 +107,25 @@ jobs:
       - name: Build and test against PostgreSQL in a container
         run: ./gradlew -p api check --no-daemon --console=plain
 
+  image:
+    name: Container image
+    runs-on: ubuntu-24.04
+    needs: [api]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build the image
+        run: docker build --file deploy/Dockerfile --tag ghcr.io/${{ github.repository }}-api:${{ github.sha }} .
+      - name: Push the image from main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+          docker tag ghcr.io/${{ github.repository }}-api:${{ github.sha }} ghcr.io/${{ github.repository }}-api:main
+          docker push ghcr.io/${{ github.repository }}-api:${{ github.sha }}
+          docker push ghcr.io/${{ github.repository }}-api:main
+
   docs:
     name: Markdown lint
     runs-on: ubuntu-24.04

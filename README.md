@@ -32,6 +32,18 @@ accounts when the first slice ships.
 | `mobile/` | Android-first application | Kotlin, Compose Multiplatform |
 | `contract/` | OpenAPI contract and conformance cases | YAML, JSON |
 
+## Run it
+
+One command starts PostgreSQL 18 and the API with the demo data, on port 8080:
+
+```sh
+docker compose -f deploy/compose.yaml up --build
+```
+
+Then `http://localhost:8080/api/v1/public/surveys/demo-movilidad` answers, and
+the manager operations accept the accounts below. The database listens on
+`localhost:5433`.
+
 ## Demo data
 
 With `DELFOS_SEED_ENABLED=true` the API applies the demo data at startup and
