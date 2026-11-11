@@ -8,6 +8,7 @@ import { ResultsPage } from './ResultsPage'
 
 let responseCount = 3
 let etagsReceived: Array<string | null> = []
+let comparableEtagsReceived: Array<string | null> = []
 
 function versionResults() {
   return {
@@ -82,6 +83,9 @@ async function fakeFetch(input: RequestInfo | URL): Promise<Response> {
     return json(200, versionResults(), { ETag: etag })
   }
   if (url.pathname.endsWith('/surveys/a/results')) {
+    const etag = '"all-3"'
+    comparableEtagsReceived.push(request.headers.get('If-None-Match'))
+    if (request.headers.get('If-None-Match') === etag) return json(304, null, { ETag: etag })
     const base = versionResults()
     return json(
       200,
@@ -94,7 +98,7 @@ async function fakeFetch(input: RequestInfo | URL): Promise<Response> {
           versionNumbers: i === 0 ? [1, 2] : [1],
         })),
       },
-      { ETag: '"all-3"' },
+      { ETag: etag },
     )
   }
   if (url.pathname.endsWith('/answers')) {
@@ -138,6 +142,7 @@ describe('ResultsPage', () => {
   beforeEach(() => {
     responseCount = 3
     etagsReceived = []
+    comparableEtagsReceived = []
     vi.stubGlobal('fetch', vi.fn(fakeFetch))
   })
   afterEach(() => {
@@ -171,6 +176,22 @@ describe('ResultsPage', () => {
     await screen.findByText('Colores')
     fireEvent.click(screen.getByRole('button', { name: 'Ver las contestaciones' }))
     await waitFor(() => expect(screen.getByText(/Segunda nota/)).toBeTruthy())
+  })
+
+  it('keeps each query its own validator when the scope changes', async () => {
+    renderPage()
+    await screen.findByText('Colores')
+    await waitFor(() => expect(etagsReceived).toContain('"v1-3"'))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Todas las versiones' }))
+    await waitFor(() => expect(screen.getByText('Versiones 1, 2')).toBeTruthy())
+    // The first request of the other scope must not carry the validator of this one.
+    expect(comparableEtagsReceived[0]).toBeNull()
+    await waitFor(() => expect(comparableEtagsReceived).toContain('"all-3"'))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Versión 1' }))
+    await waitFor(() => expect(screen.queryByText('Versiones 1, 2')).toBeNull())
+    expect(screen.getByRole('status').textContent).toContain('3 respuestas')
   })
 
   it('aggregates across versions and marks the question that changed', async () => {
