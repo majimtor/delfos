@@ -1,0 +1,7 @@
+node_modules
+dist
+*.local
+*.log
+# Generated from the contract and by the message extraction; never committed.
+src/api/schema.d.ts
+build

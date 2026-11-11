@@ -6,3 +6,4 @@ config:
 ignores:
   # Pull request templates start at the second heading level by convention.
   - .github/pull_request_template.md
+  - "**/node_modules/**"
