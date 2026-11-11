@@ -9,18 +9,21 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
 
-/** A clock the tests can move forward to exercise expiry rules. */
-class MutableClock(@Volatile private var now: Instant = Instant.now()) : Clock() {
+/** A ticking clock the tests can move forward to exercise expiry rules: real time plus an offset. */
+class MutableClock : Clock() {
+
+    @Volatile
+    private var offset: Duration = Duration.ZERO
 
     fun advance(duration: Duration) {
-        now = now.plus(duration)
+        offset = offset.plus(duration)
     }
 
     fun reset() {
-        now = Instant.now()
+        offset = Duration.ZERO
     }
 
-    override fun instant(): Instant = now
+    override fun instant(): Instant = Instant.now().plus(offset)
 
     override fun getZone(): ZoneId = ZoneOffset.UTC
 
