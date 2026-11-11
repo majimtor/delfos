@@ -6,6 +6,10 @@ import com.manuelalejandro.delfos.persistence.AccountEntity
 import com.manuelalejandro.delfos.persistence.AccountRepository
 import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.Callable
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -181,6 +185,26 @@ class SurveyApiTest : ApiTest() {
         assertCode(call(HttpMethod.POST, "/api/v1/surveys/$id/close"), HttpStatus.CONFLICT, "INVALID_STATE_TRANSITION")
         assertCode(call(HttpMethod.POST, "/api/v1/surveys/$id/publish"), HttpStatus.CONFLICT, "INVALID_STATE_TRANSITION")
         assertCode(call(HttpMethod.POST, "/api/v1/surveys/$id/draft"), HttpStatus.CONFLICT, "INVALID_STATE_TRANSITION")
+    }
+
+    @Test
+    fun `simultaneous draft creations yield one draft and one conflict, never an error`() {
+        val id = createSurvey("Race")
+        call(HttpMethod.PUT, "/api/v1/surveys/$id/draft", VALID_DEFINITION)
+        assertThat(call(HttpMethod.POST, "/api/v1/surveys/$id/publish").statusCode).isEqualTo(HttpStatus.OK)
+        val start = CountDownLatch(1)
+        val pool = Executors.newFixedThreadPool(2)
+        val responses = try {
+            val futures = (1..2).map { pool.submit(Callable { start.await(); call(HttpMethod.POST, "/api/v1/surveys/$id/draft") }) }
+            start.countDown()
+            futures.map { it.get(60, TimeUnit.SECONDS) }
+        } finally {
+            pool.shutdownNow()
+        }
+
+        assertThat(responses.map { it.statusCode }).containsExactlyInAnyOrder(HttpStatus.CREATED, HttpStatus.CONFLICT)
+        val conflict = responses.first { it.statusCode == HttpStatus.CONFLICT }
+        assertThat(json.readTree(conflict.body).get("code").asString()).isEqualTo("DRAFT_ALREADY_EXISTS")
     }
 
     @Test

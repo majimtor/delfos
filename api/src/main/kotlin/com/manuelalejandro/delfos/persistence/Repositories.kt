@@ -29,6 +29,11 @@ interface SurveyRepository : JpaRepository<SurveyEntity, UUID> {
     @Query("select s from SurveyEntity s where s.publicId = :publicId")
     fun lockByPublicId(@Param("publicId") publicId: String): SurveyEntity?
 
+    /** The owner's survey row locked for the rest of the transaction, so that the mutations of one survey are serialized. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select s from SurveyEntity s where s.id = :id and s.ownerId = :ownerId")
+    fun lockByIdAndOwnerId(@Param("id") id: UUID, @Param("ownerId") ownerId: UUID): SurveyEntity?
+
     /** First page of a manager's surveys, most recently updated first; the id breaks ties for a stable keyset. */
     @Query("select s from SurveyEntity s where s.ownerId = :ownerId and s.status in :statuses order by s.updatedAt desc, s.id desc")
     fun findFirstPage(@Param("ownerId") ownerId: UUID, @Param("statuses") statuses: Collection<SurveyStatus>, limit: Limit): List<SurveyEntity>

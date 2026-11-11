@@ -8,6 +8,10 @@ import com.manuelalejandro.delfos.persistence.AccountRepository
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.Callable
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -129,6 +133,35 @@ class PublicApiTest : ApiTest() {
         assertThat(shown.get("acceptingResponses").asBoolean()).isFalse()
         assertThat(shown.get("status").asString()).isEqualTo("CLOSED")
         assertCode(public(HttpMethod.POST, "/api/v1/public/surveys/$publicId2/responses", one), HttpStatus.CONFLICT, "SURVEY_NOT_ACCEPTING_RESPONSES")
+    }
+
+    @Test
+    fun `simultaneous submissions never exceed the quota`() {
+        val (id, publicId) = createSurvey()
+        manager(HttpMethod.PATCH, "/api/v1/surveys/$id", """{"maxResponses":3}""")
+        defineAndPublish(id)
+        val one = """{"versionNumber":1,"answers":[{"questionKey":"owns-car","optionKey":"no"}]}"""
+        val attempts = 20
+        val start = CountDownLatch(1)
+        val pool = Executors.newFixedThreadPool(attempts)
+        val responses = try {
+            val futures = (1..attempts).map {
+                pool.submit(Callable { start.await(); public(HttpMethod.POST, "/api/v1/public/surveys/$publicId/responses", one) })
+            }
+            start.countDown()
+            futures.map { it.get(60, TimeUnit.SECONDS) }
+        } finally {
+            pool.shutdownNow()
+        }
+
+        assertThat(responses.count { it.statusCode == HttpStatus.CREATED }).isEqualTo(3)
+        val rejected = responses.filter { it.statusCode != HttpStatus.CREATED }
+        assertThat(rejected).hasSize(attempts - 3)
+        assertThat(rejected.map { it.statusCode }.toSet()).containsExactly(HttpStatus.CONFLICT)
+        assertThat(rejected.map { json.readTree(it.body).get("code").asString() }.toSet()).containsExactly("RESPONSE_QUOTA_REACHED")
+        val survey = json.readTree(manager(HttpMethod.GET, "/api/v1/surveys/$id").body)
+        assertThat(survey.get("status").asString()).isEqualTo("CLOSED")
+        assertThat(survey.get("responseCount").asInt()).isEqualTo(3)
     }
 
     private fun evaluate(publicId: String, version: Int, answers: String): JsonNode {
