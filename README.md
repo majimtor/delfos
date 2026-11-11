@@ -7,11 +7,17 @@ Delfos is a survey platform: managers build surveys with conditional logic,
 publish and version them, watch results arrive and export them; respondents
 answer from the web or from a mobile application.
 
-## Status
+## Live demo
 
-In development. The plan and the architecture decisions are written; no code
-is deployed yet. This section is replaced by the demo link and the demo
-accounts when the first slice ships.
+- Web: <https://delfos.manuelalejandro.com>
+- API: <https://api.delfos.manuelalejandro.com/api/v1/health>
+
+The demo runs on free tiers: the API sleeps after fifteen minutes without
+traffic and takes up to a minute and a half to wake outside the hours when
+the keep-alive workflow keeps it up (06:00 to 24:00 UTC); the web shows a
+wait screen meanwhile. The demo data is reset every day and at every start
+of the API. Log in with the accounts listed under [Demo data](#demo-data);
+the first slice is in, the next ones are in [PLAN.md](PLAN.md).
 
 ## Where to look
 
@@ -60,8 +66,11 @@ Sample surveys of `demo-manager`: an unpublished draft, a published survey
 with the five question types and every rule operator (40 responses), a
 survey with a superseded first version and a published second one (25
 responses across both), and a closed survey (20 responses). The published
-ones can be answered at `/api/v1/public/surveys/demo-movilidad` and
-`/api/v1/public/surveys/demo-servicio`.
+ones can be answered at `/s/demo-movilidad` and `/s/demo-servicio` on the
+web, or through `/api/v1/public/surveys/demo-movilidad` and
+`/api/v1/public/surveys/demo-servicio` on the API. Running the seed again
+is the reset: it removes everything the demo accounts own and recreates the
+sample surveys.
 
 ## Working on the repository
 
@@ -97,6 +106,26 @@ npm run dev
 `npm run check` lints, checks formatting, verifies that both message
 catalogues match the code, runs the unit tests and builds. The development
 server expects the API at `http://localhost:8080`, or at `VITE_API_BASE_URL`.
+
+## Deployment
+
+Everything that deploys the demo is declared in the repository:
+
+- `deploy/render.yaml`: the API as a Render Blueprint, built from
+  `deploy/Dockerfile` on every push to `main` whose checks pass. The
+  database is PostgreSQL on Neon; its credentials and the demo reset token
+  live in the service's environment.
+- `web/wrangler.jsonc`: the web as a Cloudflare Worker that serves the
+  built files as static assets, deployed by the `web-deploy` job of the CI
+  workflow after the same checks, with `CLOUDFLARE_API_TOKEN` and
+  `CLOUDFLARE_ACCOUNT_ID` from the repository secrets.
+- `.github/workflows/keep-alive.yml`: requests the liveness probe every ten
+  minutes from 06:00 to 24:00 UTC.
+- `.github/workflows/demo-reset.yml`: applies the demo seed again every day
+  at 05:50 UTC through `POST /api/v1/demo/reset`, with
+  `DELFOS_SEED_RESET_TOKEN` from the repository secrets.
+
+The decision and the measured numbers are in ADR 0016.
 
 ## Licence
 

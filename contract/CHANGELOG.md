@@ -13,6 +13,8 @@ release, breaking changes are allowed and recorded here.
   answers, and the public operations to read, evaluate and answer a survey.
 - Problem Details error shape with stable `code` and field errors.
 - Conformance suite for the visibility rules and the definition validator.
+- `POST /demo/reset`, protected by a shared token, applies the demo seed again;
+  the public demo calls it once a day.
 
 ### Changed
 

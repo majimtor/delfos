@@ -28,9 +28,10 @@ import org.springframework.transaction.annotation.Transactional
 
 /**
  * The demo data: three fixed accounts and the sample surveys of the plan, in Spanish. Seeding is
- * idempotent by stable identifiers: accounts are upserted and surveys are recreated, so running it
- * again is the reset. Enabled with `DELFOS_SEED_ENABLED=true`; the local compose and the public demo
- * set it, tests call it directly.
+ * idempotent by stable identifiers: accounts are upserted, everything they own is removed and the
+ * sample surveys are recreated, so running it again is the reset. Enabled at startup with
+ * `DELFOS_SEED_ENABLED=true`; the local compose and the public demo set it, tests call it directly,
+ * and [DemoController] exposes it behind a token.
  */
 @Component
 class DemoSeed(
@@ -50,6 +51,9 @@ class DemoSeed(
         val manager = upsertAccount(MANAGER, isAdmin = false)
         val manager2 = upsertAccount(MANAGER_2, isAdmin = false)
         listOf(admin, manager, manager2).forEach { it.status = AccountStatus.ACTIVE }
+        // Whatever the demo accounts own goes, including what visitors created with them.
+        surveys.deleteAll(surveys.findAllByOwnerIdIn(listOf(admin.id, manager.id, manager2.id)))
+        surveys.flush()
 
         recreate("lectura", manager.id, "Hábitos de lectura", "Borrador aún no publicado, para probar el editor.", "demo-lectura") { survey ->
             version(survey, 1, DemoSurveys.readingDraft, VersionStatus.DRAFT)

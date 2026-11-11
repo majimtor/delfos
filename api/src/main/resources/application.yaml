@@ -43,6 +43,8 @@ delfos:
   seed:
     # Applies the demo data at startup; running it again resets the demo.
     enabled: ${DELFOS_SEED_ENABLED:false}
+    # Shared secret of POST /demo/reset; empty means the operation does not exist.
+    reset-token: ${DELFOS_SEED_RESET_TOKEN:}
   limits:
     public-per-minute: ${DELFOS_LIMIT_PUBLIC_PER_MINUTE:120}
     login-per-minute: ${DELFOS_LIMIT_LOGIN_PER_MINUTE:10}

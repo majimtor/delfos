@@ -50,6 +50,33 @@ class DemoSeedTest : ApiTest() {
         assertThat(json.readTree(manager(HttpMethod.GET, "/api/v1/auth/me", tokenOf(DemoSeed.ADMIN)).body).get("isAdmin").asBoolean()).isTrue()
     }
 
+    @Test
+    fun `the reset operation needs the configured token`() {
+        val missing = client.post().uri("/api/v1/demo/reset").retrieve().toEntity(String::class.java)
+        assertThat(missing.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+        assertThat(missing.headers.contentType).isEqualTo(MediaType.APPLICATION_PROBLEM_JSON)
+        assertThat(json.readTree(missing.body).get("code").asString()).isEqualTo("UNAUTHENTICATED")
+
+        val wrong = client.post().uri("/api/v1/demo/reset").headers { it.setBearerAuth("not-the-token") }.retrieve().toEntity(String::class.java)
+        assertThat(wrong.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+    }
+
+    @Test
+    fun `the reset operation removes what the demo accounts created and restores the samples`() {
+        seed.seed()
+        val manager = tokenOf(DemoSeed.MANAGER)
+        val created = client.post().uri("/api/v1/surveys").contentType(MediaType.APPLICATION_JSON)
+            .headers { it.setBearerAuth(manager); it.set(SessionAuthenticationFilter.CLIENT_HEADER, "test") }
+            .body("""{"title":"Left by a visitor","language":"es"}""").retrieve().toEntity(String::class.java)
+        assertThat(created.statusCode).describedAs(created.body).isEqualTo(HttpStatus.CREATED)
+
+        val reset = client.post().uri("/api/v1/demo/reset").headers { it.setBearerAuth("test-reset-token") }.retrieve().toEntity(String::class.java)
+        assertThat(reset.statusCode).describedAs(reset.body).isEqualTo(HttpStatus.NO_CONTENT)
+
+        val titles = json.readTree(manager(HttpMethod.GET, "/api/v1/surveys", manager).body).get("items").values().map { it.get("title").asString() }
+        assertThat(titles).containsExactlyInAnyOrder("Hábitos de lectura", "Movilidad urbana", "Satisfacción con el servicio", "Encuentro anual")
+    }
+
     private fun manager(method: HttpMethod, path: String, bearer: String): ResponseEntity<String> =
         client.method(method).uri(path).headers {
             it.setBearerAuth(bearer)

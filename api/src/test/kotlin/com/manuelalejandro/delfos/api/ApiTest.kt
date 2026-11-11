@@ -24,6 +24,8 @@ import org.testcontainers.postgresql.PostgreSQLContainer
         // Functional tests log in freely from one address; throttling has its own context in LimitsTest.
         "delfos.limits.login-per-minute=100000",
         "delfos.limits.public-per-minute=100000",
+        // The demo reset exists in the shared context; DemoSeedTest exercises it.
+        "delfos.seed.reset-token=test-reset-token",
     ],
 )
 @Import(TestClockConfig::class)

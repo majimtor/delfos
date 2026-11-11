@@ -21,3 +21,7 @@ services:
         value: "true"
       - key: DELFOS_WEB_ORIGIN
         value: https://delfos.manuelalejandro.com
+      # Render generates the secret; copy it from the service's environment into the repository
+      # secret of the same name, which the demo-reset workflow sends.
+      - key: DELFOS_SEED_RESET_TOKEN
+        generateValue: true

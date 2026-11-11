@@ -22,6 +22,7 @@ interface SessionRepository : JpaRepository<SessionEntity, UUID> {
 interface SurveyRepository : JpaRepository<SurveyEntity, UUID> {
     fun findByIdAndOwnerId(id: UUID, ownerId: UUID): SurveyEntity?
     fun findByPublicId(publicId: String): SurveyEntity?
+    fun findAllByOwnerIdIn(ownerIds: Collection<UUID>): List<SurveyEntity>
 
     /** The survey row locked for the rest of the transaction, so a response quota is never exceeded by concurrent submissions. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
