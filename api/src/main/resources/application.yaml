@@ -6,6 +6,11 @@ spring:
     url: ${DELFOS_DB_URL}
     username: ${DELFOS_DB_USERNAME}
     password: ${DELFOS_DB_PASSWORD}
+    hikari:
+      # Idle connections are released after a minute so that a serverless database can scale
+      # to zero while the API stays awake; the first request after a pause opens one connection.
+      minimum-idle: 0
+      idle-timeout: 60000
   jpa:
     hibernate:
       ddl-auto: validate

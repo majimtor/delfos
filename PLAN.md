@@ -247,7 +247,7 @@ or ten thousand responses.
 | Authentication | Opaque sessions, cookie and bearer, BCrypt | ADR 0008 |
 | Rules | Declarative visibility rules, server evaluation, shared evaluator | ADR 0009 |
 | Repository | One repository, composite Gradle builds, no orchestrator | ADR 0010 |
-| Hosting | Render Free, Neon Free, Cloudflare Pages, GitHub registry and Actions, own domain | ADR 0011 |
+| Hosting | Render Free, Neon Free, Cloudflare Workers with static assets, GitHub registry and Actions, own domain | ADR 0016 |
 | Dependencies | Dependabot groups, automated patch and minor merges, pinned toolchains and Actions | ADR 0012 |
 | Workflow | GitHub Flow, squash, signed commits, `release-please` | ADR 0013 |
 | Licence | MIT | ADR 0014 |
@@ -305,9 +305,9 @@ lint; unit tests; API tests with Testcontainers (Docker is present on the
 both languages with the untranslated-keys check; CodeQL (eligible for
 public repositories, checked 2026-11-10); container image build and push
 to the GitHub registry on `main`. Every gate blocks the merge; none is
-advisory. Secrets: Neon credentials in Render's environment; Cloudflare
-token, demo-reset secret and the Render deploy hook in Actions secrets;
-nothing in the repository.
+advisory. Secrets: Neon credentials in Render's environment; the
+Cloudflare API token and account identifier and the demo-reset secret in
+Actions secrets; nothing in the repository.
 
 Image: a two-stage Dockerfile building with Gradle 9.8 on JDK 25 and
 running on a Temurin 25 JRE, with conservative JVM flags and a JVM AOT
@@ -318,20 +318,24 @@ on 0.1 CPU.
 
 Who deploys: Render builds the Dockerfile from `main` only when the
 checks pass (`autoDeployTrigger: checksPass`); the web is deployed by the
-workflow after the same checks. A failed deploy keeps the previous
+workflow after the same checks, with `wrangler` and the Worker declared in
+`web/wrangler.jsonc`. A failed deploy keeps the previous
 version running and sends an email; the fix is a new pull request.
 
 ## 12. Deployment and demo
 
-Providers, all checked on 2026-11-05 and 2026-11-10 and none asking for a
-payment card: Render free web service in Frankfurt (512 MB, 0.1 CPU, sleeps
-after 15 minutes without traffic, 750 instance hours per month); Neon free
-PostgreSQL in Frankfurt (1 GB, 100 compute-unit hours per project per month,
-suspends after 5 minutes and resumes in hundreds of milliseconds, never
-paused or deleted for inactivity); Cloudflare Pages for the web (500 builds
-per month, no stated bandwidth limit). Domain: `delfos.manuelalejandro.com`
-for the web and `api.delfos.manuelalejandro.com` for the API, in the
-maintainer's Cloudflare zone, with automatic TLS on both providers.
+Providers, all checked on 2026-11-05, 2026-11-10 and 2026-11-11 and none
+asking for a payment card: Render free web service in Frankfurt (512 MB,
+0.1 CPU, sleeps after 15 minutes without traffic, 750 instance hours per
+month); Neon free PostgreSQL in Frankfurt (1 GB, 100 compute-unit hours per
+project per month, suspends after 5 minutes and resumes in hundreds of
+milliseconds, never paused or deleted for inactivity); a Cloudflare Worker
+serving the web as static assets (asset requests free and unlimited).
+Domain: `delfos.manuelalejandro.com` for the web and
+`api.delfos.manuelalejandro.com` for the API, in the maintainer's
+Cloudflare zone, with automatic TLS on both providers; the API's record
+stays unproxied because Cloudflare's universal certificate covers
+first-level subdomains only.
 
 Cold start: 47 seconds measured after sleep. Mitigations, cumulative: a
 scheduled workflow requesting the liveness endpoint every ten minutes while
@@ -530,10 +534,8 @@ moment indicated, each with the recommended option first:
 - Component library for the web: MUI (recommended, in daily use,
   accessible) or headless primitives with own styles. Decide when the first
   web screen of S1a starts; cheap until the editor exists.
-- Static hosting: Cloudflare Pages (recommended, decided) or Workers with
-  static assets, which Cloudflare now suggests for new projects and whose
-  asset requests are free and unlimited (checked 2026-11-10). Decide at the
-  first web deploy; migration is trivial either way.
+- Static hosting: Workers with static assets, decided at the first web
+  deploy on 2026-11-11 (ADR 0016).
 - Live updates: polling (decided for S1a) or server-sent events. Decide at
   S3 after the proxy test.
 - Native image: decide at S5 from the measured wake-up with the keep-alive
@@ -591,9 +593,10 @@ on its own.
 
 Provider facts and versions in this document were read from primary
 sources on the dates given: Render documentation on free instances, deploy
-hooks and image deployment (2026-11-05 and 2026-11-10); Neon plans,
-regions and scale-to-zero (2026-11-05); Cloudflare Pages and Workers limits
-and billing (2026-11-05 and 2026-11-10); GitHub documentation on Actions
+hooks and image deployment (2026-11-05, 2026-11-10 and 2026-11-11); Neon
+plans, regions and scale-to-zero (2026-11-05 and 2026-11-11); Cloudflare
+Pages and Workers limits and billing (2026-11-05, 2026-11-10 and
+2026-11-11); GitHub documentation on Actions
 billing, scheduled workflows, branch protection, secret scanning, push
 protection, Dependabot, CodeQL and Packages (2026-11-05 and 2026-11-10);
 Apple Developer Program and membership comparison, Google Play

@@ -21,11 +21,12 @@ Template: [0000-adr-template.md](0000-adr-template.md).
 | [0008](0008-opaque-session-tokens.md) | Opaque session tokens with cookie and bearer transports | accepted |
 | [0009](0009-declarative-visibility-rules-evaluated-on-the-server.md) | Declarative visibility rules evaluated on the server | accepted |
 | [0010](0010-single-repository-without-monorepo-tooling.md) | Single repository without monorepo tooling | accepted |
-| [0011](0011-hosting-on-free-tiers-without-a-payment-card.md) | Hosting on free tiers without a payment card | accepted |
+| [0011](0011-hosting-on-free-tiers-without-a-payment-card.md) | Hosting on free tiers without a payment card | superseded by 0016 |
 | [0012](0012-grouped-dependency-updates-and-pinned-toolchains.md) | Grouped dependency updates and pinned toolchains | accepted |
 | [0013](0013-github-flow-with-squash-merges-and-automated-releases.md) | GitHub Flow with squash merges and automated releases | accepted |
 | [0014](0014-mit-licence.md) | MIT licence | accepted |
 | [0015](0015-english-codebase-with-a-bilingual-interface.md) | English codebase with a bilingual interface | accepted |
+| [0016](0016-hosting-on-free-tiers-with-the-web-on-cloudflare-workers.md) | Hosting on free tiers with the web on Cloudflare Workers | accepted |
 
 To add a record: copy the template to `NNNN-title-in-kebab-case.md` with the
 next number, fill every section, add the row above, and merge it in the same
