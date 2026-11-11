@@ -1056,10 +1056,15 @@ components:
           maxLength: 200
 
     Option:
-      allOf:
-        - $ref: "#/components/schemas/OptionInput"
-        - type: object
-          required: [key]
+      type: object
+      required: [key, label]
+      properties:
+        key:
+          $ref: "#/components/schemas/Key"
+        label:
+          type: string
+          minLength: 1
+          maxLength: 200
 
     QuestionInput:
       type: object
@@ -1130,15 +1135,66 @@ components:
           maxLength: 100
 
     Question:
-      allOf:
-        - $ref: "#/components/schemas/QuestionInput"
-        - type: object
-          required: [key, required]
-          properties:
-            options:
-              type: array
-              items:
-                $ref: "#/components/schemas/Option"
+      type: object
+      description: A question of a version as the server returns it, with every key assigned. Same fields as `QuestionInput`.
+      required: [key, type, text, required]
+      properties:
+        key:
+          $ref: "#/components/schemas/Key"
+        type:
+          $ref: "#/components/schemas/QuestionType"
+        text:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        required:
+          type: boolean
+          default: false
+        options:
+          type: array
+          minItems: 2
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/Option"
+        minSelections:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 50
+          description: Minimum options a respondent must select. Defaults to 1.
+        maxSelections:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 50
+          description: Maximum options a respondent may select. Defaults to the number of options.
+        maxLength:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 2000
+          description: Maximum length of a text answer in Unicode code points. Defaults to 500.
+        multiline:
+          type: boolean
+          default: false
+        min:
+          type: number
+          format: double
+          description: Lower bound of a `NUMBER` answer (optional) or of a `SCALE` (default 1).
+        max:
+          type: number
+          format: double
+          description: Upper bound of a `NUMBER` answer (optional) or of a `SCALE` (3 to 10, required).
+        integerOnly:
+          type: boolean
+          default: false
+        minLabel:
+          type: string
+          maxLength: 100
+        maxLabel:
+          type: string
+          maxLength: 100
+
 
     MatchMode:
       type: string
