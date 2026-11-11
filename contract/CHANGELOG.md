@@ -16,6 +16,8 @@ release, breaking changes are allowed and recorded here.
 
 ### Changed
 
+- `Question` and `Option` are explicit schemas with required keys instead of
+  `allOf` compositions, which client generators rendered as impossible types.
 - `createSession` documents that the cookie transport requires the
   `X-Delfos-Client` header and that unknown usernames and wrong passwords
   answer the same code.
