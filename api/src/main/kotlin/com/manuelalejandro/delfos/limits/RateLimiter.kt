@@ -6,8 +6,9 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Fixed one-minute windows per key, kept in memory only. Keys are client addresses and are never
- * written anywhere else; the map forgets a key as soon as its window has passed.
+ * Fixed one-minute windows per key, kept in memory only. Keys are the kind of operation and the
+ * client address, never written anywhere else; the map forgets a key as soon as its window has
+ * passed.
  */
 class RateLimiter(private val clock: Clock, private val window: Duration = Duration.ofMinutes(1)) {
 

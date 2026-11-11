@@ -77,7 +77,7 @@
   "surveys.status.DRAFT": "Borrador",
   "surveys.status.PUBLISHED": "Publicada",
   "surveys.title": "Mis encuestas",
-  "wait.body": "La demostración duerme cuando nadie la usa y tarda hasta un minuto en arrancar. Espera un momento.",
+  "wait.body": "La demostración duerme cuando nadie la usa y tarda hasta dos minutos en arrancar. Espera un momento.",
   "wait.elapsed": "Llevamos {seconds} segundos esperando.",
   "wait.failed": "No hemos podido conectar con el servicio.",
   "wait.retry": "Reintentar",

@@ -57,6 +57,15 @@ class LimitsTest : ApiTest() {
     }
 
     @Test
+    fun `public requests and login attempts have separate windows`() {
+        clock.advance(Duration.ofMinutes(30))
+        repeat(5) { assertThat(publicGet().statusCode).isEqualTo(HttpStatus.NOT_FOUND) }
+        assertThat(publicGet().statusCode).isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
+
+        assertThat(login().statusCode).describedAs("the public window must not count against the login").isEqualTo(HttpStatus.UNAUTHORIZED)
+    }
+
+    @Test
     fun `a body above the limit is rejected before it is read`() {
         clock.advance(Duration.ofMinutes(20))
         val big = """{"username":"${"a".repeat(600)}","password":"x"}"""

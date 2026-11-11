@@ -77,7 +77,7 @@
   "surveys.status.DRAFT": "Draft",
   "surveys.status.PUBLISHED": "Published",
   "surveys.title": "My surveys",
-  "wait.body": "The demo sleeps when nobody uses it and takes up to a minute to start. Please wait.",
+  "wait.body": "The demo sleeps when nobody uses it and takes up to two minutes to start. Please wait.",
   "wait.elapsed": "Waiting for {seconds} seconds.",
   "wait.failed": "We could not reach the service.",
   "wait.retry": "Retry",
