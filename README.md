@@ -107,6 +107,14 @@ npm run dev
 catalogues match the code, runs the unit tests and builds. The development
 server expects the API at `http://localhost:8080`, or at `VITE_API_BASE_URL`.
 
+The end-to-end path in `web/e2e/` drives the built web in Chromium through
+a stranger's visit, against the locally seeded API, and checks every page
+with axe. With the compose stack running:
+
+```sh
+cd web && npx playwright install chromium && npm run build && npm run e2e
+```
+
 ## Deployment
 
 Everything that deploys the demo is declared in the repository:

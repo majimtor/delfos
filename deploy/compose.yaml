@@ -27,6 +27,8 @@ services:
       DELFOS_DB_USERNAME: delfos
       DELFOS_DB_PASSWORD: delfos
       DELFOS_SEED_ENABLED: "true"
+      # A fixed local token, so the end-to-end run can reset the demo; not a secret.
+      DELFOS_SEED_RESET_TOKEN: e2e-reset-token
       DELFOS_WEB_ORIGIN: http://localhost:5173
     ports:
       - "8080:8080"

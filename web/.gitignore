@@ -5,5 +5,8 @@ dist
 # Generated from the contract and by the message extraction; never committed.
 src/api/schema.d.ts
 build
+# Reports and traces of the end-to-end runs.
+playwright-report
+test-results
 # Local state of the Cloudflare tooling.
 .wrangler

@@ -304,7 +304,8 @@ lint; unit tests; API tests with Testcontainers (Docker is present on the
 `ubuntu-24.04` runner, checked 2026-11-05); `oasdiff breaking`; web build in
 both languages with the untranslated-keys check; CodeQL (eligible for
 public repositories, checked 2026-11-10); container image build and push
-to the GitHub registry on `main`. Every gate blocks the merge; none is
+to the GitHub registry on `main`; the end-to-end path with Playwright and
+axe against a locally seeded API. Every gate blocks the merge; none is
 advisory. Secrets: Neon credentials in Render's environment; the
 Cloudflare API token and account identifier and the demo-reset secret in
 Actions secrets; nothing in the repository.
@@ -415,8 +416,8 @@ slice has a definition of done that a stranger can verify.
 | Slice | Content | Hours (o / p / p) | Weeks at 10 h |
 | --- | --- | --- | --- |
 | S0 Foundations | Public repository with licence, plan, ADRs, rules; CI skeleton; branch protection; identity and signing checked; Dependabot; CodeQL | 8 / 12 / 18 | 1 / 1 / 2 |
-| S1a Answer a survey (public threshold) | Backend: domain, lifecycle, rules evaluator and validator with conformance suite, responses, results, sessions, authorization, contract with generated server, migrations, Spanish seed, API tests, Problem Details, pagination, rate limiting, health, logs. Web: public answer page with server-side evaluation, results page with polling, login, survey list with publish and close, wait screen, Spanish catalogue. Deploy: image with AOT cache, Render, Neon, Cloudflare, domains, keep-alive, demo reset, README with accounts | 110 / 155 / 215 | 11 / 16 / 22 |
-| S1b Second language and polish | English catalogue and English seed surveys, accessibility audit of public pages, results distributions, end-to-end test, screenshots and a 60-second video linked from the README | 30 / 45 / 65 | 3 / 5 / 7 |
+| S1a Answer a survey (public threshold) | Backend: domain, lifecycle, rules evaluator and validator with conformance suite, responses, results, sessions, authorization, contract with generated server, migrations, Spanish seed, API tests, Problem Details, pagination, rate limiting, health, logs. Web: public answer page with server-side evaluation, results page with polling, login, survey list with publish and close, wait screen, Spanish catalogue, end-to-end path with Playwright and axe. Deploy: image with AOT cache, Render, Neon, Cloudflare, domains, keep-alive, demo reset, README with accounts | 110 / 155 / 215 | 11 / 16 / 22 |
+| S1b Second language and polish | English catalogue and English seed surveys, accessibility audit of public pages, results distributions, screenshots and a 60-second video linked from the README | 30 / 45 / 65 | 3 / 5 / 7 |
 | S2 Build surveys | Editor for questions, options and rules with inline validation errors; versioning flow (edit published creates draft, publish version 2); CSV export; `release-please` and version 1.0.0 | 60 / 85 / 120 | 6 / 9 / 12 |
 | S3 Invitations, administration, live updates | Invited mode with single-use tokens; account management for administrators; server-sent events if the proxy test passes; XLSX export; installable manifest; known-issues document | 40 / 60 / 90 | 4 / 6 / 9 |
 | S4 Mobile | Shared module gains Android and iOS targets; local evaluator passing the conformance suite; Compose application to answer surveys and view results; APK on Releases by CI; iOS compiled on a macOS runner | 90 / 130 / 190 | 9 / 13 / 19 |
