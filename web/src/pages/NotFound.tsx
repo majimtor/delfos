@@ -4,7 +4,7 @@ import { FormattedMessage } from 'react-intl'
 
 export function NotFound() {
   return (
-    <Stack spacing={2} alignItems="flex-start">
+    <Stack spacing={2} sx={{ alignItems: 'flex-start' }}>
       <Typography variant="h5" component="h1">
         <FormattedMessage id="notFound.title" defaultMessage="This page does not exist" />
       </Typography>

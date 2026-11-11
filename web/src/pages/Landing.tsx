@@ -7,7 +7,7 @@ export const SAMPLE_SURVEY_PUBLIC_ID = 'demo-movilidad'
 
 export function Landing() {
   return (
-    <Stack spacing={3} alignItems="flex-start">
+    <Stack spacing={3} sx={{ alignItems: 'flex-start' }}>
       <Typography variant="h4" component="h1">
         <FormattedMessage id="app.title" defaultMessage="Delfos" />
       </Typography>
