@@ -1,0 +1,15 @@
+// Cloudflare Worker that serves the built single-page application as static assets, with no
+// script: unknown paths fall back to index.html so the client router handles them. The CI
+// workflow deploys it from main; the custom domain, its DNS record and its certificate are
+// created by Cloudflare from the route below.
+{
+  "name": "delfos-web",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+  },
+  "routes": [{ "pattern": "delfos.manuelalejandro.com", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false,
+}

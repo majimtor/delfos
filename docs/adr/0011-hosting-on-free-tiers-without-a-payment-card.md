@@ -1,6 +1,6 @@
 # 0011. Hosting on free tiers without a payment card
 
-- Status: accepted
+- Status: superseded by 0016
 - Date: 2026-11-10
 - Deciders: the maintainer
 
