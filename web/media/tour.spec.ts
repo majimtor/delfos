@@ -1,40 +1,24 @@
-import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { expect, test, type Page } from '@playwright/test'
+import { api, demoPassword, resetDemo } from './demo.ts'
 
 // The stranger's visit of the end-to-end path, paused between steps so that the recording can be
-// followed, against a locally seeded API. It writes the screenshots to docs/media and the video
-// to test-results/media; both are looked at before being committed or published.
-const api = process.env.E2E_API_BASE_URL ?? 'http://localhost:8080'
-const resetToken = process.env.E2E_RESET_TOKEN ?? 'e2e-reset-token'
-const demoPassword = 'delfos-demo'
+// followed, against a locally seeded API. The video lands in test-results/media and is looked at
+// before being published; the screenshots of the README come from screenshots.spec.ts.
 const beat = 2_000
 
 const settle = (page: Page, ms = beat) => page.waitForTimeout(ms)
 
-test.beforeAll(async ({ request }) => {
-  const reset = await request.post(`${api}/api/v1/demo/reset`, {
-    headers: { Authorization: `Bearer ${resetToken}` },
-  })
-  expect(reset.status(), 'the local API must run with the demo seed and its reset token').toBe(204)
-})
+test.beforeAll(async ({ request }) => resetDemo(request))
 
 test('the tour: answer the sample survey, manage it and watch the results move', async ({
   page,
   request,
 }, testInfo) => {
-  const webDir = path.resolve(testInfo.file, '../..')
-  const mediaDir = path.resolve(webDir, '../docs/media')
-  await mkdir(mediaDir, { recursive: true })
-  const shot = (name: string, fullPage = false) =>
-    page.screenshot({ path: path.join(mediaDir, `${name}.png`), fullPage })
-
   await test.step('landing', async () => {
     await page.goto('/')
     await expect(page.getByRole('heading', { name: 'Delfos' })).toBeVisible()
     await settle(page, 3_000)
-    await shot('landing')
-    await settle(page)
     await page.getByRole('link', { name: 'Answer a sample survey' }).click()
     await expect(page.getByRole('heading', { name: 'Urban mobility' })).toBeVisible()
     await settle(page)
@@ -44,9 +28,7 @@ test('the tour: answer the sample survey, manage it and watch the results move',
   await test.step('a later question appears and disappears as the answers change', async () => {
     await page.getByRole('radio', { name: 'By car' }).check()
     await expect(licence).toBeVisible()
-    await settle(page)
-    await shot('answer', true)
-    await settle(page)
+    await settle(page, 3_000)
     await page.getByRole('radio', { name: 'By bicycle' }).check()
     await expect(licence).toBeHidden()
     await settle(page)
@@ -86,7 +68,7 @@ test('the tour: answer the sample survey, manage it and watch the results move',
     await settle(page)
     await page.getByRole('button', { name: 'Send my response' }).click()
     await expect(page.getByRole('heading', { name: 'Thank you' })).toBeVisible()
-    await settle(page, 2_500)
+    await settle(page, 3_000)
   })
 
   await test.step('the manager logs in', async () => {
@@ -97,8 +79,7 @@ test('the tour: answer the sample survey, manage it and watch the results move',
     await settle(page, 700)
     await page.getByRole('button', { name: 'Enter' }).click()
     await expect(page.getByRole('heading', { name: 'My surveys' })).toBeVisible()
-    await settle(page, 2_000)
-    await shot('surveys', true)
+    await settle(page, 2_500)
   })
 
   const table = page.getByRole('table', { name: 'surveys' })
@@ -121,8 +102,7 @@ test('the tour: answer the sample survey, manage it and watch the results move',
     await expect(page.getByRole('heading', { name: 'Urban mobility' })).toBeVisible()
     const summary = page.getByRole('status').filter({ hasText: 'responses' })
     await expect(summary).toContainText('21 responses')
-    await settle(page, 2_500)
-    await shot('results')
+    await settle(page, 3_000)
     const submitted = await request.post(`${api}/api/v1/public/surveys/demo-mobility/responses`, {
       data: {
         versionNumber: 1,
@@ -141,5 +121,5 @@ test('the tour: answer the sample survey, manage it and watch the results move',
   // The recording is complete only once the page is closed.
   const video = page.video()
   await page.close()
-  await video?.saveAs(path.resolve(webDir, 'test-results/media/tour.webm'))
+  await video?.saveAs(path.resolve(testInfo.file, '../../test-results/media/tour.webm'))
 })
