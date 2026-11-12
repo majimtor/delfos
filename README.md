@@ -21,6 +21,11 @@ the first slice is in, the next ones are in [PLAN.md](PLAN.md).
 
 ## A tour
 
+A one-minute recording of the path, from the sample survey to the
+results that update:
+
+[tour.webm](https://github.com/user-attachments/assets/937cb056-7e97-415c-b389-20471704e4b9)
+
 ![The landing page, with the two ways in](docs/media/landing.png)
 
 Answering the sample survey: choosing "By car" makes the question about
