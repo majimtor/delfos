@@ -14,7 +14,12 @@ import com.manuelalejandro.delfos.evaluation.FieldError
 import com.manuelalejandro.delfos.evaluation.FieldErrorCode
 import com.manuelalejandro.delfos.survey.SurveyMapping.utc
 import java.util.UUID
+import org.springframework.core.io.InputStreamResource
+import org.springframework.core.io.Resource
+import org.springframework.http.ContentDisposition
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 
@@ -42,6 +47,15 @@ class ResultsController(private val service: ResultsService) : ResultsApi {
         return ResponseEntity.ok(AnswerPage(page.items.map { AnswerRecord(it.responseId, it.submittedAt.utc(), it.answer) }, page.nextCursor))
     }
 
+    override fun exportResponsesCsv(surveyId: UUID, versionNumber: Int): ResponseEntity<Resource> {
+        val file = service.exportCsv(CurrentSession.require().accountId, surveyId, versionNumber)
+        return ResponseEntity.ok()
+            .contentType(CSV)
+            .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(file.filename).build().toString())
+            // An InputStreamResource is written as it is read; no content length is computed up front.
+            .body(InputStreamResource(file.body))
+    }
+
     /** `304` without a body when the client already holds the current representation. */
     private fun <T : Any> tagged(result: ResultsService.Tagged<T>, ifNoneMatch: String?): ResponseEntity<T> =
         if (ifNoneMatch != null && ifNoneMatch.split(',').map { it.trim() }.contains(result.etag)) {
@@ -49,4 +63,8 @@ class ResultsController(private val service: ResultsService) : ResultsApi {
         } else {
             ResponseEntity.ok().eTag(result.etag).body(result.body)
         }
+
+    private companion object {
+        val CSV: MediaType = MediaType.parseMediaType("text/csv;charset=UTF-8")
+    }
 }

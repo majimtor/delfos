@@ -171,6 +171,17 @@ describe('ResultsPage', () => {
     await waitFor(() => expect(screen.getByRole('status').textContent).toContain('4 respuestas'))
   })
 
+  it('offers the responses of the version as a CSV download', async () => {
+    renderPage()
+    await screen.findByText('Colores')
+    const link = screen.getByRole('link', {
+      name: 'Descargar las respuestas de la versión 1 (CSV)',
+    })
+    expect(link.getAttribute('href')).toBe(
+      'http://localhost:8080/api/v1/surveys/a/versions/1/export.csv',
+    )
+  })
+
   it('lists the text answers on demand', async () => {
     renderPage()
     await screen.findByText('Colores')

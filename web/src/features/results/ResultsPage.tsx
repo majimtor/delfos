@@ -1,6 +1,7 @@
 import {
   Alert,
   Box,
+  Button,
   CircularProgress,
   Stack,
   ToggleButton,
@@ -11,7 +12,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { FormattedMessage, FormattedTime, useIntl } from 'react-intl'
 import { Link, useParams } from 'react-router'
-import { api } from '../../api/client'
+import { api, apiBaseUrl } from '../../api/client'
 import { usePageTitle } from '../../app/usePageTitle'
 import { QuestionResultView } from './QuestionResultView'
 import { useResults, type Scope } from './useResults'
@@ -109,6 +110,19 @@ export function ResultsPage({
           <FormattedMessage id="results.scope.comparable" defaultMessage="All versions" />
         </ToggleButton>
       </ToggleButtonGroup>
+      <Button
+        component="a"
+        href={`${apiBaseUrl}/api/v1/surveys/${surveyId}/versions/${versionNumber}/export.csv`}
+        variant="outlined"
+        size="small"
+        sx={{ alignSelf: 'flex-start' }}
+      >
+        <FormattedMessage
+          id="results.export"
+          defaultMessage="Download the responses of version {number} (CSV)"
+          values={{ number: versionNumber }}
+        />
+      </Button>
       {results.data.questions.map((question) => (
         <QuestionResultView
           key={question.key}

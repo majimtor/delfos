@@ -10,14 +10,20 @@ import com.manuelalejandro.delfos.api.generated.model.ValueCount
 import com.manuelalejandro.delfos.api.generated.model.VersionResults
 import com.manuelalejandro.delfos.definition.Question
 import com.manuelalejandro.delfos.definition.QuestionType
+import com.manuelalejandro.delfos.persistence.SurveyEntity
 import com.manuelalejandro.delfos.persistence.SurveyRepository
 import com.manuelalejandro.delfos.persistence.SurveyVersionEntity
 import com.manuelalejandro.delfos.persistence.SurveyVersionRepository
 import com.manuelalejandro.delfos.survey.Cursors
+import com.manuelalejandro.delfos.survey.DefinitionCodec
 import com.manuelalejandro.delfos.survey.DefinitionCodec.toModel
 import com.manuelalejandro.delfos.survey.SurveyMapping.utc
+import java.io.ByteArrayInputStream
+import java.io.InputStream
+import java.io.SequenceInputStream
 import java.time.Clock
 import java.time.Instant
+import java.util.Enumeration
 import java.util.UUID
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -37,6 +43,8 @@ class ResultsService(
     class ResponsePage(val items: List<AnswerQueries.ResponseRow>, val answers: Map<UUID, List<com.manuelalejandro.delfos.evaluation.Answer>>, val nextCursor: String?)
 
     class AnswerPage(val items: List<AnswerQueries.AnswerRow>, val nextCursor: String?)
+
+    class CsvFile(val filename: String, val body: InputStream)
 
     @Transactional(readOnly = true)
     fun versionResults(ownerId: UUID, surveyId: UUID, number: Int): Tagged<VersionResults> {
@@ -92,6 +100,35 @@ class ResultsService(
         return AnswerPage(page, rows.getOrNull(limit)?.let { Cursors.encode(page.last().submittedAt.toString(), page.last().responseId.toString()) })
     }
 
+    /**
+     * The responses of a version as a CSV file. The definition is read here; the rows are read in
+     * batches, through plain SQL, while the body is written, so the file never sits in memory whole.
+     */
+    @Transactional(readOnly = true)
+    fun exportCsv(ownerId: UUID, surveyId: UUID, number: Int): CsvFile {
+        val survey = owned(ownerId, surveyId)
+        val version = versionOf(surveyId, number)
+        val export = CsvExport(DefinitionCodec.definitionOf(version).questions)
+        return CsvFile("${survey.publicId}-v$number.csv", csvBody(export, version.id, number))
+    }
+
+    private fun csvBody(export: CsvExport, versionId: UUID, number: Int): InputStream {
+        val chunks = iterator {
+            yield(CsvExport.BOM + export.header())
+            var after: Pair<Instant, UUID>? = null
+            do {
+                val rows = queries.responsesAscending(versionId, number, after, EXPORT_BATCH)
+                val answers = queries.answersOf(rows.map { it.id })
+                yield(rows.joinToString("") { export.row(it.id, it.submittedAt, answers[it.id].orEmpty()) })
+                after = rows.lastOrNull()?.let { it.submittedAt to it.id }
+            } while (rows.size == EXPORT_BATCH)
+        }
+        return SequenceInputStream(object : Enumeration<InputStream> {
+            override fun hasMoreElements(): Boolean = chunks.hasNext()
+            override fun nextElement(): InputStream = ByteArrayInputStream(chunks.next().toByteArray(Charsets.UTF_8))
+        })
+    }
+
     private fun aggregate(questions: List<Question>, scope: AnswerQueries.Scope): List<QuestionResult> {
         val counts = queries.answerCounts(scope)
         val optionCounts = queries.optionCounts(scope)
@@ -145,11 +182,17 @@ class ResultsService(
 
     private fun version(ownerId: UUID, surveyId: UUID, number: Int): SurveyVersionEntity {
         owned(ownerId, surveyId)
-        return versions.findBySurveyIdAndNumber(surveyId, number)?.also { it.questions.forEach { q -> q.options.size } }
-            ?: throw ApiProblemException(HttpStatus.NOT_FOUND, ProblemCode.NOT_FOUND, "No such version.")
+        return versionOf(surveyId, number)
     }
 
-    private fun owned(ownerId: UUID, surveyId: UUID) {
+    private fun versionOf(surveyId: UUID, number: Int): SurveyVersionEntity =
+        versions.findBySurveyIdAndNumber(surveyId, number)?.also { it.questions.forEach { q -> q.options.size } }
+            ?: throw ApiProblemException(HttpStatus.NOT_FOUND, ProblemCode.NOT_FOUND, "No such version.")
+
+    private fun owned(ownerId: UUID, surveyId: UUID): SurveyEntity =
         surveys.findByIdAndOwnerId(surveyId, ownerId) ?: throw ApiProblemException(HttpStatus.NOT_FOUND, ProblemCode.NOT_FOUND, "No such survey.")
+
+    private companion object {
+        const val EXPORT_BATCH = 500
     }
 }

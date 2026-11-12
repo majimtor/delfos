@@ -15,6 +15,10 @@ release, breaking changes are allowed and recorded here.
 - Conformance suite for the visibility rules and the definition validator.
 - `POST /demo/reset`, protected by a shared token, applies the demo seed again;
   the public demo calls it once a day.
+- `GET /surveys/{id}/versions/{n}/export.csv` exports the responses of a
+  version as a streamed CSV file: one row per response, one column per
+  question, one column per option for multiple choice, text protected against
+  formula injection.
 
 ### Changed
 
