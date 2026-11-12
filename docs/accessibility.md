@@ -55,9 +55,11 @@ allows for data tables).
   revisit if the pass above finds it confusing.
 - The theme is light only, while the page allows the browser a dark colour
   scheme for its native controls.
-- The manager pages (survey list, results) got the automated checks and the
-  shared fixes, not a dedicated manual pass; the editor of the next slice
-  will bring one.
+- The manager pages (survey list, results, the new-survey form and the
+  draft editor) get the automated checks on every pull request and the
+  shared fixes, not a dedicated manual pass. The editor was built for the
+  keyboard (every control labelled, no drag and drop: questions and options
+  move with buttons) and its manual pass comes when its rules editor lands.
 
 ## How to repeat it
 

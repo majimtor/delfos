@@ -3,6 +3,8 @@ import { AppShell } from '../components/AppShell'
 import { AnswerPage } from '../features/answer/AnswerPage'
 import { LoginPage } from '../features/auth/LoginPage'
 import { RequireSession } from '../features/auth/RequireSession'
+import { EditorPage } from '../features/editor/EditorPage'
+import { NewSurveyPage } from '../features/editor/NewSurveyPage'
 import { ResultsPage } from '../features/results/ResultsPage'
 import { SurveysPage } from '../features/surveys/SurveysPage'
 import { Landing } from '../pages/Landing'
@@ -20,6 +22,8 @@ export const router = createBrowserRouter([
         Component: RequireSession,
         children: [
           { path: 'surveys', Component: SurveysPage },
+          { path: 'surveys/new', Component: NewSurveyPage },
+          { path: 'surveys/:surveyId/draft', Component: EditorPage },
           { path: 'surveys/:surveyId/versions/:versionNumber/results', Component: ResultsPage },
         ],
       },
