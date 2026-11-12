@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { DraftQuestion, DraftState } from './draft'
-import { validateDraft } from './validation'
+import { validateDetails, validateDraft } from './validation'
 
 const question = (overrides: Partial<DraftQuestion>): DraftQuestion => ({
   id: 'q',
@@ -174,5 +174,18 @@ describe('validateDraft rules', () => {
     expect(
       at([{ sourceQuestionKey: 'c', operator: 'IN', value: { optionKeys: ['a', 'z'] } }]),
     ).toEqual([{ path: 'rules[0].conditions[0].value.optionKeys[1]', code: 'UNKNOWN_OPTION' }])
+  })
+})
+
+describe('validateDetails', () => {
+  it('requires a title and bounds both fields', () => {
+    expect(validateDetails({ title: 'Clima', description: '' })).toEqual([])
+    expect(validateDetails({ title: ' ', description: '' })).toEqual([
+      { path: 'title', code: 'REQUIRED' },
+    ])
+    expect(validateDetails({ title: 'x'.repeat(201), description: 'y'.repeat(2001) })).toEqual([
+      { path: 'title', code: 'TOO_LONG', params: { max: 200 } },
+      { path: 'description', code: 'TOO_LONG', params: { max: 2000 } },
+    ])
   })
 })

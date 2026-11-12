@@ -10,6 +10,8 @@ let putBodies: Array<Record<string, unknown>> = []
 let published = 0
 let serverRejectsMax: number | null = null
 let serverRejectsRuleValue: number | null = null
+let surveyPublished = false
+let patchBodies: Array<Record<string, unknown>> = []
 
 const draft = () => ({
   number: 1,
@@ -43,16 +45,31 @@ async function fakeFetch(input: RequestInfo | URL): Promise<Response> {
       publicId: 'pub-aaaaaaaa',
       title: 'Hábitos de lectura',
       language: 'es',
-      status: 'DRAFT',
+      status: surveyPublished ? 'PUBLISHED' : 'DRAFT',
       respondentMode: 'ANONYMOUS',
       responseCount: 0,
       hasDraft: true,
+      ...(surveyPublished ? { publishedVersionNumber: 1 } : {}),
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
     })
   }
+  if (url.pathname.endsWith('/surveys/a') && request.method === 'PATCH') {
+    const body = (await request.json()) as Record<string, unknown>
+    patchBodies.push(body)
+    if (body.title === 'rechazado') {
+      return json(400, {
+        type: 'urn:delfos:problem:validation-error',
+        title: 'Bad Request',
+        status: 400,
+        code: 'VALIDATION_ERROR',
+        errors: [{ path: 'title', code: 'TOO_LONG', params: { max: 200 } }],
+      })
+    }
+    return json(200, { id: 'a', title: body.title })
+  }
   if (url.pathname.endsWith('/surveys/a/draft') && request.method === 'GET')
-    return json(200, draft())
+    return json(200, { ...draft(), number: surveyPublished ? 2 : 1 })
   if (url.pathname.endsWith('/surveys/a/draft') && request.method === 'PUT') {
     const body = (await request.json()) as {
       questions: Array<Record<string, unknown>>
@@ -117,6 +134,8 @@ describe('EditorPage', () => {
     published = 0
     serverRejectsMax = null
     serverRejectsRuleValue = null
+    surveyPublished = false
+    patchBodies = []
     vi.stubGlobal('fetch', vi.fn(fakeFetch))
   })
   afterEach(() => {
@@ -247,6 +266,35 @@ describe('EditorPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Guardar el borrador' }))
     await screen.findByText('Borrador guardado.')
     expect(putBodies).toHaveLength(2)
+  })
+
+  it('saves the title and description before the draft, and says what a draft of a published survey becomes', async () => {
+    surveyPublished = true
+    renderPage()
+    await screen.findByText('Hábitos de lectura')
+    expect(screen.getByText(/La versión 1 está publicada/).textContent).toContain(
+      'pasará a ser la versión 2',
+    )
+    const details = screen.getByRole('region', { name: 'Título y descripción' })
+    fireEvent.change(within(details).getByLabelText(/Título/), {
+      target: { value: ' Hábitos de lectura 2026 ' },
+    })
+    fireEvent.change(within(details).getByLabelText(/Descripción/), { target: { value: '' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar el borrador' }))
+    await screen.findByText('Borrador guardado.')
+    expect(patchBodies).toEqual([{ title: 'Hábitos de lectura 2026', description: null }])
+    expect(putBodies).toHaveLength(1)
+
+    fireEvent.change(within(details).getByLabelText(/Título/), { target: { value: 'rechazado' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar el borrador' }))
+    await screen.findByRole('alert')
+    expect(within(details).getByText('Usa como máximo 200 caracteres.')).toBeTruthy()
+    expect(putBodies).toHaveLength(1)
+
+    fireEvent.change(within(details).getByLabelText(/Título/), { target: { value: '' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar el borrador' }))
+    expect(within(details).getByText('Obligatorio.')).toBeTruthy()
+    expect(patchBodies).toHaveLength(2)
   })
 
   it('removes a question and drops the rules that mention it', async () => {

@@ -18,6 +18,27 @@ const TEXT_LENGTH = { min: 1, max: 2000 }
 
 const isWhole = (value: number) => Number.isInteger(value)
 
+export interface SurveyDetails {
+  title: string
+  description: string
+}
+
+const MAX_TITLE = 200
+const MAX_DESCRIPTION = 2000
+
+/** The checks of the contract on the survey's own fields, with the paths `PATCH /surveys/{id}` reports. */
+export function validateDetails(details: SurveyDetails): DraftError[] {
+  const errors: DraftError[] = []
+  if (details.title.trim() === '') errors.push({ path: 'title', code: 'REQUIRED' })
+  else if (details.title.length > MAX_TITLE) {
+    errors.push({ path: 'title', code: 'TOO_LONG', params: { max: MAX_TITLE } })
+  }
+  if (details.description.length > MAX_DESCRIPTION) {
+    errors.push({ path: 'description', code: 'TOO_LONG', params: { max: MAX_DESCRIPTION } })
+  }
+  return errors
+}
+
 /**
  * Mirrors the checks of the contract and of the shared validator that need no server, so that the
  * editor marks the fields before a request. The server remains the authority: it validates again

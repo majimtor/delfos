@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { IntlProvider } from 'react-intl'
-import { MemoryRouter } from 'react-router'
+import { MemoryRouter, Route, Routes } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import es from '../../i18n/es.json'
 import { SurveysPage } from './SurveysPage'
@@ -15,6 +15,7 @@ const base = {
 }
 
 let surveys: Array<Record<string, unknown>> = []
+let draftsCreated: string[] = []
 
 function reset() {
   surveys = [
@@ -81,6 +82,17 @@ async function fakeFetch(input: RequestInfo | URL): Promise<Response> {
       surveys.find((s) => s.id === id),
     )
   }
+  const draft = /\/surveys\/([a-z])\/draft$/.exec(url.pathname)
+  if (draft && request.method === 'POST') {
+    draftsCreated.push(draft[1]!)
+    return json(201, {
+      number: 2,
+      status: 'DRAFT',
+      createdAt: '2026-01-03T00:00:00Z',
+      questions: [],
+      rules: [],
+    })
+  }
   return json(404, { code: 'NOT_FOUND' })
 }
 
@@ -89,8 +101,11 @@ function renderPage() {
   return render(
     <QueryClientProvider client={client}>
       <IntlProvider locale="es" messages={es}>
-        <MemoryRouter>
-          <SurveysPage />
+        <MemoryRouter initialEntries={['/surveys']}>
+          <Routes>
+            <Route path="/surveys" element={<SurveysPage />} />
+            <Route path="/surveys/:surveyId/draft" element={<p>Editor del borrador</p>} />
+          </Routes>
         </MemoryRouter>
       </IntlProvider>
     </QueryClientProvider>,
@@ -102,6 +117,7 @@ const row = (title: string) => screen.getByText(title).closest('tr')!
 describe('SurveysPage', () => {
   beforeEach(() => {
     reset()
+    draftsCreated = []
     vi.stubGlobal('fetch', vi.fn(fakeFetch))
   })
   afterEach(() => {
@@ -135,6 +151,16 @@ describe('SurveysPage', () => {
     await waitFor(() =>
       expect(within(row('Primer borrador')).getByRole('button', { name: 'Cerrar' })).toBeTruthy(),
     )
+  })
+
+  it('creates a new version of a published survey and opens its editor', async () => {
+    renderPage()
+    await screen.findByText('Ya publicada')
+    const published = row('Ya publicada')
+    expect(within(published).queryByRole('link', { name: 'Editar el borrador' })).toBeNull()
+    fireEvent.click(within(published).getByRole('button', { name: 'Nueva versión' }))
+    await screen.findByText('Editor del borrador')
+    expect(draftsCreated).toEqual(['b'])
   })
 
   it('explains why an empty draft cannot be published', async () => {

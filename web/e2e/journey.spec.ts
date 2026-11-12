@@ -137,7 +137,7 @@ test('a manager sees only their own surveys', async ({ page }) => {
   await expect(table).not.toContainText('Movilidad urbana')
 })
 
-test('a manager creates a survey, edits its draft and publishes it', async ({ page }) => {
+test('a manager creates a survey, publishes it with a rule and then a second version', async ({ page }) => {
   await login(page, 'demo-manager-2')
   await page.getByRole('link', { name: 'Nueva encuesta' }).click()
   await expect(page.getByRole('heading', { name: 'Nueva encuesta' })).toBeVisible()
@@ -206,4 +206,35 @@ test('a manager creates a survey, edits its draft and publishes it', async ({ pa
   await expect(dependent).toBeVisible()
   await page.getByRole('radio', { name: 'Bueno' }).check()
   await expect(dependent).toBeHidden()
+
+  // A new version: the draft copies the published questions and is published as version 2.
+  await page.goto('/surveys')
+  await expect(page.getByRole('heading', { name: 'Mis encuestas' })).toBeVisible()
+  await row.getByRole('button', { name: 'Nueva versión' }).click()
+  await expect(page.getByRole('heading', { name: 'Clima del equipo' })).toBeVisible()
+  await expect(page.getByText(/Borrador de la versión 2/)).toBeVisible()
+  await expect(page.getByText(/La versión 1 está publicada/)).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Pregunta 2' })).toBeVisible()
+  const details = page.getByRole('region', { name: 'Título y descripción' })
+  await details.getByLabel('Título').fill('Clima del equipo (2026)')
+  await page.getByRole('button', { name: 'Añadir una pregunta' }).click()
+  await page.getByRole('menuitem', { name: 'Texto' }).click()
+  await expect(page.locator('[role="menu"]')).toHaveCount(0)
+  await page
+    .getByRole('region', { name: 'Pregunta 3' })
+    .getByLabel('Texto de la pregunta')
+    .fill('¿Algo más que contarnos?')
+  await page.getByRole('button', { name: 'Guardar y publicar' }).click()
+  await expect(page.getByRole('heading', { name: 'Mis encuestas' })).toBeVisible()
+  const renamed = page
+    .getByRole('table', { name: 'surveys' })
+    .getByRole('row', { name: /Clima del equipo \(2026\)/ })
+  await expect(renamed).toContainText('Publicada')
+  await expect(renamed.getByRole('link', { name: 'Resultados' })).toHaveAttribute(
+    'href',
+    /\/versions\/2\/results$/,
+  )
+  await page.goto(publicLink!)
+  await expect(page.getByRole('heading', { name: 'Clima del equipo (2026)' })).toBeVisible()
+  await expect(page.getByRole('textbox', { name: '¿Algo más que contarnos?' })).toBeVisible()
 })
