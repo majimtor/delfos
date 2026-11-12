@@ -61,7 +61,7 @@ export function NewSurveyPage() {
           </Alert>
         )}
         <TextField
-          label={intl.formatMessage({ id: 'newSurvey.field.title', defaultMessage: 'Title' })}
+          label={intl.formatMessage({ id: 'survey.field.title', defaultMessage: 'Title' })}
           required
           error={Boolean(errors.title)}
           helperText={
@@ -80,7 +80,7 @@ export function NewSurveyPage() {
         />
         <TextField
           label={intl.formatMessage({
-            id: 'newSurvey.field.description',
+            id: 'survey.field.description',
             defaultMessage: 'Description',
           })}
           multiline

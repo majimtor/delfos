@@ -6,6 +6,7 @@ import {
   Menu,
   MenuItem,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -26,7 +27,7 @@ import {
 import { draftErrorMessage } from './errors'
 import { typeLabel } from './labels'
 import { QuestionEditor } from './QuestionEditor'
-import { validateDraft, type DraftError } from './validation'
+import { validateDetails, validateDraft, type DraftError, type SurveyDetails } from './validation'
 
 class RequestFailed extends Error {
   readonly status: number
@@ -115,6 +116,10 @@ function DraftEditor({ surveyId, survey, draft }: EditorProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [state, dispatch] = useReducer(draftReducer, draft, fromVersion)
+  const [details, setDetails] = useState<SurveyDetails>({
+    title: survey.title,
+    description: survey.description ?? '',
+  })
   const [attempted, setAttempted] = useState<'save' | 'publish' | null>(null)
   const [serverErrors, setServerErrors] = useState<FieldError[] | null>(null)
   const [notice, setNotice] = useState<Notice>(null)
@@ -125,6 +130,16 @@ function DraftEditor({ surveyId, survey, draft }: EditorProps) {
       const { data, error, response } = await api.PUT('/surveys/{surveyId}/draft', {
         params: { path: { surveyId } },
         body: definition,
+      })
+      if (data) return data
+      throw new RequestFailed(response.status, error ?? null)
+    },
+  })
+  const update = useMutation({
+    mutationFn: async (next: SurveyDetails) => {
+      const { data, error, response } = await api.PATCH('/surveys/{surveyId}', {
+        params: { path: { surveyId } },
+        body: { title: next.title, description: next.description || null },
       })
       if (data) return data
       throw new RequestFailed(response.status, error ?? null)
@@ -145,7 +160,11 @@ function DraftEditor({ surveyId, survey, draft }: EditorProps) {
     setNotice(null)
     dispatch(action)
   }
-  const errors: DraftError[] = serverErrors ?? (attempted ? validateDraft(state, attempted) : [])
+  const mirror = (mode: 'save' | 'publish') => [
+    ...validateDetails(details),
+    ...validateDraft(state, mode),
+  ]
+  const errors: DraftError[] = serverErrors ?? (attempted ? mirror(attempted) : [])
   const errorsAt = (path: string, prefix = false) =>
     errors.filter((error) => (prefix ? error.path.startsWith(path) : error.path === path))
   const topErrors = errors.filter((error) => error.path === 'questions')
@@ -155,8 +174,14 @@ function DraftEditor({ surveyId, survey, draft }: EditorProps) {
     setAttempted(mode)
     setNotice(null)
     setServerErrors(null)
-    if (validateDraft(state, mode).length > 0) return
+    if (mirror(mode).length > 0) return
     try {
+      const trimmed = { title: details.title.trim(), description: details.description.trim() }
+      if (trimmed.title !== survey.title || trimmed.description !== (survey.description ?? '')) {
+        await update.mutateAsync(trimmed)
+        setDetails(trimmed)
+        await queryClient.invalidateQueries({ queryKey: ['survey', surveyId] })
+      }
       const saved = await save.mutateAsync(toDraftDefinition(state))
       dispatch({ type: 'loaded', version: saved })
       await queryClient.invalidateQueries({ queryKey: ['surveys'] })
@@ -177,7 +202,14 @@ function DraftEditor({ surveyId, survey, draft }: EditorProps) {
     }
   }
 
-  const busy = save.isPending || publish.isPending
+  const busy = update.isPending || save.isPending || publish.isPending
+  const fieldErrors = (path: string) => {
+    const found = errorsAt(path)
+    return {
+      error: found.length > 0,
+      helperText: found.length > 0 ? draftErrorMessage(intl, found[0]!) : undefined,
+    }
+  }
   return (
     <Stack spacing={3}>
       <Box>
@@ -198,8 +230,53 @@ function DraftEditor({ surveyId, survey, draft }: EditorProps) {
             defaultMessage="Draft of version {number}"
             values={{ number: draft.number }}
           />
+          {survey.publishedVersionNumber !== undefined && (
+            <>
+              {' '}
+              <FormattedMessage
+                id="editor.supersedes"
+                defaultMessage="Version {published} is published and keeps receiving responses; publishing this draft makes it version {number}."
+                values={{ published: survey.publishedVersionNumber, number: draft.number }}
+              />
+            </>
+          )}
         </Typography>
       </Box>
+      <Stack
+        spacing={2}
+        component="section"
+        aria-label={intl.formatMessage({
+          id: 'editor.details',
+          defaultMessage: 'Title and description',
+        })}
+      >
+        <TextField
+          label={intl.formatMessage({ id: 'survey.field.title', defaultMessage: 'Title' })}
+          required
+          value={details.title}
+          onChange={(event) => {
+            setServerErrors(null)
+            setNotice(null)
+            setDetails({ ...details, title: event.target.value })
+          }}
+          {...fieldErrors('title')}
+        />
+        <TextField
+          label={intl.formatMessage({
+            id: 'survey.field.description',
+            defaultMessage: 'Description',
+          })}
+          multiline
+          minRows={2}
+          value={details.description}
+          onChange={(event) => {
+            setServerErrors(null)
+            setNotice(null)
+            setDetails({ ...details, description: event.target.value })
+          }}
+          {...fieldErrors('description')}
+        />
+      </Stack>
       {notice && (
         <Alert
           severity={notice === 'saved' ? 'success' : 'error'}

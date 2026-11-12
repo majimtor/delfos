@@ -15,7 +15,7 @@ import {
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { FormattedDate, FormattedMessage, defineMessages, useIntl } from 'react-intl'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { api } from '../../api/client'
 import type { Problem, Schemas } from '../../api/types'
 import { usePageTitle } from '../../app/usePageTitle'
@@ -46,6 +46,7 @@ export function SurveysPage() {
   const intl = useIntl()
   usePageTitle(intl.formatMessage({ id: 'surveys.title', defaultMessage: 'My surveys' }))
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [failure, setFailure] = useState<Failure | null>(null)
   const surveys = useInfiniteQuery({
     queryKey: SURVEYS_QUERY_KEY,
@@ -70,6 +71,23 @@ export function SurveysPage() {
     },
     onMutate: () => setFailure(null),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: SURVEYS_QUERY_KEY }),
+    onError: (error) => setFailure(error instanceof ActionError ? error.failure : 'generic'),
+  })
+
+  // A published survey is edited through a new draft copied from the published version.
+  const newVersion = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error, response } = await api.POST('/surveys/{surveyId}/draft', {
+        params: { path: { surveyId: id } },
+      })
+      if (data) return id
+      throw new ActionError(error ?? null, response.status)
+    },
+    onMutate: () => setFailure(null),
+    onSuccess: async (id) => {
+      await queryClient.invalidateQueries({ queryKey: SURVEYS_QUERY_KEY })
+      navigate(`/surveys/${id}/draft`)
+    },
     onError: (error) => setFailure(error instanceof ActionError ? error.failure : 'generic'),
   })
 
@@ -164,6 +182,18 @@ export function SurveysPage() {
                         disabled={act.isPending}
                       >
                         <FormattedMessage id="surveys.action.publish" defaultMessage="Publish" />
+                      </Button>
+                    )}
+                    {survey.status === 'PUBLISHED' && !survey.hasDraft && (
+                      <Button
+                        size="small"
+                        onClick={() => newVersion.mutate(survey.id)}
+                        disabled={newVersion.isPending}
+                      >
+                        <FormattedMessage
+                          id="surveys.action.newVersion"
+                          defaultMessage="New version"
+                        />
                       </Button>
                     )}
                     {survey.status === 'PUBLISHED' && (
