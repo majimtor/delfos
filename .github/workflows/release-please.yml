@@ -1,0 +1,24 @@
+name: Release
+
+# Keeps a release pull request open with the changelog and the next version computed from the
+# Conventional Commits on main, and tags the version when that pull request merges (ADR 0013).
+on:
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  release-please:
+    name: Release pull request and tag
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          # A token of the maintainer, so that the release pull request gets its checks; a pull
+          # request opened with the workflow token triggers none and would have to be closed and
+          # reopened by hand.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}

@@ -6,4 +6,6 @@ config:
 ignores:
   # Pull request templates start at the second heading level by convention.
   - .github/pull_request_template.md
+  # Written by release-please from the commit history; its layout is not ours to change.
+  - CHANGELOG.md
   - "**/node_modules/**"

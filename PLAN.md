@@ -306,9 +306,13 @@ both languages with the untranslated-keys check; CodeQL (eligible for
 public repositories, checked 2026-11-10); container image build and push
 to the GitHub registry on `main`; the end-to-end path with Playwright and
 axe against a locally seeded API. Every gate blocks the merge; none is
-advisory. Secrets: Neon credentials in Render's environment; the
-Cloudflare API token and account identifier and the demo-reset secret in
-Actions secrets; nothing in the repository.
+advisory. Releases: `release-please` reads the Conventional Commits on
+`main`, keeps a release pull request open with the changelog and the next
+version, and tags the version when that pull request merges; 1.0.0 is
+reserved for the launch (ADR 0013). Secrets: Neon credentials in Render's
+environment; the Cloudflare API token and account identifier, the
+demo-reset secret and the release token in Actions secrets; nothing in the
+repository.
 
 Image: a two-stage Dockerfile building with Gradle 9.8 on JDK 25 and
 running on a Temurin 25 JRE, with conservative JVM flags and a JVM AOT
@@ -441,14 +445,16 @@ the first and the last merge of the slice, which bounds the hours of work
 from above. The slices were delivered in continuous working sessions, not
 at ten hours a week, so the weeks column is the derivation it says it is
 and not a forecast of calendar time; the hours remain the unit the
-remaining slices are planned in, and the estimates of S2 onwards are
-checked against what happens when S2 closes.
+remaining slices are planned in. S2 closed with the same gap as the slices
+before it; the estimates of S3 onwards stay as written, and the table keeps
+recording what happens next to them.
 
 | Slice | Probable estimate | Actual |
 | --- | --- | --- |
 | S0 Foundations | 12 h | 2026-11-10, 16:20 to 16:42: the initial commits and one pull request |
 | S1a Answer a survey | 155 h | 2026-11-10 16:42 to 2026-11-11 19:02, 26 h elapsed; 20 pull requests |
-| S1b Second language and polish | 45 h | 2026-11-11 19:02 to 2026-11-12 08:39 for the last content change, 14 h elapsed; 5 pull requests, this one included |
+| S1b Second language and polish | 45 h | 2026-11-11 19:02 to 2026-11-12 08:39 for the last content change, 14 h elapsed; 5 pull requests, the closing one included |
+| S2 Build surveys | 85 h | 2026-11-12 10:56 to 2026-11-12 22:24 for the last content change, 11 h elapsed; 5 pull requests, the closing one included |
 
 Definition of done, S1a: a stranger opens the demo, answers a seeded
 Spanish survey whose later questions appear and disappear as they answer,
