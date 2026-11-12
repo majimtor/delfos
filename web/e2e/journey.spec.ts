@@ -156,12 +156,15 @@ test('a manager creates a survey, edits its draft and publishes it', async ({ pa
 
   await page.getByRole('button', { name: 'Añadir una pregunta' }).click()
   await page.getByRole('menuitem', { name: 'Elección única' }).click()
+  await expect(page.getByRole('menu')).toBeHidden()
   const first = page.getByRole('region', { name: 'Pregunta 1' })
   await first.getByLabel('Texto de la pregunta').fill('¿Cómo valoras el ambiente del equipo?')
   await first.getByLabel('Opción 1', { exact: true }).fill('Bueno')
   await first.getByLabel('Opción 2', { exact: true }).fill('Mejorable')
   await page.getByRole('button', { name: 'Añadir una pregunta' }).click()
   await page.getByRole('menuitem', { name: 'Escala' }).click()
+  // The menu fades out; axe must not measure the contrast of items half-way through the fade.
+  await expect(page.getByRole('menu')).toBeHidden()
   const second = page.getByRole('region', { name: 'Pregunta 2' })
   await second.getByLabel('Texto de la pregunta').fill('¿Recomendarías el equipo?')
   await expectAccessible(page, 'the editor')
