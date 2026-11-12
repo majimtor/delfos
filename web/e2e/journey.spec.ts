@@ -137,7 +137,9 @@ test('a manager sees only their own surveys', async ({ page }) => {
   await expect(table).not.toContainText('Movilidad urbana')
 })
 
-test('a manager creates a survey, publishes it with a rule and then a second version', async ({ page }) => {
+test('a manager creates a survey, publishes it with a rule and then a second version', async ({
+  page,
+}) => {
   await login(page, 'demo-manager-2')
   await page.getByRole('link', { name: 'Nueva encuesta' }).click()
   await expect(page.getByRole('heading', { name: 'Nueva encuesta' })).toBeVisible()
