@@ -14,7 +14,7 @@ async function expectAccessible(page: Page, name: string) {
   const found = results.violations.map((v) => ({
     id: v.id,
     impact: v.impact,
-    nodes: v.nodes.map((n) => n.target),
+    nodes: v.nodes.map((n) => ({ target: n.target, html: n.html.slice(0, 200) })),
   }))
   expect(found, `accessibility violations on ${name}`).toEqual([])
 }
@@ -156,15 +156,16 @@ test('a manager creates a survey, edits its draft and publishes it', async ({ pa
 
   await page.getByRole('button', { name: 'Añadir una pregunta' }).click()
   await page.getByRole('menuitem', { name: 'Elección única' }).click()
-  await expect(page.getByRole('menu')).toBeHidden()
+  await expect(page.locator('[role="menu"]')).toHaveCount(0)
   const first = page.getByRole('region', { name: 'Pregunta 1' })
   await first.getByLabel('Texto de la pregunta').fill('¿Cómo valoras el ambiente del equipo?')
   await first.getByLabel('Opción 1', { exact: true }).fill('Bueno')
   await first.getByLabel('Opción 2', { exact: true }).fill('Mejorable')
   await page.getByRole('button', { name: 'Añadir una pregunta' }).click()
   await page.getByRole('menuitem', { name: 'Escala' }).click()
-  // The menu fades out; axe must not measure the contrast of items half-way through the fade.
-  await expect(page.getByRole('menu')).toBeHidden()
+  // The menu fades out hidden from the accessibility tree and is removed afterwards; axe must not
+  // measure the contrast of its items mid-fade, so wait for the removal, not for the hiding.
+  await expect(page.locator('[role="menu"]')).toHaveCount(0)
   const second = page.getByRole('region', { name: 'Pregunta 2' })
   await second.getByLabel('Texto de la pregunta').fill('¿Recomendarías el equipo?')
   await expectAccessible(page, 'the editor')
