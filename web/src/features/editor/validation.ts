@@ -1,4 +1,5 @@
 import { isChoice, type DraftState } from './draft'
+import { OPERATORS, fieldsOf, presentFields } from './rules'
 
 /** An error in the shape of the contract's `FieldError`, with the same paths the server uses. */
 export interface DraftError {
@@ -91,5 +92,75 @@ export function validateDraft(state: DraftState, mode: 'save' | 'publish' = 'sav
       }
     }
   })
+  validateRules(state, errors)
   return errors
+}
+
+function validateRules(state: DraftState, errors: DraftError[]) {
+  const byKey = new Map(
+    state.questions.map((question, index) => [question.key, { question, index }]),
+  )
+  const targets = new Set<string>()
+  state.rules.forEach((rule, ruleIndex) => {
+    const rulePath = `rules[${ruleIndex}]`
+    const target = byKey.get(rule.targetQuestionKey)
+    if (!target) errors.push({ path: `${rulePath}.targetQuestionKey`, code: 'UNKNOWN_QUESTION' })
+    else if (targets.has(rule.targetQuestionKey)) {
+      errors.push({ path: `${rulePath}.targetQuestionKey`, code: 'DUPLICATE_RULE' })
+    } else targets.add(rule.targetQuestionKey)
+    if (rule.conditions.length === 0) {
+      errors.push({ path: `${rulePath}.conditions`, code: 'EMPTY_CONDITIONS' })
+    }
+    rule.conditions.forEach((condition, conditionIndex) => {
+      const path = `${rulePath}.conditions[${conditionIndex}]`
+      const source = byKey.get(condition.sourceQuestionKey)
+      const operator = OPERATORS[condition.operator]
+      if (!source) errors.push({ path: `${path}.sourceQuestionKey`, code: 'UNKNOWN_QUESTION' })
+      else {
+        if (target && source.index === target.index) {
+          errors.push({ path: `${path}.sourceQuestionKey`, code: 'SELF_REFERENCE' })
+        } else if (target && source.index > target.index) {
+          errors.push({
+            path: `${path}.sourceQuestionKey`,
+            code: 'FORWARD_REFERENCE',
+            params: { sourcePosition: source.index + 1, targetPosition: target.index + 1 },
+          })
+        }
+        if (!operator.sourceTypes.includes(source.question.type)) {
+          errors.push({
+            path: `${path}.operator`,
+            code: 'OPERATOR_TYPE_MISMATCH',
+            params: { sourceType: source.question.type },
+          })
+        }
+      }
+      const present = presentFields(condition.value)
+      const expected = fieldsOf(operator.shape)
+      const value = condition.value
+      if (
+        present.length !== expected.length ||
+        expected.some((field) => !present.includes(field))
+      ) {
+        errors.push({ path: `${path}.value`, code: 'VALUE_TYPE_MISMATCH' })
+      } else if (condition.operator === 'BETWEEN' && value!.min! > value!.max!) {
+        errors.push({ path: `${path}.value`, code: 'VALUE_TYPE_MISMATCH' })
+      } else if (
+        source &&
+        operator.sourceTypes.includes(source.question.type) &&
+        source.question.options
+      ) {
+        const keys = new Set(source.question.options.map((option) => option.key))
+        if (expected.includes('optionKey') && !keys.has(value!.optionKey!)) {
+          errors.push({ path: `${path}.value.optionKey`, code: 'UNKNOWN_OPTION' })
+        }
+        if (expected.includes('optionKeys')) {
+          value!.optionKeys!.forEach((key, keyIndex) => {
+            if (!keys.has(key)) {
+              errors.push({ path: `${path}.value.optionKeys[${keyIndex}]`, code: 'UNKNOWN_OPTION' })
+            }
+          })
+        }
+      }
+    })
+  })
 }

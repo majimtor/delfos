@@ -146,8 +146,8 @@ function DraftEditor({ surveyId, survey, draft }: EditorProps) {
     dispatch(action)
   }
   const errors: DraftError[] = serverErrors ?? (attempted ? validateDraft(state, attempted) : [])
-  const errorsAt = (path: string) => errors.filter((error) => error.path === path)
-  const ruleErrors = errors.filter((error) => error.path.startsWith('rules')).length
+  const errorsAt = (path: string, prefix = false) =>
+    errors.filter((error) => (prefix ? error.path.startsWith(path) : error.path === path))
   const topErrors = errors.filter((error) => error.path === 'questions')
 
   const submit = async (andPublish: boolean) => {
@@ -235,16 +235,6 @@ function DraftEditor({ surveyId, survey, draft }: EditorProps) {
                 },
                 { count: errors.length },
               )}
-          {ruleErrors > 0 && (
-            <>
-              {' '}
-              <FormattedMessage
-                id="editor.error.rules"
-                defaultMessage="{count, plural, one {A visibility rule is} other {# visibility rules are}} no longer valid after this change."
-                values={{ count: ruleErrors }}
-              />
-            </>
-          )}
         </Alert>
       )}
       {state.questions.length === 0 && (
@@ -256,6 +246,8 @@ function DraftEditor({ surveyId, survey, draft }: EditorProps) {
         <QuestionEditor
           key={question.id}
           question={question}
+          questions={state.questions}
+          rules={state.rules}
           index={index}
           count={state.questions.length}
           errorsAt={errorsAt}

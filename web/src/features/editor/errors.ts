@@ -40,6 +40,50 @@ export function draftErrorMessage(intl: IntlShape, error: DraftError): string {
         id: 'editor.error.noQuestions',
         defaultMessage: 'Add at least one question before publishing.',
       })
+    case 'UNKNOWN_QUESTION':
+      return intl.formatMessage({
+        id: 'editor.error.unknownQuestion',
+        defaultMessage: 'That question no longer exists.',
+      })
+    case 'SELF_REFERENCE':
+      return intl.formatMessage({
+        id: 'editor.error.selfReference',
+        defaultMessage: 'A question cannot depend on itself.',
+      })
+    case 'FORWARD_REFERENCE':
+      return intl.formatMessage(
+        {
+          id: 'editor.error.forwardReference',
+          defaultMessage:
+            'The source question must come before this one; it is now question {sourcePosition}.',
+        },
+        { sourcePosition: numberOr(p.sourcePosition, 0) },
+      )
+    case 'OPERATOR_TYPE_MISMATCH':
+      return intl.formatMessage({
+        id: 'editor.error.operatorTypeMismatch',
+        defaultMessage: 'This operator does not fit the type of the source question.',
+      })
+    case 'VALUE_TYPE_MISMATCH':
+      return intl.formatMessage({
+        id: 'editor.error.valueTypeMismatch',
+        defaultMessage: 'Enter a value that fits the operator.',
+      })
+    case 'DUPLICATE_RULE':
+      return intl.formatMessage({
+        id: 'editor.error.duplicateRule',
+        defaultMessage: 'This question already has a rule.',
+      })
+    case 'EMPTY_CONDITIONS':
+      return intl.formatMessage({
+        id: 'editor.error.emptyConditions',
+        defaultMessage: 'Add at least one condition.',
+      })
+    case 'UNKNOWN_OPTION':
+      return intl.formatMessage({
+        id: 'editor.error.unknownOption',
+        defaultMessage: 'That option no longer exists.',
+      })
     default:
       return intl.formatMessage({
         id: 'error.INVALID_VALUE',

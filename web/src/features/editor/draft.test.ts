@@ -214,3 +214,138 @@ describe('toDraftDefinition', () => {
     })
   })
 })
+
+describe('draftReducer rules', () => {
+  const scaleAdded = () => {
+    const state = draftReducer(loaded(), { type: 'addQuestion', questionType: 'SCALE' })
+    return { state, scale: state.questions[3]! }
+  }
+
+  it('adds a rule on an earlier question with one condition, and none on the first question', () => {
+    const { state, scale } = scaleAdded()
+    const withRule = draftReducer(state, { type: 'addRule', id: scale.id })
+    expect(withRule.rules).toHaveLength(2)
+    expect(withRule.rules[1]).toEqual({
+      targetQuestionKey: scale.key,
+      match: 'ALL',
+      conditions: [{ sourceQuestionKey: 'books', operator: 'EQ' }],
+    })
+    expect(draftReducer(withRule, { type: 'addRule', id: scale.id })).toBe(withRule)
+    expect(draftReducer(state, { type: 'addRule', id: 'books' })).toBe(state)
+  })
+
+  it('changes the match, adds and removes conditions, and removes the rule with its last condition', () => {
+    const { state, scale } = scaleAdded()
+    let next = draftReducer(state, { type: 'addRule', id: scale.id })
+    next = draftReducer(next, { type: 'setRuleMatch', id: scale.id, match: 'ANY' })
+    expect(next.rules[1]!.match).toBe('ANY')
+    next = draftReducer(next, { type: 'addCondition', id: scale.id })
+    expect(next.rules[1]!.conditions).toHaveLength(2)
+    next = draftReducer(next, { type: 'removeCondition', id: scale.id, index: 0 })
+    expect(next.rules[1]!.conditions).toHaveLength(1)
+    next = draftReducer(next, { type: 'removeCondition', id: scale.id, index: 0 })
+    expect(next.rules).toHaveLength(1)
+    expect(draftReducer(next, { type: 'removeRule', id: 'recommendation' }).rules).toEqual([])
+  })
+
+  it('resets the operator and the value with the source, keeps the value only across operators of the same shape', () => {
+    const { state, scale } = scaleAdded()
+    let next = draftReducer(state, { type: 'addRule', id: scale.id })
+    next = draftReducer(next, {
+      type: 'setConditionValue',
+      id: scale.id,
+      index: 0,
+      value: { number: 3 },
+    })
+    next = draftReducer(next, {
+      type: 'setConditionOperator',
+      id: scale.id,
+      index: 0,
+      operator: 'GT',
+    })
+    expect(next.rules[1]!.conditions[0]).toEqual({
+      sourceQuestionKey: 'books',
+      operator: 'GT',
+      value: { number: 3 },
+    })
+    next = draftReducer(next, {
+      type: 'setConditionOperator',
+      id: scale.id,
+      index: 0,
+      operator: 'BETWEEN',
+    })
+    expect(next.rules[1]!.conditions[0]).toEqual({
+      sourceQuestionKey: 'books',
+      operator: 'BETWEEN',
+    })
+    next = draftReducer(next, {
+      type: 'setConditionSource',
+      id: scale.id,
+      index: 0,
+      sourceKey: 'formats',
+    })
+    expect(next.rules[1]!.conditions[0]).toEqual({
+      sourceQuestionKey: 'formats',
+      operator: 'INCLUDES_ANY',
+    })
+    next = draftReducer(next, {
+      type: 'setConditionValue',
+      id: scale.id,
+      index: 0,
+      value: { optionKeys: ['paper'] },
+    })
+    next = draftReducer(next, {
+      type: 'setConditionValue',
+      id: scale.id,
+      index: 0,
+      value: undefined,
+    })
+    expect(next.rules[1]!.conditions[0]).toEqual({
+      sourceQuestionKey: 'formats',
+      operator: 'INCLUDES_ANY',
+    })
+  })
+
+  it('keeps the rule of a question whose type changes and drops the rules that depended on it', () => {
+    const retyped = draftReducer(loaded(), {
+      type: 'changeType',
+      id: 'recommendation',
+      questionType: 'NUMBER',
+    })
+    expect(retyped.rules).toHaveLength(1)
+    expect(retyped.rules[0]!.targetQuestionKey).toBe(retyped.questions[2]!.key)
+    expect(retyped.rules[0]!.targetQuestionKey).not.toBe('recommendation')
+    expect(
+      draftReducer(loaded(), { type: 'changeType', id: 'books', questionType: 'TEXT' }).rules,
+    ).toEqual([])
+  })
+
+  it('sends conditions without empty values', () => {
+    const { state, scale } = scaleAdded()
+    let next = draftReducer(state, { type: 'addRule', id: scale.id })
+    next = draftReducer(next, {
+      type: 'setConditionValue',
+      id: scale.id,
+      index: 0,
+      value: { number: undefined },
+    })
+    next = draftReducer(next, { type: 'addCondition', id: scale.id })
+    next = draftReducer(next, {
+      type: 'setConditionOperator',
+      id: scale.id,
+      index: 1,
+      operator: 'BETWEEN',
+    })
+    next = draftReducer(next, {
+      type: 'setConditionValue',
+      id: scale.id,
+      index: 1,
+      value: { min: 1, max: undefined },
+    })
+    const sent = toDraftDefinition(next).rules[1]!
+    expect(sent.conditions).toEqual([
+      { sourceQuestionKey: 'books', operator: 'EQ' },
+      { sourceQuestionKey: 'books', operator: 'BETWEEN', value: { min: 1 } },
+    ])
+  })
+})

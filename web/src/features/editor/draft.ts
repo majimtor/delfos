@@ -1,4 +1,13 @@
 import type { Schemas } from '../../api/types'
+import {
+  defaultCondition,
+  shapeOf,
+  sourcesFor,
+  type Condition,
+  type ConditionOperator,
+  type ConditionValue,
+  type MatchMode,
+} from './rules'
 
 export type QuestionType = Schemas['QuestionType']
 export type VisibilityRule = Schemas['VisibilityRule']
@@ -65,6 +74,14 @@ export type DraftAction =
   | { type: 'removeOption'; id: string; optionKey: string }
   | { type: 'moveOption'; id: string; optionKey: string; direction: Direction }
   | { type: 'updateOption'; id: string; optionKey: string; label: string }
+  | { type: 'addRule'; id: string }
+  | { type: 'removeRule'; id: string }
+  | { type: 'setRuleMatch'; id: string; match: MatchMode }
+  | { type: 'addCondition'; id: string }
+  | { type: 'removeCondition'; id: string; index: number }
+  | { type: 'setConditionSource'; id: string; index: number; sourceKey: string }
+  | { type: 'setConditionOperator'; id: string; index: number; operator: ConditionOperator }
+  | { type: 'setConditionValue'; id: string; index: number; value: ConditionValue | undefined }
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
@@ -110,6 +127,44 @@ function withoutKey(rules: VisibilityRule[], key: string): VisibilityRule[] {
       rule.targetQuestionKey !== key &&
       !rule.conditions.some((condition) => condition.sourceQuestionKey === key),
   )
+}
+
+/** After a type change: the rule on the question follows its new key; the rules that depended on it go, their operators no longer fit. */
+function retargeted(rules: VisibilityRule[], oldKey: string, newKey: string): VisibilityRule[] {
+  return rules
+    .filter((rule) => !rule.conditions.some((condition) => condition.sourceQuestionKey === oldKey))
+    .map((rule) =>
+      rule.targetQuestionKey === oldKey ? { ...rule, targetQuestionKey: newKey } : rule,
+    )
+}
+
+function mapRule(
+  state: DraftState,
+  id: string,
+  change: (rule: VisibilityRule, question: DraftQuestion) => VisibilityRule | null,
+): DraftState {
+  const question = state.questions.find((q) => q.id === id)
+  if (!question) return state
+  const rules = state.rules.flatMap((rule) => {
+    if (rule.targetQuestionKey !== question.key) return [rule]
+    const next = change(rule, question)
+    return next ? [next] : []
+  })
+  return { ...state, rules }
+}
+
+function mapCondition(
+  state: DraftState,
+  id: string,
+  index: number,
+  change: (condition: Condition) => Condition,
+): DraftState {
+  return mapRule(state, id, (rule) => ({
+    ...rule,
+    conditions: rule.conditions.map((condition, i) =>
+      i === index ? change(condition) : condition,
+    ),
+  }))
 }
 
 function move<T>(items: T[], index: number, direction: Direction): T[] {
@@ -178,11 +233,10 @@ export function draftReducer(state: DraftState, action: DraftAction): DraftState
     case 'changeType': {
       const current = state.questions.find((q) => q.id === action.id)
       if (!current || current.type === action.questionType) return state
+      const next = retyped(current, action.questionType)
       return {
-        questions: state.questions.map((q) =>
-          q.id === action.id ? retyped(q, action.questionType) : q,
-        ),
-        rules: withoutKey(state.rules, current.key),
+        questions: state.questions.map((q) => (q.id === action.id ? next : q)),
+        rules: retargeted(state.rules, current.key, next.key),
       }
     }
     case 'addOption':
@@ -211,6 +265,58 @@ export function draftReducer(state: DraftState, action: DraftAction): DraftState
         options: (q.options ?? []).map((o) =>
           o.key === action.optionKey ? { ...o, label: action.label } : o,
         ),
+      }))
+    case 'addRule': {
+      const question = state.questions.find((q) => q.id === action.id)
+      const source = sourcesFor(state.questions, action.id)[0]
+      if (!question || !source) return state
+      if (state.rules.some((rule) => rule.targetQuestionKey === question.key)) return state
+      return {
+        ...state,
+        rules: [
+          ...state.rules,
+          { targetQuestionKey: question.key, match: 'ALL', conditions: [defaultCondition(source)] },
+        ],
+      }
+    }
+    case 'removeRule':
+      return mapRule(state, action.id, () => null)
+    case 'setRuleMatch':
+      return mapRule(state, action.id, (rule) => ({ ...rule, match: action.match }))
+    case 'addCondition': {
+      const source = sourcesFor(state.questions, action.id)[0]
+      if (!source) return state
+      return mapRule(state, action.id, (rule) => ({
+        ...rule,
+        conditions: [...rule.conditions, defaultCondition(source)],
+      }))
+    }
+    case 'removeCondition':
+      // A rule without conditions cannot exist: removing the last one removes the rule.
+      return mapRule(state, action.id, (rule) =>
+        rule.conditions.length <= 1
+          ? null
+          : { ...rule, conditions: rule.conditions.filter((_, i) => i !== action.index) },
+      )
+    case 'setConditionSource': {
+      const source = state.questions.find((q) => q.key === action.sourceKey)
+      if (!source) return state
+      return mapCondition(state, action.id, action.index, () => defaultCondition(source))
+    }
+    case 'setConditionOperator':
+      return mapCondition(state, action.id, action.index, (condition) => ({
+        sourceQuestionKey: condition.sourceQuestionKey,
+        operator: action.operator,
+        // The value survives only when the new operator takes the same kind of value.
+        ...(shapeOf(condition.operator) === shapeOf(action.operator) && condition.value
+          ? { value: condition.value }
+          : {}),
+      }))
+    case 'setConditionValue':
+      return mapCondition(state, action.id, action.index, (condition) => ({
+        sourceQuestionKey: condition.sourceQuestionKey,
+        operator: condition.operator,
+        ...(action.value ? { value: action.value } : {}),
       }))
   }
 }
@@ -250,6 +356,30 @@ export function toDraftDefinition(state: DraftState): DraftDefinition {
       }
       return input
     }),
-    rules: state.rules,
+    rules: state.rules.map((rule) => ({
+      targetQuestionKey: rule.targetQuestionKey,
+      match: rule.match,
+      conditions: rule.conditions.map((condition) => {
+        const value = compactValue(condition.value)
+        return {
+          sourceQuestionKey: condition.sourceQuestionKey,
+          operator: condition.operator,
+          ...(value ? { value } : {}),
+        }
+      }),
+    })),
   }
+}
+
+function compactValue(value: ConditionValue | undefined): ConditionValue | undefined {
+  if (!value) return undefined
+  const compact: ConditionValue = {}
+  if (value.optionKey !== undefined) compact.optionKey = value.optionKey
+  if (value.optionKeys !== undefined && value.optionKeys.length > 0) {
+    compact.optionKeys = value.optionKeys
+  }
+  if (value.number !== undefined) compact.number = value.number
+  if (value.min !== undefined) compact.min = value.min
+  if (value.max !== undefined) compact.max = value.max
+  return Object.keys(compact).length > 0 ? compact : undefined
 }
