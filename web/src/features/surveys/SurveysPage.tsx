@@ -14,10 +14,11 @@ import {
 } from '@mui/material'
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { FormattedDate, FormattedMessage, defineMessages } from 'react-intl'
+import { FormattedDate, FormattedMessage, defineMessages, useIntl } from 'react-intl'
 import { Link } from 'react-router'
 import { api } from '../../api/client'
 import type { Problem, Schemas } from '../../api/types'
+import { usePageTitle } from '../../app/usePageTitle'
 
 type Survey = Schemas['Survey']
 
@@ -42,6 +43,8 @@ const failureMessages = defineMessages({
 type Failure = keyof typeof failureMessages
 
 export function SurveysPage() {
+  const intl = useIntl()
+  usePageTitle(intl.formatMessage({ id: 'surveys.title', defaultMessage: 'My surveys' }))
   const queryClient = useQueryClient()
   const [failure, setFailure] = useState<Failure | null>(null)
   const surveys = useInfiniteQuery({

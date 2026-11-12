@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { IntlProvider } from 'react-intl'
 import en from './en.json'
 import es from './es.json'
@@ -25,8 +25,11 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     } catch {
       // A visitor without storage simply loses the preference on reload.
     }
-    document.documentElement.lang = next
   }, [])
+  // The document's language follows the interface from the first render, not only after a change.
+  useEffect(() => {
+    document.documentElement.lang = locale
+  }, [locale])
   const value = useMemo(() => ({ locale, setLocale }), [locale, setLocale])
   return (
     <LocaleContext.Provider value={value}>

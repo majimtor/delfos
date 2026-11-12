@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { useParams } from 'react-router'
 import { api } from '../../api/client'
+import { usePageTitle } from '../../app/usePageTitle'
 import type { PublicSurvey, Question } from '../../api/types'
 import {
   answersToSend,
@@ -28,6 +29,7 @@ export function AnswerPage() {
       return data
     },
   })
+  usePageTitle(survey.data?.title)
 
   if (survey.isPending) {
     return (

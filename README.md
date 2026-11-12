@@ -27,6 +27,8 @@ the first slice is in, the next ones are in [PLAN.md](PLAN.md).
   reverse, each with its alternatives and the condition that reopens it.
 - [docs/engineering-rules.md](docs/engineering-rules.md): the rules every
   change in this repository follows.
+- [docs/accessibility.md](docs/accessibility.md): what was checked on the
+  public pages, what was fixed and what remains.
 
 ## Planned layout
 

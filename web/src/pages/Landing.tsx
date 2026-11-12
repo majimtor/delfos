@@ -1,6 +1,7 @@
 import { Button, Stack, Typography } from '@mui/material'
 import { Link } from 'react-router'
 import { FormattedMessage } from 'react-intl'
+import { usePageTitle } from '../app/usePageTitle'
 import { useLocale, type Locale } from '../i18n/locale'
 
 /** Public ids of the sample surveys of the demo seed, one per interface language. */
@@ -11,6 +12,7 @@ export const SAMPLE_SURVEY_PUBLIC_ID: Record<Locale, string> = {
 
 export function Landing() {
   const { locale } = useLocale()
+  usePageTitle(null)
   return (
     <Stack spacing={3} sx={{ alignItems: 'flex-start' }}>
       <Typography variant="h4" component="h1">
