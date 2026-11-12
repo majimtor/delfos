@@ -19,6 +19,26 @@ wait screen meanwhile. The demo data is reset every day and at every start
 of the API. Log in with the accounts listed under [Demo data](#demo-data);
 the first slice is in, the next ones are in [PLAN.md](PLAN.md).
 
+## A tour
+
+![The landing page, with the two ways in](docs/media/landing.png)
+
+Answering the sample survey: choosing "By car" makes the question about
+the driving licence appear. The rules are evaluated on the server, and
+the web only shows what the server says is visible.
+
+![The answer page, with a question revealed by an answer](docs/media/answer.png)
+
+The manager's list: the sample surveys in both languages, their state,
+their response counts and the actions each state allows.
+
+![The surveys of demo-manager, with state and actions](docs/media/surveys.png)
+
+The results of a survey, per version or across the versions that are
+comparable, refreshed while responses arrive.
+
+![Results of a survey, with a distribution per question](docs/media/results.png)
+
 ## Where to look
 
 - [PLAN.md](PLAN.md): what gets built, in which order, with which stack and
@@ -118,6 +138,18 @@ with axe. With the compose stack running:
 ```sh
 cd web && npx playwright install chromium && npm run build && npm run e2e
 ```
+
+The screenshots in `docs/media/` and the tour video come from `web/media/`:
+the same path in English, with pauses between steps so that it can be
+watched. With the compose stack running:
+
+```sh
+cd web && npm run build && npm run media
+```
+
+The screenshots replace the committed ones; the video lands in
+`web/test-results/media/tour.webm`. Look at both before committing or
+publishing them.
 
 ## Deployment
 

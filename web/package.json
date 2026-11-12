@@ -8,6 +8,7 @@
     "build": "npm run generate:api && tsc -b && vite build",
     "preview": "vite preview",
     "e2e": "playwright test",
+    "media": "playwright test --config playwright.media.config.ts",
     "lint": "oxlint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
