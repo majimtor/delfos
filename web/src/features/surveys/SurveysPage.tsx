@@ -94,9 +94,18 @@ export function SurveysPage() {
 
   return (
     <Stack spacing={3}>
-      <Typography variant="h4" component="h1">
-        <FormattedMessage id="surveys.title" defaultMessage="My surveys" />
-      </Typography>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={2}
+        sx={{ justifyContent: 'space-between', alignItems: { sm: 'center' } }}
+      >
+        <Typography variant="h4" component="h1">
+          <FormattedMessage id="surveys.title" defaultMessage="My surveys" />
+        </Typography>
+        <Button variant="contained" component={Link} to="/surveys/new">
+          <FormattedMessage id="surveys.action.new" defaultMessage="New survey" />
+        </Button>
+      </Stack>
       {failure && (
         <Alert severity="error" role="alert" onClose={() => setFailure(null)}>
           <FormattedMessage {...failureMessages[failure]} />
@@ -140,6 +149,14 @@ export function SurveysPage() {
                 </TableCell>
                 <TableCell>
                   <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+                    {survey.hasDraft && survey.status !== 'CLOSED' && (
+                      <Button size="small" component={Link} to={`/surveys/${survey.id}/draft`}>
+                        <FormattedMessage
+                          id="surveys.action.edit"
+                          defaultMessage="Edit the draft"
+                        />
+                      </Button>
+                    )}
                     {survey.hasDraft && survey.status !== 'CLOSED' && (
                       <Button
                         size="small"

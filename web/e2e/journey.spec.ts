@@ -14,7 +14,7 @@ async function expectAccessible(page: Page, name: string) {
   const found = results.violations.map((v) => ({
     id: v.id,
     impact: v.impact,
-    nodes: v.nodes.map((n) => n.target),
+    nodes: v.nodes.map((n) => ({ target: n.target, html: n.html.slice(0, 200) })),
   }))
   expect(found, `accessibility violations on ${name}`).toEqual([])
 }
@@ -135,4 +135,47 @@ test('a manager sees only their own surveys', async ({ page }) => {
   await expect(table).toContainText('Teletrabajo en el equipo')
   await expect(table).toContainText('Remote work in the team')
   await expect(table).not.toContainText('Movilidad urbana')
+})
+
+test('a manager creates a survey, edits its draft and publishes it', async ({ page }) => {
+  await login(page, 'demo-manager-2')
+  await page.getByRole('link', { name: 'Nueva encuesta' }).click()
+  await expect(page.getByRole('heading', { name: 'Nueva encuesta' })).toBeVisible()
+  await expectAccessible(page, 'the new survey page')
+  await page.getByLabel('Título').fill('Clima del equipo')
+  await page.getByRole('button', { name: 'Crear y editar las preguntas' }).click()
+  await expect(page.getByRole('heading', { name: 'Clima del equipo' })).toBeVisible()
+  await expect(page).toHaveTitle('Borrador de Clima del equipo · Delfos')
+  await expect(page.getByText('El borrador todavía no tiene preguntas.')).toBeVisible()
+
+  // An empty draft is refused before any request leaves the browser.
+  await page.getByRole('button', { name: 'Guardar y publicar' }).click()
+  await expect(page.getByRole('alert')).toContainText(
+    'Añade al menos una pregunta antes de publicar.',
+  )
+
+  await page.getByRole('button', { name: 'Añadir una pregunta' }).click()
+  await page.getByRole('menuitem', { name: 'Elección única' }).click()
+  await expect(page.locator('[role="menu"]')).toHaveCount(0)
+  const first = page.getByRole('region', { name: 'Pregunta 1' })
+  await first.getByLabel('Texto de la pregunta').fill('¿Cómo valoras el ambiente del equipo?')
+  await first.getByLabel('Opción 1', { exact: true }).fill('Bueno')
+  await first.getByLabel('Opción 2', { exact: true }).fill('Mejorable')
+  await page.getByRole('button', { name: 'Añadir una pregunta' }).click()
+  await page.getByRole('menuitem', { name: 'Escala' }).click()
+  // The menu fades out hidden from the accessibility tree and is removed afterwards; axe must not
+  // measure the contrast of its items mid-fade, so wait for the removal, not for the hiding.
+  await expect(page.locator('[role="menu"]')).toHaveCount(0)
+  const second = page.getByRole('region', { name: 'Pregunta 2' })
+  await second.getByLabel('Texto de la pregunta').fill('¿Recomendarías el equipo?')
+  await expectAccessible(page, 'the editor')
+
+  await page.getByRole('button', { name: 'Guardar el borrador' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Borrador guardado.' })).toBeVisible()
+  await page.getByRole('button', { name: 'Guardar y publicar' }).click()
+  await expect(page.getByRole('heading', { name: 'Mis encuestas' })).toBeVisible()
+  const row = page
+    .getByRole('table', { name: 'surveys' })
+    .getByRole('row', { name: /Clima del equipo/ })
+  await expect(row).toContainText('Publicada')
 })

@@ -115,6 +115,12 @@ describe('SurveysPage', () => {
     const draft = row('Primer borrador')
     expect(within(draft).getByText('Borrador')).toBeTruthy()
     expect(within(draft).getByRole('button', { name: 'Publicar' })).toBeTruthy()
+    expect(
+      within(draft).getByRole('link', { name: 'Editar el borrador' }).getAttribute('href'),
+    ).toBe('/surveys/a/draft')
+    expect(screen.getByRole('link', { name: 'Nueva encuesta' }).getAttribute('href')).toBe(
+      '/surveys/new',
+    )
     const published = row('Ya publicada')
     expect(within(published).getByRole('button', { name: 'Cerrar' })).toBeTruthy()
     expect(within(published).getByRole('link', { name: 'Resultados' }).getAttribute('href')).toBe(
