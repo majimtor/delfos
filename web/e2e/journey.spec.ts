@@ -167,7 +167,23 @@ test('a manager creates a survey, edits its draft and publishes it', async ({ pa
   // measure the contrast of its items mid-fade, so wait for the removal, not for the hiding.
   await expect(page.locator('[role="menu"]')).toHaveCount(0)
   const second = page.getByRole('region', { name: 'Pregunta 2' })
-  await second.getByLabel('Texto de la pregunta').fill('¿Recomendarías el equipo?')
+  await second.getByLabel('Texto de la pregunta').fill('¿Qué mejorarías primero?')
+  await expect(first.getByText(/Siempre visible/)).toBeVisible()
+
+  // The second question depends on the first: shown only when the answer is "Mejorable".
+  await second.getByLabel(/Mostrar solo cuando/).check()
+  const condition = second.getByRole('group', { name: 'Condición 1' })
+  await expect(condition.getByRole('combobox', { name: 'Depende de la pregunta' })).toContainText(
+    '1. ¿Cómo valoras el ambiente del equipo?',
+  )
+  await expect(condition.getByRole('combobox', { name: 'Operador' })).toContainText('es')
+  // The value is chosen with the keyboard: the select opens with Enter and the option with Enter.
+  const option = condition.getByRole('combobox', { name: 'Opción' })
+  await option.focus()
+  await page.keyboard.press('Enter')
+  await page.getByRole('option', { name: 'Mejorable' }).focus()
+  await page.keyboard.press('Enter')
+  await expect(option).toContainText('Mejorable')
   await expectAccessible(page, 'the editor')
 
   await page.getByRole('button', { name: 'Guardar el borrador' }).click()
@@ -178,4 +194,16 @@ test('a manager creates a survey, edits its draft and publishes it', async ({ pa
     .getByRole('table', { name: 'surveys' })
     .getByRole('row', { name: /Clima del equipo/ })
   await expect(row).toContainText('Publicada')
+
+  // The rule drives the public page: the second question appears only with "Mejorable".
+  const publicLink = await row.getByRole('link', { name: 'Enlace público' }).getAttribute('href')
+  await page.goto(publicLink!)
+  await expect(page.getByRole('heading', { name: 'Clima del equipo' })).toBeVisible()
+  // A scale question is a fieldset; its row of buttons is a second group with the same name.
+  const dependent = page.locator('fieldset').filter({ hasText: '¿Qué mejorarías primero?' })
+  await expect(dependent).toBeHidden()
+  await page.getByRole('radio', { name: 'Mejorable' }).check()
+  await expect(dependent).toBeVisible()
+  await page.getByRole('radio', { name: 'Bueno' }).check()
+  await expect(dependent).toBeHidden()
 })

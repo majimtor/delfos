@@ -21,21 +21,33 @@ import {
   type DraftQuestion,
   type QuestionType,
   type QuestionPatch,
+  type VisibilityRule,
 } from './draft'
 import { draftErrorMessage } from './errors'
 import { typeLabel } from './labels'
+import { RuleEditor } from './RuleEditor'
 import type { DraftError } from './validation'
 
 interface Props {
   question: DraftQuestion
+  questions: DraftQuestion[]
+  rules: VisibilityRule[]
   index: number
   count: number
-  errorsAt: (path: string) => DraftError[]
+  errorsAt: (path: string, prefix?: boolean) => DraftError[]
   onEdit: (action: DraftAction) => void
 }
 
 /** One question of the draft with the fields its type has; every control is labelled for the keyboard. */
-export function QuestionEditor({ question, index, count, errorsAt, onEdit }: Props) {
+export function QuestionEditor({
+  question,
+  questions,
+  rules,
+  index,
+  count,
+  errorsAt,
+  onEdit,
+}: Props) {
   const intl = useIntl()
   const number = index + 1
   const path = `questions[${index}]`
@@ -371,6 +383,13 @@ export function QuestionEditor({ question, index, count, errorsAt, onEdit }: Pro
             </Stack>
           </Stack>
         )}
+        <RuleEditor
+          question={question}
+          questions={questions}
+          rules={rules}
+          errorsAt={errorsAt}
+          onEdit={onEdit}
+        />
       </Stack>
     </Paper>
   )

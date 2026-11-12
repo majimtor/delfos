@@ -57,9 +57,14 @@ allows for data tables).
   scheme for its native controls.
 - The manager pages (survey list, results, the new-survey form and the
   draft editor) get the automated checks on every pull request and the
-  shared fixes, not a dedicated manual pass. The editor was built for the
-  keyboard (every control labelled, no drag and drop: questions and options
-  move with buttons) and its manual pass comes when its rules editor lands.
+  shared fixes. The editor had its own pass on 2026-11-12, with the rules
+  editor in: every control labelled; questions, options and conditions
+  move or go with named buttons rather than drag and drop; each question
+  is a region, its visibility a group and each condition a group, so the
+  tree reads as the page looks; the selects open and choose with the
+  keyboard (the end-to-end path picks an option that way). Left as is: the
+  selects are custom comboboxes that announce their value as text, and a
+  condition row wraps onto several lines below tablet width.
 
 ## How to repeat it
 

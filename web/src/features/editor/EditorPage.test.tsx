@@ -9,6 +9,7 @@ import { EditorPage } from './EditorPage'
 let putBodies: Array<Record<string, unknown>> = []
 let published = 0
 let serverRejectsMax: number | null = null
+let serverRejectsRuleValue: number | null = null
 
 const draft = () => ({
   number: 1,
@@ -53,8 +54,24 @@ async function fakeFetch(input: RequestInfo | URL): Promise<Response> {
   if (url.pathname.endsWith('/surveys/a/draft') && request.method === 'GET')
     return json(200, draft())
   if (url.pathname.endsWith('/surveys/a/draft') && request.method === 'PUT') {
-    const body = (await request.json()) as { questions: Array<Record<string, unknown>> }
+    const body = (await request.json()) as {
+      questions: Array<Record<string, unknown>>
+      rules: Array<{ conditions: Array<{ value?: { number?: number } }> }>
+    }
     putBodies.push(body)
+    const rules = body.rules
+    if (
+      serverRejectsRuleValue !== null &&
+      rules[0]?.conditions[0]?.value?.number === serverRejectsRuleValue
+    ) {
+      return json(400, {
+        type: 'urn:delfos:problem:validation-error',
+        title: 'Bad Request',
+        status: 400,
+        code: 'VALIDATION_ERROR',
+        errors: [{ path: 'rules[0].conditions[0].value', code: 'VALUE_TYPE_MISMATCH' }],
+      })
+    }
     if (serverRejectsMax !== null && body.questions[0]?.max === serverRejectsMax) {
       return json(400, {
         type: 'urn:delfos:problem:validation-error',
@@ -64,7 +81,7 @@ async function fakeFetch(input: RequestInfo | URL): Promise<Response> {
         errors: [{ path: 'questions[0].max', code: 'INVALID_VALUE' }],
       })
     }
-    return json(200, { ...draft(), questions: body.questions, rules: [] })
+    return json(200, { ...draft(), questions: body.questions, rules })
   }
   if (url.pathname.endsWith('/surveys/a/publish') && request.method === 'POST') {
     published += 1
@@ -99,6 +116,7 @@ describe('EditorPage', () => {
     putBodies = []
     published = 0
     serverRejectsMax = null
+    serverRejectsRuleValue = null
     vi.stubGlobal('fetch', vi.fn(fakeFetch))
   })
   afterEach(() => {
@@ -190,6 +208,45 @@ describe('EditorPage', () => {
     await screen.findByText('Lista de encuestas')
     expect(putBodies).toHaveLength(1)
     expect(published).toBe(1)
+  })
+
+  it('edits a visibility rule, sends it, and places the server error on its value', async () => {
+    serverRejectsRuleValue = 7
+    renderPage()
+    await screen.findByText('Hábitos de lectura')
+    expect(within(question('Pregunta 1')).getByText(/Siempre visible/)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir una pregunta' }))
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Escala' }))
+    const second = question('Pregunta 2')
+    fireEvent.change(within(second).getByLabelText(/Texto de la pregunta/), {
+      target: { value: '¿Recomendarías la lectura?' },
+    })
+    fireEvent.click(within(second).getByLabelText(/Mostrar solo cuando/))
+    const condition = within(second).getByRole('group', { name: 'Condición 1' })
+    expect(
+      within(condition).getByRole('combobox', { name: 'Depende de la pregunta' }).textContent,
+    ).toContain('1. ¿Cuántos libros leíste?')
+    fireEvent.mouseDown(within(condition).getByRole('combobox', { name: 'Operador' }))
+    fireEvent.click(await screen.findByRole('option', { name: 'es mayor que' }))
+    fireEvent.change(within(condition).getByLabelText('Valor'), { target: { value: '7' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar el borrador' }))
+    await screen.findByRole('alert')
+    expect(within(condition).getByText('Indica un valor acorde al operador.')).toBeTruthy()
+    expect(putBodies).toHaveLength(1)
+    const sent = putBodies[0]!.rules as Array<Record<string, unknown>>
+    expect(sent).toEqual([
+      {
+        targetQuestionKey: (putBodies[0]!.questions as Array<{ key: string }>)[1]!.key,
+        match: 'ALL',
+        conditions: [{ sourceQuestionKey: 'books', operator: 'GT', value: { number: 7 } }],
+      },
+    ])
+
+    fireEvent.change(within(condition).getByLabelText('Valor'), { target: { value: '0' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar el borrador' }))
+    await screen.findByText('Borrador guardado.')
+    expect(putBodies).toHaveLength(2)
   })
 
   it('removes a question and drops the rules that mention it', async () => {
