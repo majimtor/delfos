@@ -434,6 +434,22 @@ of learning; no interruptions longer than two weeks; the hosting providers
 behave as measured; the editor in S2 uses library components except where
 noted; mobile estimates assume Android only is distributed.
 
+Estimated and actual: the estimates above stay as they were written, and
+what happened is recorded next to them when a slice closes, from the
+history of `main` (merge times in UTC). Actual is the time elapsed between
+the first and the last merge of the slice, which bounds the hours of work
+from above. The slices were delivered in continuous working sessions, not
+at ten hours a week, so the weeks column is the derivation it says it is
+and not a forecast of calendar time; the hours remain the unit the
+remaining slices are planned in, and the estimates of S2 onwards are
+checked against what happens when S2 closes.
+
+| Slice | Probable estimate | Actual |
+| --- | --- | --- |
+| S0 Foundations | 12 h | 2026-11-10, 16:20 to 16:42: the initial commits and one pull request |
+| S1a Answer a survey | 155 h | 2026-11-10 16:42 to 2026-11-11 19:02, 26 h elapsed; 20 pull requests |
+| S1b Second language and polish | 45 h | 2026-11-11 19:02 to 2026-11-12 08:39 for the last content change, 14 h elapsed; 5 pull requests, this one included |
+
 Definition of done, S1a: a stranger opens the demo, answers a seeded
 Spanish survey whose later questions appear and disappear as they answer,
 and sees the results page update; logs in as `demo-manager`, sees three
