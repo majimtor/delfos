@@ -48,6 +48,7 @@
   "notFound.home": "Volver al inicio",
   "notFound.title": "Esta página no existe",
   "results.answerCount": "{count, plural, one {# contestación} other {# contestaciones}}",
+  "results.export": "Descargar las respuestas de la versión {number} (CSV)",
   "results.loadFailed": "No se han podido cargar los resultados.",
   "results.max": "Máximo",
   "results.mean": "Media",

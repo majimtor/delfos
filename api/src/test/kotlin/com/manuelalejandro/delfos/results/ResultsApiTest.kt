@@ -126,9 +126,40 @@ class ResultsApiTest : ApiTest() {
     }
 
     @Test
+    fun `the responses of a version export as CSV, oldest first, with a column per question and per option`() {
+        submit(1, """[{"questionKey":"colour","optionKey":"green"},{"questionKey":"age","number":25},{"questionKey":"mood","number":3},{"questionKey":"note","text":"=SUM(A1:A2)"}]""")
+        submit(1, """[{"questionKey":"colour","optionKey":"green"},{"questionKey":"age","number":35},{"questionKey":"mood","number":2},{"questionKey":"note","text":"He said \"hi\", twice"}]""")
+
+        val response = manager(HttpMethod.GET, "/api/v1/surveys/$id/versions/1/export.csv")
+        assertThat(response.statusCode).describedAs(response.body).isEqualTo(HttpStatus.OK)
+        assertThat(response.headers.contentType.toString()).isEqualTo("text/csv;charset=UTF-8")
+        assertThat(response.headers.contentDisposition.type).isEqualTo("attachment")
+        assertThat(response.headers.contentDisposition.filename).isEqualTo("$publicId-v1.csv")
+        val body = response.body!!
+        assertThat(body).startsWith("\uFEFF")
+        val lines = body.removePrefix("\uFEFF").split("\r\n")
+        assertThat(lines.first()).isEqualTo(
+            "Response id,Submitted at,Colour (colour),Toppings (toppings) / A (a),Toppings (toppings) / B (b),Toppings (toppings) / C (c),Age (age),Mood (mood),Note (note)",
+        )
+        val rows = lines.drop(1).filter { it.isNotEmpty() }
+        assertThat(rows).hasSize(5)
+        val submittedAt = rows.map { it.split(",")[1] }
+        assertThat(submittedAt).allMatch { Regex("""\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z""").matches(it) }
+        assertThat(submittedAt).isSorted()
+        assertThat(rows.map { it.substringAfter(',').substringAfter(',') }).containsExactly(
+            "Red,1,1,0,30,4,first",
+            "Red,0,1,0,40,5,",
+            "Blue,,,,20,4,third",
+            "Green,,,,25,3,'=SUM(A1:A2)",
+            "Green,,,,35,2,\"He said \"\"hi\"\", twice\"",
+        )
+        assertThat(manager(HttpMethod.GET, "/api/v1/surveys/$id/versions/9/export.csv").statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+    }
+
+    @Test
     fun `another manager cannot read results`() {
         val other = tokenOf(newAccount())
-        for (path in listOf("/api/v1/surveys/$id/versions/1/results", "/api/v1/surveys/$id/results?scope=comparable", "/api/v1/surveys/$id/versions/1/responses", "/api/v1/surveys/$id/versions/1/answers?questionKey=note")) {
+        for (path in listOf("/api/v1/surveys/$id/versions/1/results", "/api/v1/surveys/$id/results?scope=comparable", "/api/v1/surveys/$id/versions/1/responses", "/api/v1/surveys/$id/versions/1/answers?questionKey=note", "/api/v1/surveys/$id/versions/1/export.csv")) {
             assertThat(manager(HttpMethod.GET, path, bearer = other).statusCode).describedAs(path).isEqualTo(HttpStatus.NOT_FOUND)
         }
     }

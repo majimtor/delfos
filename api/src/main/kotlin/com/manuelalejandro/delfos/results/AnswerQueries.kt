@@ -72,6 +72,19 @@ class AnswerQueries(private val jdbc: JdbcTemplate) {
         }
     }
 
+    /** The responses after a keyset position, oldest first; the export reads them batch by batch. */
+    fun responsesAscending(versionId: UUID, versionNumber: Int, after: Pair<Instant, UUID>?, limit: Int): List<ResponseRow> {
+        val mapper = { rs: ResultSet, _: Int -> ResponseRow(rs.getObject("id", UUID::class.java), versionNumber, rs.getTimestamp("submitted_at").toInstant()) }
+        return if (after == null) {
+            jdbc.query("select id, submitted_at from response where version_id = ? order by submitted_at, id limit ?", mapper, versionId, limit)
+        } else {
+            jdbc.query(
+                "select id, submitted_at from response where version_id = ? and (submitted_at, id) > (?, ?) order by submitted_at, id limit ?",
+                mapper, versionId, java.sql.Timestamp.from(after.first), after.second, limit,
+            )
+        }
+    }
+
     fun answersOf(responseIds: Collection<UUID>): Map<UUID, List<Answer>> {
         if (responseIds.isEmpty()) return emptyMap()
         return jdbc.query(

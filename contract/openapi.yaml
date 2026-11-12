@@ -585,6 +585,44 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /surveys/{surveyId}/versions/{versionNumber}/export.csv:
+    parameters:
+      - $ref: "#/components/parameters/SurveyId"
+      - $ref: "#/components/parameters/VersionNumber"
+    get:
+      tags: [results]
+      summary: Export the responses of a version as CSV
+      operationId: exportResponsesCsv
+      description: |
+        One row per response, oldest first, after two columns with the
+        response id and the submission time; then one column per question in
+        the order of the version, named `text (key)`. A single choice exports
+        the option label; a multiple choice one column per option, named
+        `text (key) / label (optionKey)`, with `1` or `0`; a number or scale
+        the value; a text its content. An unanswered question leaves its
+        cells empty. Any text that starts with `=`, `+`, `-`, `@`, a tab or a
+        carriage return gets a leading apostrophe so that a spreadsheet does
+        not run it as a formula. UTF-8 with byte-order mark, comma separated,
+        CRLF line ends, timestamps in ISO 8601 UTC to the second. The body is
+        streamed in batches of responses.
+      responses:
+        "200":
+          description: The CSV file, offered as an attachment named `<publicId>-v<n>.csv`.
+          headers:
+            Content-Disposition:
+              description: "`attachment; filename=\"<publicId>-v<n>.csv\"`"
+              schema:
+                type: string
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /public/surveys/{publicId}:
     parameters:
       - $ref: "#/components/parameters/PublicId"
