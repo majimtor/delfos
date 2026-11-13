@@ -43,6 +43,14 @@ test('a stranger answers the sample survey, then manages it and watches the resu
     await expect(page.getByRole('heading', { name: 'Delfos' })).toBeVisible()
     await expect(page).toHaveTitle('Delfos')
     await expectAccessible(page, 'the landing page')
+    // The page is installable: it links a manifest that the server serves as such.
+    await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
+      'href',
+      '/manifest.webmanifest',
+    )
+    const manifest = await request.get('http://localhost:5173/manifest.webmanifest')
+    expect(manifest.ok()).toBeTruthy()
+    expect(((await manifest.json()) as { name: string; icons: unknown[] }).name).toBe('Delfos')
     // The first Tab stop skips the header, for keyboard users.
     await page.keyboard.press('Tab')
     await expect(page.getByRole('link', { name: 'Saltar al contenido' })).toBeFocused()
