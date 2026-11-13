@@ -28,7 +28,12 @@ rule is revisited.
 - History is never rewritten after a push. A mistake gets a new commit.
 - Commits are signed. The author identity is configured per repository and
   checked with `git config --show-origin user.email` before the first
-  commit on a new machine.
+  commit on a new machine. The one exception is the commit of the release
+  pull request, which `release-please` writes through the API without a
+  signature: it never reaches `main` as such, because the squash merge
+  creates the commit on `main`, signed by GitHub. For that reason the
+  branch protection of `main` does not require signed commits on the pull
+  request branches; every commit on `main` is signed all the same.
 
 ## Branches and pull requests
 
