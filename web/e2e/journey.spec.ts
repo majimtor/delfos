@@ -19,10 +19,10 @@ async function expectAccessible(page: Page, name: string) {
   expect(found, `accessibility violations on ${name}`).toEqual([])
 }
 
-async function login(page: Page, username: string) {
+async function login(page: Page, username: string, password = demoPassword) {
   await page.goto('/login')
   await page.getByLabel('Usuario').fill(username)
-  await page.getByLabel('Contraseña').fill(demoPassword)
+  await page.getByLabel('Contraseña').fill(password)
   await page.getByRole('button', { name: 'Entrar' }).click()
   await expect(page.getByRole('heading', { name: 'Mis encuestas' })).toBeVisible()
 }
@@ -300,4 +300,38 @@ test('a manager creates an invited survey and a respondent uses a single-use lin
     .click()
   await expect(invitations.getByText('Usada', { exact: true })).toHaveCount(1)
   await expect(invitations.getByText('Pendiente', { exact: true })).toHaveCount(1)
+})
+
+test('an administrator creates an account, which works until it is disabled', async ({ page }) => {
+  await login(page, 'demo-admin')
+  await page.getByRole('link', { name: 'Cuentas' }).click()
+  await expect(page.getByRole('heading', { name: 'Cuentas' })).toBeVisible()
+  const accounts = page.getByRole('table', { name: 'accounts' })
+  await expect(accounts.getByRole('row', { name: /demo-admin/ })).toContainText('(tú)')
+  await page.getByLabel('Usuario').fill('e2e-gestora')
+  await page.getByLabel('Contraseña').fill('una-contraseña-larga')
+  await page.getByRole('button', { name: 'Crear la cuenta' }).click()
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Cuenta e2e-gestora creada.' }),
+  ).toBeVisible()
+  await expectAccessible(page, 'the accounts page')
+  await expect(accounts.getByRole('row', { name: /e2e-gestora/ })).toContainText('Activa')
+
+  await page.getByRole('button', { name: 'Salir' }).click()
+  await login(page, 'e2e-gestora', 'una-contraseña-larga')
+  await expect(page.getByText('Todavía no tienes encuestas.')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Cuentas' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Salir' }).click()
+
+  await login(page, 'demo-admin')
+  await page.getByRole('link', { name: 'Cuentas' }).click()
+  await page.getByRole('button', { name: 'Deshabilitar e2e-gestora' }).click()
+  await expect(accounts.getByRole('row', { name: /e2e-gestora/ })).toContainText('Deshabilitada')
+  await page.getByRole('button', { name: 'Salir' }).click()
+
+  await page.goto('/login')
+  await page.getByLabel('Usuario').fill('e2e-gestora')
+  await page.getByLabel('Contraseña').fill('una-contraseña-larga')
+  await page.getByRole('button', { name: 'Entrar' }).click()
+  await expect(page.getByRole('alert')).toContainText('Esta cuenta está deshabilitada.')
 })

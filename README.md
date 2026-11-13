@@ -89,7 +89,7 @@ The accounts are fictitious and their password is public on purpose.
 | --- | --- | --- |
 | `demo-manager` | `delfos-demo` | Owns the sample surveys |
 | `demo-manager-2` | `delfos-demo` | Owns one survey, to show that managers only see their own |
-| `demo-admin` | `delfos-demo` | Manager with the administrator flag |
+| `demo-admin` | `delfos-demo` | Administrator: creates and disables accounts, sees no other manager's surveys |
 
 Sample surveys of `demo-manager`, in Spanish: an unpublished draft, a
 published survey with the five question types and every rule operator (40

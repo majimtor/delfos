@@ -45,6 +45,8 @@ tags:
     description: Aggregated results and raw responses.
   - name: invitations
     description: Single-use invitations of a survey in invited mode.
+  - name: accounts
+    description: Manager accounts, for administrators.
   - name: public
     description: Answering a published survey; no authentication.
   - name: demo
@@ -146,6 +148,96 @@ paths:
                 $ref: "#/components/schemas/Me"
         "401":
           $ref: "#/components/responses/Unauthorized"
+
+  /accounts:
+    get:
+      tags: [accounts]
+      summary: List the accounts
+      operationId: listAccounts
+      description: Newest first. An administrator manages accounts and nothing else; the surveys of other managers stay out of reach.
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of accounts.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/AdminRequired"
+    post:
+      tags: [accounts]
+      summary: Create an account
+      operationId: createAccount
+      description: The password is set here and never returned; the account can log in at once.
+      parameters:
+        - $ref: "#/components/parameters/ClientHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAccountRequest"
+      responses:
+        "201":
+          description: The account.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/AdminRequired"
+        "409":
+          description: The username exists already, whatever its case (`USERNAME_TAKEN`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+
+  /accounts/{accountId}/disable:
+    parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [accounts]
+      summary: Disable an account
+      operationId: disableAccount
+      description: A disabled account cannot log in and its open sessions stop working at once. Disabling an account that is already disabled changes nothing; an administrator cannot disable their own account.
+      parameters:
+        - $ref: "#/components/parameters/ClientHeader"
+      responses:
+        "200":
+          description: The account, disabled.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/AdminRequired"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: The account is the administrator's own (`INVALID_STATE_TRANSITION`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
 
   /surveys:
     get:
@@ -992,6 +1084,12 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
+    AdminRequired:
+      description: The session is not an administrator's (`ADMIN_REQUIRED`).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
     InvitationRefused:
       description: The survey needs an invitation that was not given (`INVITATION_REQUIRED`), or the token is unknown for this survey or revoked (`INVITATION_INVALID`).
       content:
@@ -1121,6 +1219,56 @@ components:
         sessionExpiresAt:
           type: string
           format: date-time
+
+    AccountStatus:
+      type: string
+      enum: [ACTIVE, DISABLED]
+
+    Account:
+      type: object
+      required: [id, username, isAdmin, status, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        isAdmin:
+          type: boolean
+        status:
+          $ref: "#/components/schemas/AccountStatus"
+        createdAt:
+          type: string
+          format: date-time
+
+    AccountPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Account"
+        nextCursor:
+          type: string
+
+    CreateAccountRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 64
+          pattern: "^[a-z0-9][a-z0-9._-]*$"
+          description: Lowercase letters, digits, dots, hyphens and underscores; unique whatever the case.
+        password:
+          type: string
+          minLength: 12
+          maxLength: 256
+        isAdmin:
+          type: boolean
+          default: false
 
     CreateSurveyRequest:
       type: object
@@ -1915,6 +2063,8 @@ components:
         - INVITATION_REQUIRED
         - INVITATION_INVALID
         - INVITATION_USED
+        - ADMIN_REQUIRED
+        - USERNAME_TAKEN
         - PAYLOAD_TOO_LARGE
         - RATE_LIMITED
         - INTERNAL_ERROR
