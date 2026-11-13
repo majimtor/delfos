@@ -17,8 +17,9 @@ traffic and takes up to two minutes to wake outside the hours when
 the keep-alive workflow keeps it up (06:00 to 24:00 UTC); the web shows a
 wait screen meanwhile. The demo data is reset every day and at every start
 of the API. Log in with the accounts listed under [Demo data](#demo-data).
-Two slices are in: answering surveys with conditional logic and live
-results, and building them in the browser, with versions and a CSV export;
+Three slices are in: answering surveys with conditional logic and live
+results, building them in the browser with versions and exports, and the
+invited mode, the administrators' accounts and results pushed as events;
 the next ones are in [PLAN.md](PLAN.md).
 
 ## A tour
@@ -56,6 +57,8 @@ comparable, refreshed while responses arrive.
   change in this repository follows.
 - [docs/accessibility.md](docs/accessibility.md): what was checked on the
   public pages, what was fixed and what remains.
+- [docs/known-issues.md](docs/known-issues.md): what is known not to work
+  or to work within limits, and the figures read at each quarterly check.
 
 ## Planned layout
 
@@ -178,7 +181,8 @@ Everything that deploys the demo is declared in the repository:
   workflow after the same checks, with `CLOUDFLARE_API_TOKEN` and
   `CLOUDFLARE_ACCOUNT_ID` from the repository secrets.
 - `.github/workflows/keep-alive.yml`: requests the liveness probe every ten
-  minutes from 06:00 to 24:00 UTC.
+  minutes from 06:00 to 24:00 UTC, as far as GitHub runs the schedule
+  (see `docs/known-issues.md`).
 - `.github/workflows/demo-reset.yml`: applies the demo seed again every day
   at 05:50 UTC through `POST /api/v1/demo/reset`, with
   `DELFOS_SEED_RESET_TOKEN` from the repository secrets.
