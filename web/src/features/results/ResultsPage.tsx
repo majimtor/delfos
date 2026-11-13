@@ -16,8 +16,11 @@ import { api, apiBaseUrl } from '../../api/client'
 import { usePageTitle } from '../../app/usePageTitle'
 import { QuestionResultView } from './QuestionResultView'
 import { useResults, type Scope } from './useResults'
+import { useResultsEvents } from './useResultsEvents'
 
 export const RESULTS_POLL_INTERVAL_MS = 5_000
+/** While the event stream is open, polling only guards against a missed event. */
+export const RESULTS_FALLBACK_POLL_INTERVAL_MS = 60_000
 
 export function ResultsPage({
   pollIntervalMs = RESULTS_POLL_INTERVAL_MS,
@@ -38,7 +41,13 @@ export function ResultsPage({
       return data
     },
   })
-  const results = useResults(surveyId, versionNumber, scope, pollIntervalMs)
+  const live = useResultsEvents(surveyId)
+  const results = useResults(
+    surveyId,
+    versionNumber,
+    scope,
+    live ? Math.max(pollIntervalMs, RESULTS_FALLBACK_POLL_INTERVAL_MS) : pollIntervalMs,
+  )
   const intl = useIntl()
   usePageTitle(
     survey.data
@@ -90,6 +99,12 @@ export function ResultsPage({
               time: <FormattedTime value={results.data.computedAt} timeStyle="medium" />,
             }}
           />
+          {live && (
+            <>
+              {' · '}
+              <FormattedMessage id="results.live" defaultMessage="live" />
+            </>
+          )}
         </Typography>
       </Box>
       <ToggleButtonGroup

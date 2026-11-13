@@ -222,9 +222,12 @@ types, counts per option; for number and scale, count, mean, minimum,
 maximum and, for scale, the distribution per value; for text, the count
 with answers paginated separately. `scope=comparable` aggregates across
 versions for comparable questions and marks the rest. Live updates by
-polling every five seconds with `If-None-Match`; the server answers `304`
-when nothing changed. Server-sent events are deferred until a test through
-the hosting proxy passes (section 18).
+server-sent events since S3: the web listens to one stream per survey,
+which announces every new response with a heartbeat comment every twenty
+seconds in between, and reads the results again on each event; polling
+with `If-None-Match` every five seconds, the mechanism of S1a, stays as
+the fallback, slowed to once a minute while the stream is open. The
+hosting proxy was measured on 2026-11-13 before deciding (section 18).
 
 Export: CSV per version from S2, one row per response and one column per
 question, multiple choice as one column per option with 1 or 0, text
@@ -547,7 +550,7 @@ Update procedure per piece:
 | Respondent accounts and history | Invited mode does not cover a real case |
 | Partial save and resume; pages and sections; randomisation; quotas per option | A seeded survey exceeds ten questions |
 | Shared ownership and teams | A second real manager |
-| Server-sent events or WebSockets | The proxy test passes (idle connection held for two minutes with and without events) |
+| WebSockets | A need that server-sent events, adopted in S3 after the proxy test (two streams held through Render for 150 seconds on 2026-11-13, one with a heartbeat every twenty seconds and one idle after its first event, both still open at the end), do not cover |
 | Asynchronous export, XLSX in S1, PDF report | CSV deployed and a measurement over ten seconds or ten thousand responses |
 | Precomputed aggregates | The results endpoint exceeds 500 ms on the seed |
 | Audit log | An administrator with access to others' data |
@@ -567,8 +570,9 @@ moment indicated, each with the recommended option first:
   web screen of S1a starts; cheap until the editor exists.
 - Static hosting: Workers with static assets, decided at the first web
   deploy on 2026-11-11 (ADR 0016).
-- Live updates: polling (decided for S1a) or server-sent events. Decide at
-  S3 after the proxy test.
+- Live updates: server-sent events with polling as the fallback, decided
+  on 2026-11-13 after the proxy test of section 18; polling alone was the
+  choice of S1a.
 - Native image: decide at S5 from the measured wake-up with the keep-alive
   running and not running.
 - Demo reset cadence: daily, decided on 2026-11-11 with the reset workflow.

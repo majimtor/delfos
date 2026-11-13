@@ -158,6 +158,7 @@
   "results.answerCount": "{count, plural, one {# contestación} other {# contestaciones}}",
   "results.export": "Descargar las respuestas de la versión {number} (CSV)",
   "results.exportXlsx": "Descargar las respuestas de la versión {number} (Excel)",
+  "results.live": "en directo",
   "results.loadFailed": "No se han podido cargar los resultados.",
   "results.max": "Máximo",
   "results.mean": "Media",
