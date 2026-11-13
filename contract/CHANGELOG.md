@@ -30,6 +30,9 @@ release, breaking changes are allowed and recorded here.
   `POST /accounts/{accountId}/disable`, with the codes `ADMIN_REQUIRED` and
   `USERNAME_TAKEN`.
 
+- `GET /surveys/{id}/versions/{n}/export.xlsx` exports the responses of a
+  version as a workbook with the rows and columns of the CSV export.
+
 ### Changed
 
 - `Question` and `Option` are explicit schemas with required keys instead of

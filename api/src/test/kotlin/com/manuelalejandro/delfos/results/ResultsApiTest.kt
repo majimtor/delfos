@@ -157,9 +157,33 @@ class ResultsApiTest : ApiTest() {
     }
 
     @Test
+    fun `the responses of a version export as a workbook with the same layout as the CSV`() {
+        val response = client.get().uri("/api/v1/surveys/$id/versions/1/export.xlsx").headers {
+            it.setBearerAuth(token)
+            it.set(SessionAuthenticationFilter.CLIENT_HEADER, "test")
+        }.retrieve().toEntity(ByteArray::class.java)
+        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(response.headers.contentType.toString()).isEqualTo("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        assertThat(response.headers.contentDisposition.filename).isEqualTo("$publicId-v1.xlsx")
+        val bytes = response.body!!
+        assertThat(bytes.take(2)).containsExactly('P'.code.toByte(), 'K'.code.toByte())
+        val sheet = java.util.zip.ZipInputStream(java.io.ByteArrayInputStream(bytes)).use { zip ->
+            generateSequence { zip.nextEntry }.first { it.name == "xl/worksheets/sheet1.xml" }
+            String(zip.readBytes(), Charsets.UTF_8)
+        }
+        assertThat(sheet).contains("<t xml:space=\"preserve\">Colour (colour)</t>")
+        assertThat(sheet).contains("<t xml:space=\"preserve\">Toppings (toppings) / C (c)</t>")
+        assertThat(Regex("<row r=\"\\d+\">").findAll(sheet).count()).isEqualTo(4)
+        assertThat(sheet).contains("<c r=\"C2\" t=\"inlineStr\"><is><t xml:space=\"preserve\">Red</t></is></c>")
+        assertThat(sheet).contains("<c r=\"G2\"><v>30</v></c>")
+        assertThat(sheet).contains("<c r=\"I2\" t=\"inlineStr\"><is><t xml:space=\"preserve\">first</t></is></c>")
+        assertThat(manager(HttpMethod.GET, "/api/v1/surveys/$id/versions/9/export.xlsx").statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+    }
+
+    @Test
     fun `another manager cannot read results`() {
         val other = tokenOf(newAccount())
-        for (path in listOf("/api/v1/surveys/$id/versions/1/results", "/api/v1/surveys/$id/results?scope=comparable", "/api/v1/surveys/$id/versions/1/responses", "/api/v1/surveys/$id/versions/1/answers?questionKey=note", "/api/v1/surveys/$id/versions/1/export.csv")) {
+        for (path in listOf("/api/v1/surveys/$id/versions/1/results", "/api/v1/surveys/$id/results?scope=comparable", "/api/v1/surveys/$id/versions/1/responses", "/api/v1/surveys/$id/versions/1/answers?questionKey=note", "/api/v1/surveys/$id/versions/1/export.csv", "/api/v1/surveys/$id/versions/1/export.xlsx")) {
             assertThat(manager(HttpMethod.GET, path, bearer = other).statusCode).describedAs(path).isEqualTo(HttpStatus.NOT_FOUND)
         }
     }

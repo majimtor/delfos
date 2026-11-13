@@ -157,6 +157,7 @@
   "notFound.title": "This page does not exist",
   "results.answerCount": "{count, plural, one {# answer} other {# answers}}",
   "results.export": "Download the responses of version {number} (CSV)",
+  "results.exportXlsx": "Download the responses of version {number} (Excel)",
   "results.loadFailed": "The results could not be loaded.",
   "results.max": "Maximum",
   "results.mean": "Mean",
