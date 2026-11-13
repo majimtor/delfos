@@ -423,14 +423,16 @@ slice has a definition of done that a stranger can verify.
 | S1a Answer a survey (public threshold) | Backend: domain, lifecycle, rules evaluator and validator with conformance suite, responses, results, sessions, authorization, contract with generated server, migrations, Spanish seed, API tests, Problem Details, pagination, rate limiting, health, logs. Web: public answer page with server-side evaluation, results page with polling, login, survey list with publish and close, wait screen, Spanish catalogue, end-to-end path with Playwright and axe. Deploy: image with AOT cache, Render, Neon, Cloudflare, domains, keep-alive, demo reset, README with accounts | 110 / 155 / 215 | 11 / 16 / 22 |
 | S1b Second language and polish | English catalogue and English seed surveys, accessibility audit of public pages, screenshots and a 60-second video linked from the README | 30 / 45 / 65 | 3 / 5 / 7 |
 | S2 Build surveys | Editor for questions, options and rules with inline validation errors; versioning flow (edit published creates draft, publish version 2); CSV export; `release-please` and version 1.0.0 | 60 / 85 / 120 | 6 / 9 / 12 |
-| S3 Invitations, administration, live updates | Invited mode with single-use tokens; account management for administrators; server-sent events if the proxy test passes; XLSX export; installable manifest; known-issues document | 40 / 60 / 90 | 4 / 6 / 9 |
-| S4 Mobile | Shared module gains Android and iOS targets; local evaluator passing the conformance suite; Compose application to answer surveys and view results; APK on Releases by CI; iOS compiled on a macOS runner | 90 / 130 / 190 | 9 / 13 / 19 |
-| S5 Optional, by trigger | Aggregated PDF report, performance tests, mutation testing, native image experiment | 30 / 50 / 80 | 3 / 5 / 8 |
+| S3 Invitations, administration, live updates | Invited mode with single-use tokens; account management for administrators; server-sent events if the proxy test passes; XLSX export; installable manifest; known-issues document | 8 / 12 / 20 | 1 / 1 / 2 |
+| S4 Mobile | Shared module gains Android and iOS targets; local evaluator passing the conformance suite; Compose application to answer surveys and view results; APK on Releases by CI; iOS compiled on a macOS runner | 20 / 35 / 60 | 2 / 4 / 6 |
+| S5 Optional, by trigger | Aggregated PDF report, performance tests, mutation testing, native image experiment | 8 / 15 / 30 | 1 / 2 / 3 |
 
-Totals: to the public threshold (S0 + S1a) 118 / 167 / 233 hours, that is
-12 / 17 / 23 weeks; to launch (S0 to S2) 208 / 297 / 418 hours, 21 / 30 /
-42 weeks; to the full vision (S0 to S4) 338 / 487 / 698 hours, 34 / 49 / 70
-weeks; S5 is extra and conditional.
+Totals as first written, kept for the record: to the public threshold
+(S0 + S1a) 118 / 167 / 233 hours, that is 12 / 17 / 23 weeks; to launch
+(S0 to S2) 208 / 297 / 418 hours, 21 / 30 / 42 weeks; to the full vision
+(S0 to S4) 338 / 487 / 698 hours, 34 / 49 / 70 weeks. Remaining after the
+revision of 2026-11-13 below: to the full vision (S3 + S4) 28 / 47 / 80
+hours, that is 3 / 5 / 8 weeks; S5 is extra and conditional.
 
 Assumptions: the maintainer works daily with Spring Boot, React and
 TypeScript and is new to Kotlin and Compose, so S1a includes 25 to 40 hours
@@ -446,8 +448,11 @@ from above. The slices were delivered in continuous working sessions, not
 at ten hours a week, so the weeks column is the derivation it says it is
 and not a forecast of calendar time; the hours remain the unit the
 remaining slices are planned in. S2 closed with the same gap as the slices
-before it; the estimates of S3 onwards stay as written, and the table keeps
-recording what happens next to them.
+before it, so the rows of S3 to S5 were revised on 2026-11-13: first
+estimated at 60, 130 and 50 probable hours, they now read 12, 35 and 15,
+from the pace of the three closed slices, with S4 kept wider because its
+toolchain is new to the project; the table keeps recording what happens
+next to them.
 
 | Slice | Probable estimate | Actual |
 | --- | --- | --- |
