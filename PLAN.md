@@ -349,10 +349,15 @@ Cold start: 47 seconds measured after sleep on the throwaway service and 95
 seconds on the deployed API on 2026-11-11, migration and seed included.
 Mitigations, cumulative: a scheduled workflow requesting the liveness
 endpoint every ten minutes from 06:00 to 24:00 UTC while the repository
-has activity, which keeps the instance awake eighteen hours a day, within
-the free hours, and does not touch the database so Neon can sleep; a wait
+has activity, meant to keep the instance awake eighteen hours a day, within
+the free hours, without touching the database so Neon can sleep; a wait
 screen in the web client while the API is unreachable, with retries; and,
-as an experiment with a trigger, a native image (section 18).
+as an experiment with a trigger, a native image (section 18). Measured on
+2026-11-13: GitHub ran that ten-minute schedule five times in two days
+and the daily reset eight hours late, so the keep-alive is best effort and
+the wait screen is what covers visitors; if a reliable one matters, a cron
+trigger on the Cloudflare Worker that serves the web replaces it, decided
+at a quarterly check. The record is in `docs/known-issues.md`.
 
 Demo: fixed accounts from the seed, documented in the README; the seed
 reset daily at 05:50 UTC by a scheduled workflow through a protected
@@ -463,6 +468,7 @@ next to them.
 | S1a Answer a survey | 155 h | 2026-11-10 16:42 to 2026-11-11 19:02, 26 h elapsed; 20 pull requests |
 | S1b Second language and polish | 45 h | 2026-11-11 19:02 to 2026-11-12 08:39 for the last content change, 14 h elapsed; 5 pull requests, the closing one included |
 | S2 Build surveys | 85 h | 2026-11-12 10:56 to 2026-11-12 22:24 for the last content change, 11 h elapsed; 5 pull requests, the closing one included |
+| S3 Invitations, administration, live updates | 12 h | 2026-11-13 10:41 to 2026-11-13 13:19 for the last content change, 2 h 38 min elapsed; 7 pull requests, the closing one included |
 
 Definition of done, S1a: a stranger opens the demo, answers a seeded
 Spanish survey whose later questions appear and disappear as they answer,
