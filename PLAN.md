@@ -303,8 +303,10 @@ thirty business rules), performance tests (when a results query exceeds
 
 GitHub Actions, free for the public repository (checked 2026-11-05).
 Pipeline on every pull request and on `main`, with path filters: format and
-lint; unit tests; API tests with Testcontainers (Docker is present on the
-`ubuntu-24.04` runner, checked 2026-11-05); `oasdiff breaking`; web build in
+lint; unit tests, with the shared module also on Android and on the iOS
+simulator of a `macos-15` runner; API tests with Testcontainers (Docker is
+present on the `ubuntu-24.04` runner, checked 2026-11-05); `oasdiff
+breaking`; web build in
 both languages with the untranslated-keys check; CodeQL (eligible for
 public repositories, checked 2026-11-10); container image build and push
 to the GitHub registry on `main`; the end-to-end path with Playwright and

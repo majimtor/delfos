@@ -5,6 +5,7 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         mavenCentral()
+        google()
     }
 }
 
@@ -16,6 +17,7 @@ plugins {
 dependencyResolutionManagement {
     repositories {
         mavenCentral()
+        google()
     }
     versionCatalogs {
         create("libs") {

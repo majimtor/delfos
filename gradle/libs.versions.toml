@@ -7,6 +7,10 @@ openapi-generator = "7.27.0"
 # JUnit follows the version managed by Spring Boot so both builds test on the same platform.
 junit = "6.0.3"
 jackson-databind-nullable = "0.2.13"
+# Android Gradle plugin, through its Kotlin Multiplatform library plugin, for the Android target of the shared module.
+agp = "9.5.1"
+android-compileSdk = "36"
+android-minSdk = "26"
 
 [libraries]
 jackson-databind-nullable = { module = "org.openapitools:jackson-databind-nullable", version.ref = "jackson-databind-nullable" }
@@ -22,3 +26,4 @@ kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotl
 kotlin-jpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
 openapi-generator = { id = "org.openapi.generator", version.ref = "openapi-generator" }
+android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
