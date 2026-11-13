@@ -7,3 +7,6 @@
 build/
 .gradle/
 .kotlin/
+
+# Local path of the Android SDK; each machine has its own.
+local.properties

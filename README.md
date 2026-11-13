@@ -134,6 +134,12 @@ start Gradle (Java 17 or newer):
 
 The API tests start PostgreSQL 18 in a container, so Docker must be running.
 
+The shared module builds for the JVM by default. Its Android and iOS targets
+are switched on with `-Pdelfos.android=true` (needs the Android SDK, found
+through `ANDROID_HOME` or `shared/local.properties`) and `-Pdelfos.ios=true`
+(needs Xcode); `check` then runs the conformance suite on every target that
+the machine can run.
+
 The web client lives in `web/` and needs the Node version in `web/.node-version`:
 
 ```sh
