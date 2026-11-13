@@ -34,6 +34,7 @@ export function useEvaluation(
   versionNumber: number,
   questions: Question[],
   answers: Answers,
+  invitation?: string,
   delayMs = 300,
 ): Evaluation {
   const [evaluation, setEvaluation] = useState<Evaluated>(EMPTY)
@@ -46,7 +47,7 @@ export function useEvaluation(
     const sent = answersToSend(questions, answers, visibleRef.current)
     const timer = setTimeout(async () => {
       const { data } = await api.POST('/public/surveys/{publicId}/evaluations', {
-        params: { path: { publicId } },
+        params: { path: { publicId }, query: invitation ? { invitation } : undefined },
         body: { versionNumber, answers: sent },
         signal: controller.signal,
       })
@@ -65,7 +66,7 @@ export function useEvaluation(
       clearTimeout(timer)
       controller.abort()
     }
-  }, [publicId, versionNumber, questions, answers, delayMs])
+  }, [publicId, versionNumber, questions, answers, invitation, delayMs])
 
   return { ...evaluation, pending: evaluation.evaluatedFor !== answers }
 }

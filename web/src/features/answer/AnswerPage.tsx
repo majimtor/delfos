@@ -2,7 +2,7 @@ import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/ma
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useMemo, useState } from 'react'
 import { FormattedMessage } from 'react-intl'
-import { useParams } from 'react-router'
+import { useParams, useSearchParams } from 'react-router'
 import { api } from '../../api/client'
 import { usePageTitle } from '../../app/usePageTitle'
 import type { PublicSurvey, Question } from '../../api/types'
@@ -16,20 +16,28 @@ import {
 import { QuestionField } from './QuestionField'
 import { useEvaluation } from './useEvaluation'
 
+type Refusal = 'INVITATION_REQUIRED' | 'INVITATION_INVALID' | 'INVITATION_USED'
+
+const REFUSALS: Refusal[] = ['INVITATION_REQUIRED', 'INVITATION_INVALID', 'INVITATION_USED']
+
 export function AnswerPage() {
   const { publicId = '' } = useParams()
+  const [params] = useSearchParams()
+  // The invitation travels in the link the respondent received; an anonymous survey ignores it.
+  const invitation = params.get('invitation') ?? undefined
   const survey = useQuery({
-    queryKey: ['public-survey', publicId],
+    queryKey: ['public-survey', publicId, invitation],
     queryFn: async () => {
-      const { data, response } = await api.GET('/public/surveys/{publicId}', {
-        params: { path: { publicId } },
+      const { data, error, response } = await api.GET('/public/surveys/{publicId}', {
+        params: { path: { publicId }, query: invitation ? { invitation } : undefined },
       })
       if (response.status === 404) return null
+      if (error && REFUSALS.includes(error.code as Refusal)) return error.code as Refusal
       if (!data) throw new Error(`unexpected status ${response.status}`)
       return data
     },
   })
-  usePageTitle(survey.data?.title)
+  usePageTitle(typeof survey.data === 'object' ? survey.data?.title : undefined)
 
   if (survey.isPending) {
     return (
@@ -55,16 +63,48 @@ export function AnswerPage() {
       </Alert>
     )
   }
-  return <SurveyForm publicId={publicId} survey={survey.data} />
+  if (typeof survey.data === 'string') return <InvitationRefused code={survey.data} />
+  return <SurveyForm publicId={publicId} survey={survey.data} invitation={invitation} />
 }
 
-function SurveyForm({ publicId, survey }: { publicId: string; survey: PublicSurvey }) {
+function InvitationRefused({ code }: { code: Refusal }) {
+  return (
+    <Alert severity={code === 'INVITATION_REQUIRED' ? 'info' : 'warning'}>
+      {code === 'INVITATION_REQUIRED' && (
+        <FormattedMessage
+          id="answer.invitation.required"
+          defaultMessage="This survey is answered by invitation: open the link you received."
+        />
+      )}
+      {code === 'INVITATION_INVALID' && (
+        <FormattedMessage
+          id="answer.invitation.invalid"
+          defaultMessage="This invitation is not valid for this survey."
+        />
+      )}
+      {code === 'INVITATION_USED' && (
+        <FormattedMessage
+          id="answer.invitation.used"
+          defaultMessage="This invitation has already been used."
+        />
+      )}
+    </Alert>
+  )
+}
+
+interface FormProps {
+  publicId: string
+  survey: PublicSurvey
+  invitation: string | undefined
+}
+
+function SurveyForm({ publicId, survey, invitation }: FormProps) {
   const questions: Question[] = useMemo(() => survey.version.questions, [survey])
   const [answers, setAnswers] = useState<Answers>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitErrors, setSubmitErrors] = useState<QuestionError[]>([])
-  const [outcome, setOutcome] = useState<'idle' | 'done' | 'closed' | 'failed'>('idle')
-  const evaluation = useEvaluation(publicId, survey.version.number, questions, answers)
+  const [outcome, setOutcome] = useState<'idle' | 'done' | 'closed' | 'used' | 'failed'>('idle')
+  const evaluation = useEvaluation(publicId, survey.version.number, questions, answers, invitation)
 
   const onChange = useCallback((key: string, value: AnswerValue) => {
     setSubmitErrors([])
@@ -75,7 +115,7 @@ function SurveyForm({ publicId, survey }: { publicId: string; survey: PublicSurv
     setSubmitting(true)
     const sent = answersToSend(questions, answers, evaluation.visible)
     const { data, error, response } = await api.POST('/public/surveys/{publicId}/responses', {
-      params: { path: { publicId } },
+      params: { path: { publicId }, query: invitation ? { invitation } : undefined },
       body: { versionNumber: survey.version.number, answers: sent },
     })
     setSubmitting(false)
@@ -87,8 +127,14 @@ function SurveyForm({ publicId, survey }: { publicId: string; survey: PublicSurv
       setSubmitErrors(attributeErrors(error.errors, sent))
       return
     }
+    if (error?.code === 'INVITATION_USED') {
+      setOutcome('used')
+      return
+    }
     setOutcome(response.status === 409 ? 'closed' : 'failed')
   }
+
+  if (outcome === 'used') return <InvitationRefused code="INVITATION_USED" />
 
   if (outcome === 'done') {
     return (

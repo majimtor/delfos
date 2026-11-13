@@ -68,4 +68,14 @@ describe('NewSurveyPage', () => {
     await screen.findByText('Editor de new-id')
     expect(bodies).toEqual([{ title: 'Clima laboral', language: 'es' }])
   })
+
+  it('sends the invited mode when chosen', async () => {
+    renderPage()
+    fireEvent.change(screen.getByLabelText(/Título/), { target: { value: 'Solo invitados' } })
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Quién puede responder' }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Solo personas con invitación' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Crear y editar las preguntas' }))
+    await screen.findByText('Editor de new-id')
+    expect(bodies).toEqual([{ title: 'Solo invitados', language: 'es', respondentMode: 'INVITED' }])
+  })
 })

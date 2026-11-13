@@ -214,6 +214,18 @@ export function SurveysPage() {
                         <FormattedMessage id="surveys.action.results" defaultMessage="Results" />
                       </Button>
                     )}
+                    {survey.respondentMode === 'INVITED' && (
+                      <Button
+                        size="small"
+                        component={Link}
+                        to={`/surveys/${survey.id}/invitations`}
+                      >
+                        <FormattedMessage
+                          id="surveys.action.invitations"
+                          defaultMessage="Invitations"
+                        />
+                      </Button>
+                    )}
                     {survey.status !== 'DRAFT' && (
                       <Button
                         size="small"

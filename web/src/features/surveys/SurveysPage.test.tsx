@@ -36,6 +36,7 @@ function reset() {
       hasDraft: false,
       publishedVersionNumber: 1,
       responseCount: 7,
+      respondentMode: 'INVITED',
     },
     {
       ...base,
@@ -143,6 +144,10 @@ describe('SurveysPage', () => {
       '/surveys/b/versions/1/results',
     )
     expect(within(published).getByText('7')).toBeTruthy()
+    expect(within(published).getByRole('link', { name: 'Invitaciones' }).getAttribute('href')).toBe(
+      '/surveys/b/invitations',
+    )
+    expect(within(draft).queryByRole('link', { name: 'Invitaciones' })).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: 'Cargar más' }))
     await waitFor(() => expect(screen.getByText('Sin preguntas')).toBeTruthy())
