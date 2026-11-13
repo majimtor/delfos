@@ -25,8 +25,8 @@ class DemoSeedTest : ApiTest() {
         val manager = tokenOf(DemoSeed.MANAGER)
         val surveys = json.readTree(manager(HttpMethod.GET, "/api/v1/surveys", manager).body).get("items").values().associateBy { it.get("title").asString() }
         assertThat(surveys.keys).containsExactlyInAnyOrder(
-            "Hábitos de lectura", "Movilidad urbana", "Satisfacción con el servicio", "Encuentro anual",
-            "Reading habits", "Urban mobility", "Service satisfaction", "Annual meetup",
+            "Hábitos de lectura", "Movilidad urbana", "Satisfacción con el servicio", "Encuentro anual", "Valoración del taller",
+            "Reading habits", "Urban mobility", "Service satisfaction", "Annual meetup", "Workshop feedback",
         )
         assertThat(surveys.getValue("Urban mobility").get("language").asString()).isEqualTo("en")
         assertThat(surveys.getValue("Urban mobility").get("responseCount").asInt()).isEqualTo(20)
@@ -35,6 +35,20 @@ class DemoSeedTest : ApiTest() {
         assertThat(surveys.getValue("Satisfacción con el servicio").get("responseCount").asInt()).isEqualTo(25)
         assertThat(surveys.getValue("Satisfacción con el servicio").get("publishedVersionNumber").asInt()).isEqualTo(2)
         assertThat(surveys.getValue("Encuentro anual").get("status").asString()).isEqualTo("CLOSED")
+        assertThat(surveys.getValue("Valoración del taller").get("respondentMode").asString()).isEqualTo("INVITED")
+        assertThat(surveys.getValue("Valoración del taller").get("responseCount").asInt()).isEqualTo(2)
+
+        // The invited survey opens with its published tokens; the first two are already used.
+        val withoutToken = client.get().uri("/api/v1/public/surveys/demo-taller").retrieve().toEntity(String::class.java)
+        assertThat(withoutToken.statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+        assertThat(json.readTree(withoutToken.body).get("code").asString()).isEqualTo("INVITATION_REQUIRED")
+        val third = client.get().uri("/api/v1/public/surveys/demo-taller?invitation=${DemoSeed.invitationToken("demo-taller", 3)}").retrieve().toEntity(String::class.java)
+        assertThat(third.statusCode).describedAs(third.body).isEqualTo(HttpStatus.OK)
+        val usedOne = client.get().uri("/api/v1/public/surveys/demo-workshop?invitation=${DemoSeed.invitationToken("demo-workshop", 1)}").retrieve().toEntity(String::class.java)
+        assertThat(usedOne.statusCode).isEqualTo(HttpStatus.CONFLICT)
+        val tallerId = surveys.getValue("Valoración del taller").get("id").asString()
+        val invitations = json.readTree(manager(HttpMethod.GET, "/api/v1/surveys/$tallerId/invitations", manager).body).get("items").values().map { it.get("status").asString() }
+        assertThat(invitations).containsExactlyInAnyOrder("USED", "USED", "PENDING", "PENDING", "PENDING")
 
         val mobilityId = surveys.getValue("Movilidad urbana").get("id").asString()
         val results = json.readTree(manager(HttpMethod.GET, "/api/v1/surveys/$mobilityId/versions/1/results", manager).body)
@@ -84,8 +98,8 @@ class DemoSeedTest : ApiTest() {
 
         val titles = json.readTree(manager(HttpMethod.GET, "/api/v1/surveys", manager).body).get("items").values().map { it.get("title").asString() }
         assertThat(titles).containsExactlyInAnyOrder(
-            "Hábitos de lectura", "Movilidad urbana", "Satisfacción con el servicio", "Encuentro anual",
-            "Reading habits", "Urban mobility", "Service satisfaction", "Annual meetup",
+            "Hábitos de lectura", "Movilidad urbana", "Satisfacción con el servicio", "Encuentro anual", "Valoración del taller",
+            "Reading habits", "Urban mobility", "Service satisfaction", "Annual meetup", "Workshop feedback",
         )
     }
 

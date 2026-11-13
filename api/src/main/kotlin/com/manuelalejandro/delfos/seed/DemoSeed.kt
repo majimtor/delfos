@@ -8,6 +8,11 @@ import com.manuelalejandro.delfos.evaluation.DefinitionValidator
 import com.manuelalejandro.delfos.evaluation.ValidationMode
 import com.manuelalejandro.delfos.persistence.AccountEntity
 import com.manuelalejandro.delfos.persistence.AccountRepository
+import com.manuelalejandro.delfos.domain.InvitationStatus
+import com.manuelalejandro.delfos.domain.RespondentMode
+import com.manuelalejandro.delfos.invitations.InvitationTokens
+import com.manuelalejandro.delfos.persistence.InvitationEntity
+import com.manuelalejandro.delfos.persistence.InvitationRepository
 import com.manuelalejandro.delfos.persistence.SurveyEntity
 import com.manuelalejandro.delfos.persistence.SurveyRepository
 import com.manuelalejandro.delfos.persistence.SurveyVersionEntity
@@ -39,6 +44,7 @@ class DemoSeed(
     private val accounts: AccountRepository,
     private val surveys: SurveyRepository,
     private val versions: SurveyVersionRepository,
+    private val invitations: InvitationRepository,
     private val writer: ResponseWriter,
     private val passwordEncoder: PasswordEncoder,
     private val clock: Clock,
@@ -76,6 +82,11 @@ class DemoSeed(
             respond(v1, DemoSurveys.event, count = 20, seed = 4, daysAgo = 90..40)
             survey.status = SurveyStatus.CLOSED
         }
+        recreate("taller", manager.id, "Valoración del taller", "Modo invitado: solo responde quien tiene un enlace de un solo uso; dos de las cinco invitaciones ya se usaron.", "demo-taller", respondentMode = RespondentMode.INVITED) { survey ->
+            val v1 = version(survey, 1, DemoSurveys.workshop, VersionStatus.PUBLISHED)
+            survey.status = SurveyStatus.PUBLISHED
+            invite(survey, v1, DemoSurveys.workshop, count = 5, used = 2, seed = 6)
+        }
         recreate("privada", manager2.id, "Teletrabajo en el equipo", "Pertenece a otro gestor: no aparece para demo-manager.", "demo-privada") { survey ->
             val v1 = version(survey, 1, DemoSurveys.privateSurvey, VersionStatus.PUBLISHED)
             respond(v1, DemoSurveys.privateSurvey, count = 5, seed = 5)
@@ -101,6 +112,11 @@ class DemoSeed(
             respond(v1, EnglishDemoSurveys.meetup, count = 10, seed = 14, daysAgo = 90..40, texts = EnglishDemoSurveys.texts)
             survey.status = SurveyStatus.CLOSED
         }
+        recreate("workshop-en", manager.id, "Workshop feedback", "Invited mode: only a respondent with a single-use link can answer; two of the five invitations were used.", "demo-workshop", language = "en", respondentMode = RespondentMode.INVITED) { survey ->
+            val v1 = version(survey, 1, EnglishDemoSurveys.workshop, VersionStatus.PUBLISHED)
+            survey.status = SurveyStatus.PUBLISHED
+            invite(survey, v1, EnglishDemoSurveys.workshop, count = 5, used = 2, seed = 16, texts = EnglishDemoSurveys.texts)
+        }
         recreate("remote-en", manager2.id, "Remote work in the team", "Belongs to another manager: demo-manager does not see it.", "demo-remote", language = "en") { survey ->
             val v1 = version(survey, 1, EnglishDemoSurveys.privateSurvey, VersionStatus.PUBLISHED)
             respond(v1, EnglishDemoSurveys.privateSurvey, count = 3, seed = 15, texts = EnglishDemoSurveys.texts)
@@ -123,12 +139,30 @@ class DemoSeed(
         }
     }
 
-    private fun recreate(name: String, ownerId: UUID, title: String, description: String, publicId: String, language: String = "es", build: (SurveyEntity) -> Unit) {
+    private fun recreate(name: String, ownerId: UUID, title: String, description: String, publicId: String, language: String = "es", respondentMode: RespondentMode = RespondentMode.ANONYMOUS, build: (SurveyEntity) -> Unit) {
         val id = stableId("survey:$name")
         surveys.findById(id).ifPresent { surveys.delete(it); surveys.flush() }
         val now = clock.instant()
-        val survey = surveys.save(SurveyEntity(id, publicId, ownerId, title, description, language = language, createdAt = now.minus(Duration.ofDays(DAYS_BACK)), updatedAt = now))
+        val survey = surveys.save(SurveyEntity(id, publicId, ownerId, title, description, language = language, respondentMode = respondentMode, createdAt = now.minus(Duration.ofDays(DAYS_BACK)), updatedAt = now))
         build(survey)
+    }
+
+    /**
+     * Invitations with known tokens, so that the demo can publish their links; the first `used` ones
+     * carry a synthetic response. Real invitations get random tokens from the API.
+     */
+    private fun invite(survey: SurveyEntity, version: SurveyVersionEntity, definition: SurveyDefinition, count: Int, used: Int, seed: Int, texts: List<String> = SPANISH_TEXTS) {
+        val generator = ResponseGenerator(definition, seed, texts)
+        val now = clock.instant()
+        for (n in 1..count) {
+            val invitation = invitations.save(InvitationEntity(stableId("invitation:${survey.publicId}:$n"), survey.id, InvitationTokens.hash(invitationToken(survey.publicId, n)), createdAt = now.minus(Duration.ofDays(7))))
+            if (n <= used) {
+                val submittedAt = now.minus(Duration.ofDays((used - n + 1).toLong()))
+                writer.store(version.id, definition, generator.next(), submittedAt, invitation.id)
+                invitation.status = InvitationStatus.USED
+                invitation.usedAt = submittedAt
+            }
+        }
     }
 
     private fun version(survey: SurveyEntity, number: Int, definition: SurveyDefinition, status: VersionStatus): SurveyVersionEntity {
@@ -160,6 +194,9 @@ class DemoSeed(
         private const val DAYS_BACK = 100L
 
         fun stableId(name: String): UUID = UUID.nameUUIDFromBytes("delfos-seed:$name".toByteArray(Charsets.UTF_8))
+
+        /** The token of the n-th invitation of a demo survey; public on purpose, like the demo passwords. */
+        fun invitationToken(publicId: String, n: Int): String = "$publicId-$n"
     }
 }
 

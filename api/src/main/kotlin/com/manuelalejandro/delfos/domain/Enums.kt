@@ -8,6 +8,8 @@ enum class RespondentMode { ANONYMOUS, INVITED }
 
 enum class VersionStatus { DRAFT, PUBLISHED, SUPERSEDED }
 
+enum class InvitationStatus { PENDING, USED, REVOKED }
+
 enum class Language(val code: String) {
     ES("es"),
     EN("en"),
