@@ -65,7 +65,7 @@ class SecurityConfig {
             val config = CorsConfiguration().apply {
                 allowedOrigins = listOf(webOrigin)
                 allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                allowedHeaders = listOf(HttpHeaders.CONTENT_TYPE, HttpHeaders.AUTHORIZATION, HttpHeaders.IF_NONE_MATCH, SessionAuthenticationFilter.CLIENT_HEADER)
+                allowedHeaders = listOf(HttpHeaders.CONTENT_TYPE, HttpHeaders.AUTHORIZATION, HttpHeaders.IF_NONE_MATCH, HttpHeaders.CACHE_CONTROL, "Last-Event-ID", SessionAuthenticationFilter.CLIENT_HEADER)
                 exposedHeaders = listOf(HttpHeaders.ETAG, HttpHeaders.LOCATION, HttpHeaders.RETRY_AFTER)
                 allowCredentials = true
                 maxAge = CORS_MAX_AGE_SECONDS

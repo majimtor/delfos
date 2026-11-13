@@ -33,6 +33,10 @@ release, breaking changes are allowed and recorded here.
 - `GET /surveys/{id}/versions/{n}/export.xlsx` exports the responses of a
   version as a workbook with the rows and columns of the CSV export.
 
+- `GET /surveys/{id}/results/events`: server-sent events with the response
+  count of a survey, on connection and on every new response, with a
+  heartbeat between them.
+
 ### Changed
 
 - `Question` and `Option` are explicit schemas with required keys instead of
