@@ -58,9 +58,14 @@ class DemoSeed(
         val manager = upsertAccount(MANAGER, isAdmin = false)
         val manager2 = upsertAccount(MANAGER_2, isAdmin = false)
         listOf(admin, manager, manager2).forEach { it.status = AccountStatus.ACTIVE }
-        // Whatever the demo accounts own goes, including what visitors created with them.
+        // Whatever the demo accounts own goes, including what visitors created with them, and so do
+        // the accounts that visitors created through the demo administrator.
         surveys.deleteAll(surveys.findAllByOwnerIdIn(listOf(admin.id, manager.id, manager2.id)))
+        val visitors = accounts.findAllByUsernameNotIn(listOf(ADMIN, MANAGER, MANAGER_2))
+        surveys.deleteAll(surveys.findAllByOwnerIdIn(visitors.map { it.id }))
         surveys.flush()
+        accounts.deleteAll(visitors)
+        accounts.flush()
 
         recreate("lectura", manager.id, "Hábitos de lectura", "Borrador aún no publicado, para probar el editor.", "demo-lectura") { survey ->
             version(survey, 1, DemoSurveys.readingDraft, VersionStatus.DRAFT)

@@ -4,6 +4,7 @@ import { AnswerPage } from '../features/answer/AnswerPage'
 import { LoginPage } from '../features/auth/LoginPage'
 import { RequireSession } from '../features/auth/RequireSession'
 import { EditorPage } from '../features/editor/EditorPage'
+import { AccountsPage } from '../features/accounts/AccountsPage'
 import { InvitationsPage } from '../features/invitations/InvitationsPage'
 import { NewSurveyPage } from '../features/editor/NewSurveyPage'
 import { ResultsPage } from '../features/results/ResultsPage'
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
           { path: 'surveys/new', Component: NewSurveyPage },
           { path: 'surveys/:surveyId/draft', Component: EditorPage },
           { path: 'surveys/:surveyId/invitations', Component: InvitationsPage },
+          { path: 'accounts', Component: AccountsPage },
           { path: 'surveys/:surveyId/versions/:versionNumber/results', Component: ResultsPage },
         ],
       },

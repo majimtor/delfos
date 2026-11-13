@@ -14,10 +14,18 @@ import org.springframework.data.jpa.repository.Lock
 
 interface AccountRepository : JpaRepository<AccountEntity, UUID> {
     fun findByUsernameIgnoreCase(username: String): AccountEntity?
+    fun findAllByUsernameNotIn(usernames: Collection<String>): List<AccountEntity>
+
+    @Query("select a from AccountEntity a order by a.createdAt desc, a.id desc")
+    fun findFirstPage(limit: Limit): List<AccountEntity>
+
+    @Query("select a from AccountEntity a where a.createdAt < :createdAt or (a.createdAt = :createdAt and a.id < :id) order by a.createdAt desc, a.id desc")
+    fun findPageAfter(@Param("createdAt") createdAt: Instant, @Param("id") id: UUID, limit: Limit): List<AccountEntity>
 }
 
 interface SessionRepository : JpaRepository<SessionEntity, UUID> {
     fun findByTokenHash(tokenHash: String): SessionEntity?
+    fun findAllByAccountId(accountId: UUID): List<SessionEntity>
 }
 
 interface SurveyRepository : JpaRepository<SurveyEntity, UUID> {

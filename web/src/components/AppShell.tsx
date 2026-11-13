@@ -57,6 +57,11 @@ export function AppShell() {
               <Button component={Link} to="/surveys" color="inherit">
                 <FormattedMessage id="app.nav.surveys" defaultMessage="My surveys" />
               </Button>
+              {session.data.isAdmin && (
+                <Button component={Link} to="/accounts" color="inherit">
+                  <FormattedMessage id="app.nav.accounts" defaultMessage="Accounts" />
+                </Button>
+              )}
               <Typography variant="body2" color="text.secondary">
                 {session.data.username}
               </Typography>

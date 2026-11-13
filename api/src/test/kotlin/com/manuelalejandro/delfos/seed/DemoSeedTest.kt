@@ -50,6 +50,18 @@ class DemoSeedTest : ApiTest() {
         val invitations = json.readTree(manager(HttpMethod.GET, "/api/v1/surveys/$tallerId/invitations", manager).body).get("items").values().map { it.get("status").asString() }
         assertThat(invitations).containsExactlyInAnyOrder("USED", "USED", "PENDING", "PENDING", "PENDING")
 
+        // An account a visitor creates through the demo administrator goes with the next reset.
+        val adminToken = tokenOf(DemoSeed.ADMIN)
+        val visitor = client.post().uri("/api/v1/accounts").contentType(MediaType.APPLICATION_JSON).headers {
+            it.setBearerAuth(adminToken)
+            it.set(SessionAuthenticationFilter.CLIENT_HEADER, "test")
+        }.body("""{"username":"visitor-made","password":"a-long-enough-password"}""").retrieve().toEntity(String::class.java)
+        assertThat(visitor.statusCode).describedAs(visitor.body).isEqualTo(HttpStatus.CREATED)
+        seed.seed()
+        val gone = client.post().uri("/api/v1/auth/sessions").contentType(MediaType.APPLICATION_JSON)
+            .body("""{"username":"visitor-made","password":"a-long-enough-password","transport":"BEARER"}""").retrieve().toEntity(String::class.java)
+        assertThat(gone.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+
         val mobilityId = surveys.getValue("Movilidad urbana").get("id").asString()
         val results = json.readTree(manager(HttpMethod.GET, "/api/v1/surveys/$mobilityId/versions/1/results", manager).body)
         assertThat(results.get("responseCount").asInt()).isEqualTo(40)

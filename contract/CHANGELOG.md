@@ -26,6 +26,10 @@ release, breaking changes are allowed and recorded here.
   parameter and answer `INVITATION_REQUIRED`, `INVITATION_INVALID` or
   `INVITATION_USED`; `PublicSurvey` carries `respondentMode`.
 
+- Accounts for administrators: `GET`, `POST /accounts` and
+  `POST /accounts/{accountId}/disable`, with the codes `ADMIN_REQUIRED` and
+  `USERNAME_TAKEN`.
+
 ### Changed
 
 - `Question` and `Option` are explicit schemas with required keys instead of
