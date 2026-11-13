@@ -16,8 +16,10 @@ The demo runs on free tiers: the API sleeps after fifteen minutes without
 traffic and takes up to two minutes to wake outside the hours when
 the keep-alive workflow keeps it up (06:00 to 24:00 UTC); the web shows a
 wait screen meanwhile. The demo data is reset every day and at every start
-of the API. Log in with the accounts listed under [Demo data](#demo-data);
-the first slice is in, the next ones are in [PLAN.md](PLAN.md).
+of the API. Log in with the accounts listed under [Demo data](#demo-data).
+Two slices are in: answering surveys with conditional logic and live
+results, and building them in the browser, with versions and a CSV export;
+the next ones are in [PLAN.md](PLAN.md).
 
 ## A tour
 
@@ -173,6 +175,14 @@ Everything that deploys the demo is declared in the repository:
 - `.github/workflows/demo-reset.yml`: applies the demo seed again every day
   at 05:50 UTC through `POST /api/v1/demo/reset`, with
   `DELFOS_SEED_RESET_TOKEN` from the repository secrets.
+- `.github/workflows/release-please.yml`: keeps a release pull request
+  open with `CHANGELOG.md` and the next version in `version.txt`, computed
+  from the Conventional Commits on `main`, and tags the version when that
+  pull request merges. With `RELEASE_PLEASE_TOKEN` in the repository
+  secrets (a fine-grained token of the maintainer limited to this
+  repository, with write access to contents and pull requests) the pull
+  request gets its checks; without it, closing and reopening it triggers
+  them.
 
 The decision and the measured numbers are in ADR 0016.
 
