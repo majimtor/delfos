@@ -717,6 +717,38 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /surveys/{surveyId}/versions/{versionNumber}/export.xlsx:
+    parameters:
+      - $ref: "#/components/parameters/SurveyId"
+      - $ref: "#/components/parameters/VersionNumber"
+    get:
+      tags: [results]
+      summary: Export the responses of a version as a workbook
+      operationId: exportResponsesXlsx
+      description: |
+        The same rows and columns as the CSV export, as an Office Open XML
+        workbook with one sheet named Responses: texts as inline strings,
+        which a spreadsheet never evaluates, numbers and the 1 or 0 of a
+        multiple choice as numbers, the submission time as text in ISO 8601
+        UTC. Built whole before the response starts.
+      responses:
+        "200":
+          description: The workbook, offered as an attachment named `<publicId>-v<n>.xlsx`.
+          headers:
+            Content-Disposition:
+              description: "`attachment; filename=\"<publicId>-v<n>.xlsx\"`"
+              schema:
+                type: string
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /surveys/{surveyId}/invitations:
     parameters:
       - $ref: "#/components/parameters/SurveyId"

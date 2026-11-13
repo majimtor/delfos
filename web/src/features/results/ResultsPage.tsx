@@ -110,19 +110,32 @@ export function ResultsPage({
           <FormattedMessage id="results.scope.comparable" defaultMessage="All versions" />
         </ToggleButton>
       </ToggleButtonGroup>
-      <Button
-        component="a"
-        href={`${apiBaseUrl}/api/v1/surveys/${surveyId}/versions/${versionNumber}/export.csv`}
-        variant="outlined"
-        size="small"
-        sx={{ alignSelf: 'flex-start' }}
-      >
-        <FormattedMessage
-          id="results.export"
-          defaultMessage="Download the responses of version {number} (CSV)"
-          values={{ number: versionNumber }}
-        />
-      </Button>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: 'flex-start' }}>
+        <Button
+          component="a"
+          href={`${apiBaseUrl}/api/v1/surveys/${surveyId}/versions/${versionNumber}/export.csv`}
+          variant="outlined"
+          size="small"
+        >
+          <FormattedMessage
+            id="results.export"
+            defaultMessage="Download the responses of version {number} (CSV)"
+            values={{ number: versionNumber }}
+          />
+        </Button>
+        <Button
+          component="a"
+          href={`${apiBaseUrl}/api/v1/surveys/${surveyId}/versions/${versionNumber}/export.xlsx`}
+          variant="outlined"
+          size="small"
+        >
+          <FormattedMessage
+            id="results.exportXlsx"
+            defaultMessage="Download the responses of version {number} (Excel)"
+            values={{ number: versionNumber }}
+          />
+        </Button>
+      </Stack>
       {results.data.questions.map((question) => (
         <QuestionResultView
           key={question.key}

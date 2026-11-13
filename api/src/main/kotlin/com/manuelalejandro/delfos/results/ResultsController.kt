@@ -14,6 +14,7 @@ import com.manuelalejandro.delfos.evaluation.FieldError
 import com.manuelalejandro.delfos.evaluation.FieldErrorCode
 import com.manuelalejandro.delfos.survey.SurveyMapping.utc
 import java.util.UUID
+import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.InputStreamResource
 import org.springframework.core.io.Resource
 import org.springframework.http.ContentDisposition
@@ -54,6 +55,14 @@ class ResultsController(private val service: ResultsService) : ResultsApi {
             .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(file.filename).build().toString())
             // An InputStreamResource is written as it is read; no content length is computed up front.
             .body(InputStreamResource(file.body))
+    }
+
+    override fun exportResponsesXlsx(surveyId: UUID, versionNumber: Int): ResponseEntity<Resource> {
+        val file = service.exportXlsx(CurrentSession.require().accountId, surveyId, versionNumber)
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType(XlsxExport.CONTENT_TYPE))
+            .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(file.filename).build().toString())
+            .body(ByteArrayResource(file.bytes))
     }
 
     /** `304` without a body when the client already holds the current representation. */

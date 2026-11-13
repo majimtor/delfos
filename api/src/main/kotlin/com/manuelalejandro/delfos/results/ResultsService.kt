@@ -19,6 +19,7 @@ import com.manuelalejandro.delfos.survey.DefinitionCodec
 import com.manuelalejandro.delfos.survey.DefinitionCodec.toModel
 import com.manuelalejandro.delfos.survey.SurveyMapping.utc
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.SequenceInputStream
 import java.time.Clock
@@ -45,6 +46,8 @@ class ResultsService(
     class AnswerPage(val items: List<AnswerQueries.AnswerRow>, val nextCursor: String?)
 
     class CsvFile(val filename: String, val body: InputStream)
+
+    class XlsxFile(val filename: String, val bytes: ByteArray)
 
     @Transactional(readOnly = true)
     fun versionResults(ownerId: UUID, surveyId: UUID, number: Int): Tagged<VersionResults> {
@@ -110,6 +113,31 @@ class ResultsService(
         val version = versionOf(surveyId, number)
         val export = CsvExport(DefinitionCodec.definitionOf(version).questions)
         return CsvFile("${survey.publicId}-v$number.csv", csvBody(export, version.id, number))
+    }
+
+    /**
+     * The responses of a version as a workbook. Built whole before the response starts, which the
+     * plan accepts until an export measures over ten seconds or ten thousand responses.
+     */
+    @Transactional(readOnly = true)
+    fun exportXlsx(ownerId: UUID, surveyId: UUID, number: Int): XlsxFile {
+        val survey = owned(ownerId, surveyId)
+        val version = versionOf(surveyId, number)
+        val export = XlsxExport(DefinitionCodec.definitionOf(version).questions)
+        val out = ByteArrayOutputStream()
+        export.write(out, responseRows(version.id, number))
+        return XlsxFile("${survey.publicId}-v$number.xlsx", out.toByteArray())
+    }
+
+    /** Every response of a version, oldest first, read in batches as the sequence is consumed. */
+    private fun responseRows(versionId: UUID, number: Int): Sequence<XlsxExport.Row> = sequence {
+        var after: Pair<Instant, UUID>? = null
+        do {
+            val rows = queries.responsesAscending(versionId, number, after, EXPORT_BATCH)
+            val answers = queries.answersOf(rows.map { it.id })
+            rows.forEach { yield(XlsxExport.Row(it.id, it.submittedAt, answers[it.id].orEmpty())) }
+            after = rows.lastOrNull()?.let { it.submittedAt to it.id }
+        } while (rows.size == EXPORT_BATCH)
     }
 
     private fun csvBody(export: CsvExport, versionId: UUID, number: Int): InputStream {

@@ -1,48 +1,30 @@
 package com.manuelalejandro.delfos.results
 
 import com.manuelalejandro.delfos.definition.Question
-import com.manuelalejandro.delfos.definition.QuestionType
 import com.manuelalejandro.delfos.evaluation.Answer
+import com.manuelalejandro.delfos.results.ExportLayout.Cell
 import java.math.BigDecimal
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 /**
- * Lays out the responses of a version as CSV for spreadsheets, as the contract describes: one row
- * per response, one column per question in the order of the version and, for a multiple choice,
- * one column per option with 1 or 0. Every text that came from a person, headers included, gets a
- * leading apostrophe when a spreadsheet would run it as a formula. Comma separated, RFC 4180
- * quoting, CRLF line ends; the byte-order mark is for the caller to prepend once.
+ * Renders the shared export layout as CSV for spreadsheets. Every text that came from a person,
+ * headers included, gets a leading apostrophe when a spreadsheet would run it as a formula. Comma
+ * separated, RFC 4180 quoting, CRLF line ends; the byte-order mark is for the caller to prepend once.
  */
 class CsvExport(questions: List<Question>) {
 
-    /** A column: its header and the cell it takes from a response's answers, by question key. */
-    private class Column(val header: String, val cell: (Map<String, Answer>) -> String)
+    private val layout = ExportLayout(questions)
 
-    private val columns: List<Column> = questions.flatMap { question ->
-        val header = safe("${question.text} (${question.key})")
-        when (question.type) {
-            QuestionType.SINGLE_CHOICE -> listOf(
-                Column(header) { answers ->
-                    answers[question.key]?.optionKey?.let { key -> safe(question.options?.firstOrNull { it.key == key }?.label ?: key) } ?: ""
-                },
-            )
-            QuestionType.MULTIPLE_CHOICE -> question.options.orEmpty().map { option ->
-                Column(safe("${question.text} (${question.key}) / ${option.label} (${option.key})")) { answers ->
-                    answers[question.key]?.let { if (option.key in it.optionKeys.orEmpty()) "1" else "0" } ?: ""
-                }
-            }
-            QuestionType.NUMBER, QuestionType.SCALE -> listOf(Column(header) { answers -> answers[question.key]?.number?.let(::plain) ?: "" })
-            QuestionType.TEXT -> listOf(Column(header) { answers -> answers[question.key]?.text?.let(::safe) ?: "" })
-        }
-    }
+    fun header(): String = line(layout.columns.map { safe(it.header) })
 
-    fun header(): String = line(listOf("Response id", "Submitted at") + columns.map { it.header })
+    fun row(id: UUID, submittedAt: Instant, answers: List<Answer>): String = line(layout.cells(id, submittedAt, answers).map { render(it) })
 
-    fun row(id: UUID, submittedAt: Instant, answers: List<Answer>): String {
-        val byKey = answers.associateBy { it.questionKey }
-        return line(listOf(id.toString(), submittedAt.truncatedTo(ChronoUnit.SECONDS).toString()) + columns.map { it.cell(byKey) })
+    private fun render(cell: Cell): String = when (cell) {
+        is Cell.Text -> safe(cell.value)
+        is Cell.Number -> plain(cell.value)
+        is Cell.Flag -> if (cell.value) "1" else "0"
+        Cell.Empty -> ""
     }
 
     companion object {

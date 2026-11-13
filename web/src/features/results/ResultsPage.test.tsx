@@ -180,6 +180,12 @@ describe('ResultsPage', () => {
     expect(link.getAttribute('href')).toBe(
       'http://localhost:8080/api/v1/surveys/a/versions/1/export.csv',
     )
+    const workbook = screen.getByRole('link', {
+      name: 'Descargar las respuestas de la versión 1 (Excel)',
+    })
+    expect(workbook.getAttribute('href')).toBe(
+      'http://localhost:8080/api/v1/surveys/a/versions/1/export.xlsx',
+    )
   })
 
   it('lists the text answers on demand', async () => {
