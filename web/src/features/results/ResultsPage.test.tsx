@@ -138,6 +138,38 @@ function renderPage() {
   )
 }
 
+class FakeEventSource {
+  static instances: FakeEventSource[] = []
+  readonly url: string
+  readonly withCredentials: boolean
+  onopen: (() => void) | null = null
+  onerror: (() => void) | null = null
+  private listeners: Record<string, Array<() => void>> = {}
+  closed = false
+
+  constructor(url: string, init?: { withCredentials?: boolean }) {
+    this.url = url
+    this.withCredentials = init?.withCredentials ?? false
+    FakeEventSource.instances.push(this)
+  }
+
+  addEventListener(type: string, listener: () => void) {
+    this.listeners[type] = [...(this.listeners[type] ?? []), listener]
+  }
+
+  open() {
+    this.onopen?.()
+  }
+
+  emit(type: string) {
+    this.listeners[type]?.forEach((listener) => listener())
+  }
+
+  close() {
+    this.closed = true
+  }
+}
+
 describe('ResultsPage', () => {
   beforeEach(() => {
     responseCount = 3
@@ -186,6 +218,40 @@ describe('ResultsPage', () => {
     expect(workbook.getAttribute('href')).toBe(
       'http://localhost:8080/api/v1/surveys/a/versions/1/export.xlsx',
     )
+  })
+
+  it('reads the results again when the event stream announces a change, and shows it is live', async () => {
+    FakeEventSource.instances = []
+    vi.stubGlobal('EventSource', FakeEventSource)
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <IntlProvider locale="es" messages={es}>
+          <MemoryRouter initialEntries={['/surveys/a/versions/1/results']}>
+            <Routes>
+              <Route
+                path="/surveys/:surveyId/versions/:versionNumber/results"
+                element={<ResultsPage pollIntervalMs={600_000} />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </IntlProvider>
+      </QueryClientProvider>,
+    )
+    await screen.findByText('Colores')
+    expect(screen.getByRole('status').textContent).toContain('3 respuestas')
+    const source = FakeEventSource.instances[0]!
+    expect(source.url).toBe('http://localhost:8080/api/v1/surveys/a/results/events')
+    expect(source.withCredentials).toBe(true)
+    expect(screen.getByRole('status').textContent).not.toContain('en directo')
+    source.open()
+    await waitFor(() => expect(screen.getByRole('status').textContent).toContain('en directo'))
+
+    responseCount = 4
+    source.emit('results')
+    await waitFor(() => expect(screen.getByRole('status').textContent).toContain('4 respuestas'))
+    expect(etagsReceived.length).toBeGreaterThanOrEqual(2)
   })
 
   it('lists the text answers on demand', async () => {
