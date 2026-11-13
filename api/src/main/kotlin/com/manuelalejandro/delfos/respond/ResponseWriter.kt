@@ -12,9 +12,9 @@ import org.springframework.stereotype.Component
 @Component
 class ResponseWriter(private val responses: SurveyResponseRepository, private val answers: AnswerStore) {
 
-    fun store(versionId: UUID, definition: SurveyDefinition, givenAnswers: List<Answer>, submittedAt: Instant): SurveyResponseEntity {
+    fun store(versionId: UUID, definition: SurveyDefinition, givenAnswers: List<Answer>, submittedAt: Instant, invitationId: UUID? = null): SurveyResponseEntity {
         // Flushed so the answers inserted with SQL can reference the row in the same transaction.
-        val response = responses.saveAndFlush(SurveyResponseEntity(UUID.randomUUID(), versionId, submittedAt = submittedAt))
+        val response = responses.saveAndFlush(SurveyResponseEntity(UUID.randomUUID(), versionId, invitationId, submittedAt))
         val typeByKey = definition.questions.associate { it.key to it.type }
         answers.insertAll(response.id, givenAnswers.map { AnswerStore.TypedAnswer(it, typeByKey.getValue(it.questionKey)) })
         return response

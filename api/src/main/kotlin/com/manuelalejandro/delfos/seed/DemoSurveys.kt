@@ -86,6 +86,14 @@ object DemoSurveys {
         rules = listOf(rule("recomendacion", MatchMode.ALL, cond("libros", ConditionOperator.GT, number(0.0)))),
     )
 
+    val workshop: SurveyDefinition = SurveyDefinition(
+        questions = listOf(
+            Question("valoracion", QuestionType.SCALE, "¿Cómo valoras el taller?", required = true, max = 5.0, minLabel = "Muy mal", maxLabel = "Muy bien"),
+            Question("partes", QuestionType.MULTIPLE_CHOICE, "¿Qué parte te resultó más útil?", options = options("demo" to "La demostración", "ejercicios" to "Los ejercicios", "debate" to "El debate")),
+            Question("cambios", QuestionType.TEXT, "¿Qué cambiarías?", maxLength = 200),
+        ),
+    )
+
     val privateSurvey: SurveyDefinition = SurveyDefinition(
         questions = listOf(
             Question("teletrabajo", QuestionType.SCALE, "¿Cuántos días a la semana teletrabajas?", required = true, min = 0.0, max = 5.0),

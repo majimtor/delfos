@@ -20,6 +20,12 @@ release, breaking changes are allowed and recorded here.
   question, one column per option for multiple choice, text protected against
   formula injection.
 
+- Invited mode: `POST`, `GET /surveys/{id}/invitations` and
+  `DELETE /surveys/{id}/invitations/{invitationId}` create, list and revoke
+  single-use invitations; the public operations take the `invitation` query
+  parameter and answer `INVITATION_REQUIRED`, `INVITATION_INVALID` or
+  `INVITATION_USED`; `PublicSurvey` carries `respondentMode`.
+
 ### Changed
 
 - `Question` and `Option` are explicit schemas with required keys instead of

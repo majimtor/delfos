@@ -43,6 +43,8 @@ tags:
     description: Read access to the versions of a survey.
   - name: results
     description: Aggregated results and raw responses.
+  - name: invitations
+    description: Single-use invitations of a survey in invited mode.
   - name: public
     description: Answering a published survey; no authentication.
   - name: demo
@@ -623,6 +625,101 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /surveys/{surveyId}/invitations:
+    parameters:
+      - $ref: "#/components/parameters/SurveyId"
+    get:
+      tags: [invitations]
+      summary: List the invitations of a survey
+      operationId: listInvitations
+      description: Newest first, with their state; the tokens are never returned again.
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of invitations.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitationPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [invitations]
+      summary: Create single-use invitations
+      operationId: createInvitations
+      description: |
+        Creates `count` invitations and returns their tokens, the only time
+        they are shown; the server keeps a hash. The link for a respondent
+        is the public answer page with `?invitation=<token>`. Only a survey in
+        `INVITED` mode that is not closed takes invitations.
+      parameters:
+        - $ref: "#/components/parameters/ClientHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInvitationsRequest"
+      responses:
+        "201":
+          description: The invitations with their tokens.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatedInvitations"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: The survey is anonymous or closed (`INVALID_STATE_TRANSITION`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+
+  /surveys/{surveyId}/invitations/{invitationId}:
+    parameters:
+      - $ref: "#/components/parameters/SurveyId"
+      - name: invitationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      tags: [invitations]
+      summary: Revoke an invitation
+      operationId: revokeInvitation
+      description: A revoked invitation no longer opens the survey. Revoking one that is already revoked changes nothing; a used one cannot be revoked.
+      parameters:
+        - $ref: "#/components/parameters/ClientHeader"
+      responses:
+        "204":
+          description: Revoked, or already revoked.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: The invitation was already used (`INVALID_STATE_TRANSITION`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+
   /public/surveys/{publicId}:
     parameters:
       - $ref: "#/components/parameters/PublicId"
@@ -630,8 +727,14 @@ paths:
       tags: [public]
       summary: Get a published survey to answer it
       operationId: getPublicSurvey
-      description: Returns the currently published version. A closed survey is returned with `acceptingResponses` false; a survey that was never published is not found.
+      description: |
+        Returns the currently published version. A closed survey is returned
+        with `acceptingResponses` false; a survey that was never published is
+        not found. A survey in `INVITED` mode is returned only with a valid
+        invitation token.
       security: []
+      parameters:
+        - $ref: "#/components/parameters/InvitationToken"
       responses:
         "200":
           description: The survey and its published definition.
@@ -639,8 +742,16 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PublicSurvey"
+        "403":
+          $ref: "#/components/responses/InvitationRefused"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          description: The invitation has already been used (`INVITATION_USED`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "429":
           $ref: "#/components/responses/TooManyRequests"
 
@@ -655,8 +766,11 @@ paths:
         A pure function: given a version number and the answers so far, returns
         which questions are visible, the errors in the answers given, and the
         visible required questions that have no valid answer yet. Nothing is
-        stored. Clients call it as answers change.
+        stored. Clients call it as answers change. A survey in `INVITED` mode
+        evaluates only with a valid invitation token.
       security: []
+      parameters:
+        - $ref: "#/components/parameters/InvitationToken"
       requestBody:
         required: true
         content:
@@ -672,10 +786,12 @@ paths:
                 $ref: "#/components/schemas/EvaluationResult"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/InvitationRefused"
         "404":
           $ref: "#/components/responses/NotFound"
         "409":
-          description: The version is not answerable (`VERSION_NOT_ANSWERABLE`), for example a draft.
+          description: The version is not answerable (`VERSION_NOT_ANSWERABLE`), for example a draft, or the invitation has already been used (`INVITATION_USED`).
           content:
             application/problem+json:
               schema:
@@ -695,8 +811,12 @@ paths:
         evaluation, including one valid answer for every visible required
         question, and stores the response. A superseded version of a
         published survey is still accepted so that a respondent who loaded it
-        before a new publication can submit.
+        before a new publication can submit. In `INVITED` mode the response
+        uses up the invitation whose token travels with it; a second
+        submission with the same token is refused.
       security: []
+      parameters:
+        - $ref: "#/components/parameters/InvitationToken"
       requestBody:
         required: true
         content:
@@ -712,10 +832,12 @@ paths:
                 $ref: "#/components/schemas/SubmittedResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/InvitationRefused"
         "404":
           $ref: "#/components/responses/NotFound"
         "409":
-          description: The survey is not accepting responses (`SURVEY_NOT_ACCEPTING_RESPONSES`), its quota is reached (`RESPONSE_QUOTA_REACHED`) or the version is not answerable (`VERSION_NOT_ANSWERABLE`).
+          description: The survey is not accepting responses (`SURVEY_NOT_ACCEPTING_RESPONSES`), its quota is reached (`RESPONSE_QUOTA_REACHED`) or the version is not answerable (`VERSION_NOT_ANSWERABLE`), or the invitation has already been used (`INVITATION_USED`).
           content:
             application/problem+json:
               schema:
@@ -797,6 +919,18 @@ components:
       required: true
       schema:
         $ref: "#/components/schemas/PublicId"
+    InvitationToken:
+      name: invitation
+      in: query
+      required: false
+      description: |
+        The token of a single-use invitation, taken from the link the
+        respondent received. Required for a survey in `INVITED` mode and
+        ignored for an anonymous one.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 200
     Cursor:
       name: cursor
       in: query
@@ -854,6 +988,12 @@ components:
             $ref: "#/components/schemas/Problem"
     Forbidden:
       description: The cookie-authenticated request lacks the client header (`CSRF_REJECTED`).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    InvitationRefused:
+      description: The survey needs an invitation that was not given (`INVITATION_REQUIRED`), or the token is unknown for this survey or revoked (`INVITATION_INVALID`).
       content:
         application/problem+json:
           schema:
@@ -919,7 +1059,7 @@ components:
 
     RespondentMode:
       type: string
-      description: "`ANONYMOUS`: anyone with the link may answer. `INVITED`: single-use invitation tokens (not yet available)."
+      description: "`ANONYMOUS`: anyone with the link may answer. `INVITED`: only a respondent with a single-use invitation token."
       enum: [ANONYMOUS, INVITED]
 
     VersionStatus:
@@ -1503,6 +1643,8 @@ components:
         acceptingResponses:
           type: boolean
           description: False when the survey is closed or its quota is reached.
+        respondentMode:
+          $ref: "#/components/schemas/RespondentMode"
         closesAt:
           type: string
           format: date-time
@@ -1685,6 +1827,74 @@ components:
         nextCursor:
           type: string
 
+    InvitationStatus:
+      type: string
+      description: "`PENDING`: not used yet. `USED`: a response was submitted with it. `REVOKED`: withdrawn by the manager."
+      enum: [PENDING, USED, REVOKED]
+
+    Invitation:
+      type: object
+      required: [id, status, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/InvitationStatus"
+        createdAt:
+          type: string
+          format: date-time
+        usedAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+
+    InvitationPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Invitation"
+        nextCursor:
+          type: string
+
+    CreateInvitationsRequest:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 200
+          default: 1
+
+    CreatedInvitation:
+      type: object
+      required: [id, token, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        token:
+          type: string
+          description: Shown once; the server keeps only a hash.
+        createdAt:
+          type: string
+          format: date-time
+
+    CreatedInvitations:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreatedInvitation"
+
     ProblemCode:
       type: string
       description: Stable machine-readable error code; the contract of errors.
@@ -1702,6 +1912,9 @@ components:
         - VERSION_NOT_ANSWERABLE
         - SURVEY_NOT_ACCEPTING_RESPONSES
         - RESPONSE_QUOTA_REACHED
+        - INVITATION_REQUIRED
+        - INVITATION_INVALID
+        - INVITATION_USED
         - PAYLOAD_TOO_LARGE
         - RATE_LIMITED
         - INTERNAL_ERROR

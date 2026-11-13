@@ -103,6 +103,13 @@ in the interface language, or through `/api/v1/public/surveys/<public id>`
 on the API. Running the seed again is the reset: it removes everything the
 demo accounts own and recreates the sample surveys.
 
+`demo-manager` also owns one survey per language in invited mode
+(`demo-taller`, `demo-workshop`), each with five single-use invitations of
+which the first two are already used. Their tokens are public on purpose,
+`<public id>-<n>` with `n` from 1 to 5, so `?invitation=demo-taller-3`
+opens the Spanish one; a real invitation gets a random token that is shown
+once.
+
 ## Working on the repository
 
 After cloning, point Git at the versioned hooks and install

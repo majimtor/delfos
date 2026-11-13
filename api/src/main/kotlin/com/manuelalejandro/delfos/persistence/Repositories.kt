@@ -1,5 +1,6 @@
 package com.manuelalejandro.delfos.persistence
 
+import com.manuelalejandro.delfos.domain.InvitationStatus
 import com.manuelalejandro.delfos.domain.SurveyStatus
 import com.manuelalejandro.delfos.domain.VersionStatus
 import java.time.Instant
@@ -68,4 +69,24 @@ interface SurveyResponseRepository : JpaRepository<SurveyResponseEntity, UUID> {
 
     @Query("select count(r) from SurveyResponseEntity r where r.versionId in (select v.id from SurveyVersionEntity v where v.surveyId = :surveyId)")
     fun countBySurveyId(@Param("surveyId") surveyId: UUID): Long
+}
+
+interface InvitationRepository : JpaRepository<InvitationEntity, UUID> {
+    fun findByTokenHash(tokenHash: String): InvitationEntity?
+    fun findByIdAndSurveyId(id: UUID, surveyId: UUID): InvitationEntity?
+    fun countBySurveyIdAndStatus(surveyId: UUID, status: InvitationStatus): Long
+
+    /** The invitation locked for the rest of the transaction, so that two submissions with one token cannot both use it. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select i from InvitationEntity i where i.tokenHash = :tokenHash")
+    fun lockByTokenHash(@Param("tokenHash") tokenHash: String): InvitationEntity?
+
+    @Query("select i from InvitationEntity i where i.surveyId = :surveyId order by i.createdAt desc, i.id desc")
+    fun findFirstPage(@Param("surveyId") surveyId: UUID, limit: Limit): List<InvitationEntity>
+
+    @Query(
+        "select i from InvitationEntity i where i.surveyId = :surveyId " +
+            "and (i.createdAt < :createdAt or (i.createdAt = :createdAt and i.id < :id)) order by i.createdAt desc, i.id desc",
+    )
+    fun findPageAfter(@Param("surveyId") surveyId: UUID, @Param("createdAt") createdAt: Instant, @Param("id") id: UUID, limit: Limit): List<InvitationEntity>
 }
