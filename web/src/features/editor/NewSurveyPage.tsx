@@ -23,6 +23,7 @@ export function NewSurveyPage() {
   const navigate = useNavigate()
   const { locale } = useLocale()
   const [language, setLanguage] = useState<Locale>(locale)
+  const [mode, setMode] = useState<Schemas['RespondentMode']>('ANONYMOUS')
   const form = useForm<Fields>({ defaultValues: { title: '', description: '' } })
   usePageTitle(intl.formatMessage({ id: 'newSurvey.title', defaultMessage: 'New survey' }))
 
@@ -41,6 +42,7 @@ export function NewSurveyPage() {
       title: fields.title.trim(),
       language,
       ...(description ? { description } : {}),
+      ...(mode === 'INVITED' ? { respondentMode: mode } : {}),
     })
   })
   const errors = form.formState.errors
@@ -110,6 +112,34 @@ export function NewSurveyPage() {
           </MenuItem>
           <MenuItem value="en">
             <FormattedMessage id="app.language.en" defaultMessage="English" />
+          </MenuItem>
+        </TextField>
+        <TextField
+          select
+          label={intl.formatMessage({
+            id: 'survey.field.respondentMode',
+            defaultMessage: 'Who can answer',
+          })}
+          value={mode}
+          onChange={(event) => setMode(event.target.value as Schemas['RespondentMode'])}
+          helperText={
+            mode === 'INVITED' &&
+            intl.formatMessage({
+              id: 'survey.mode.INVITED.hint',
+              defaultMessage:
+                'You will create single-use links after publishing; nobody else can open the survey.',
+            })
+          }
+          sx={{ maxWidth: 360 }}
+        >
+          <MenuItem value="ANONYMOUS">
+            <FormattedMessage id="survey.mode.ANONYMOUS" defaultMessage="Anyone with the link" />
+          </MenuItem>
+          <MenuItem value="INVITED">
+            <FormattedMessage
+              id="survey.mode.INVITED"
+              defaultMessage="Only people with an invitation"
+            />
           </MenuItem>
         </TextField>
         <Button

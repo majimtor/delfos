@@ -240,3 +240,64 @@ test('a manager creates a survey, publishes it with a rule and then a second ver
   await expect(page.getByRole('heading', { name: 'Clima del equipo (2026)' })).toBeVisible()
   await expect(page.getByRole('textbox', { name: '¿Algo más que contarnos?' })).toBeVisible()
 })
+
+test('a manager creates an invited survey and a respondent uses a single-use link once', async ({
+  page,
+}) => {
+  await login(page, 'demo-manager-2')
+  await page.getByRole('link', { name: 'Nueva encuesta' }).click()
+  await page.getByLabel('Título').fill('Solo con invitación')
+  await page.getByRole('combobox', { name: 'Quién puede responder' }).click()
+  await page.getByRole('option', { name: 'Solo personas con invitación' }).click()
+  await page.getByRole('button', { name: 'Crear y editar las preguntas' }).click()
+  await expect(page.getByRole('heading', { name: 'Solo con invitación' })).toBeVisible()
+  await page.getByRole('button', { name: 'Añadir una pregunta' }).click()
+  await page.getByRole('menuitem', { name: 'Escala' }).click()
+  await expect(page.locator('[role="menu"]')).toHaveCount(0)
+  await page
+    .getByRole('region', { name: 'Pregunta 1' })
+    .getByLabel('Texto de la pregunta')
+    .fill('¿Cómo valoras la sesión?')
+  await page.getByRole('button', { name: 'Guardar y publicar' }).click()
+  await expect(page.getByRole('heading', { name: 'Mis encuestas' })).toBeVisible()
+
+  const surveys = page.getByRole('table', { name: 'surveys' })
+  await surveys
+    .getByRole('row', { name: /Solo con invitación/ })
+    .getByRole('link', { name: 'Invitaciones' })
+    .click()
+  await expect(page.getByRole('heading', { name: 'Invitaciones' })).toBeVisible()
+  await expect(page.getByText('Todavía no hay invitaciones.')).toBeVisible()
+  await page.getByLabel('Cuántas').fill('2')
+  await page.getByRole('button', { name: 'Crear invitaciones' }).click()
+  const links = page.getByRole('status').filter({ hasText: 'Enlaces nuevos' })
+  await expect(links).toBeVisible()
+  await expectAccessible(page, 'the invitations page')
+  const link = (await links.locator('code').first().textContent()) ?? ''
+  expect(link).toContain('?invitation=')
+  const invitations = page.getByRole('table', { name: 'invitations' })
+  await expect(invitations.getByText('Pendiente', { exact: true })).toHaveCount(2)
+
+  // Without the token the survey stays closed to strangers; with it, it opens exactly once.
+  await page.goto(link.split('?')[0] ?? link)
+  await expect(page.getByText(/se responde por invitación/)).toBeVisible()
+  await page.goto(link)
+  await expect(page.getByRole('heading', { name: 'Solo con invitación' })).toBeVisible()
+  await page
+    .locator('fieldset')
+    .filter({ hasText: '¿Cómo valoras la sesión?' })
+    .getByRole('button', { name: '4', exact: true })
+    .click()
+  await page.getByRole('button', { name: 'Enviar mi respuesta' }).click()
+  await expect(page.getByRole('heading', { name: 'Gracias' })).toBeVisible()
+  await page.goto(link)
+  await expect(page.getByText('Esta invitación ya se ha usado.')).toBeVisible()
+
+  await page.goto('/surveys')
+  await surveys
+    .getByRole('row', { name: /Solo con invitación/ })
+    .getByRole('link', { name: 'Invitaciones' })
+    .click()
+  await expect(invitations.getByText('Usada', { exact: true })).toHaveCount(1)
+  await expect(invitations.getByText('Pendiente', { exact: true })).toHaveCount(1)
+})

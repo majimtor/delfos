@@ -67,6 +67,7 @@ function evaluate(answers: Sent[]) {
 }
 
 let submitted: Sent[][] = []
+let tokensSeen: Array<string | null> = []
 
 async function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url =
@@ -77,8 +78,31 @@ async function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
       status,
       headers: { 'Content-Type': status >= 400 ? 'application/problem+json' : 'application/json' },
     })
-  if (url.endsWith('/public/surveys/demo-test')) return json(200, survey)
-  if (url.endsWith('/public/surveys/missing')) {
+  const parsed = new URL(url)
+  const path = parsed.pathname
+  tokensSeen.push(parsed.searchParams.get('invitation'))
+  if (path.endsWith('/public/surveys/by-invitation')) {
+    const token = parsed.searchParams.get('invitation')
+    if (token === 'used-token') {
+      return json(409, {
+        type: 'urn:delfos:problem:invitation-used',
+        title: 'Conflict',
+        status: 409,
+        code: 'INVITATION_USED',
+      })
+    }
+    if (token !== 'good-token') {
+      return json(403, {
+        type: 'urn:delfos:problem:invitation-required',
+        title: 'Forbidden',
+        status: 403,
+        code: token ? 'INVITATION_INVALID' : 'INVITATION_REQUIRED',
+      })
+    }
+    return json(200, { ...survey, publicId: 'by-invitation', respondentMode: 'INVITED' })
+  }
+  if (path.endsWith('/public/surveys/demo-test')) return json(200, survey)
+  if (path.endsWith('/public/surveys/missing')) {
     return json(404, {
       type: 'urn:delfos:problem:not-found',
       title: 'Not Found',
@@ -87,8 +111,8 @@ async function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
     })
   }
   const body = JSON.parse(rawBody || '{"answers":[]}') as { answers: Sent[] }
-  if (url.endsWith('/evaluations')) return json(200, evaluate(body.answers))
-  if (url.endsWith('/responses')) {
+  if (path.endsWith('/evaluations')) return json(200, evaluate(body.answers))
+  if (path.endsWith('/responses')) {
     const result = evaluate(body.answers)
     const errors = [
       ...result.errors,
@@ -116,12 +140,12 @@ async function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
   return json(404, { code: 'NOT_FOUND' })
 }
 
-function renderPage(publicId: string) {
+function renderPage(publicId: string, search = '') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
       <IntlProvider locale="es" messages={es}>
-        <MemoryRouter initialEntries={[`/s/${publicId}`]}>
+        <MemoryRouter initialEntries={[`/s/${publicId}${search}`]}>
           <Routes>
             <Route path="/s/:publicId" element={<AnswerPage />} />
           </Routes>
@@ -143,6 +167,7 @@ async function readySubmitButton() {
 describe('AnswerPage', () => {
   beforeEach(() => {
     submitted = []
+    tokensSeen = []
     vi.stubGlobal('fetch', vi.fn(fakeFetch))
   })
   afterEach(() => {
@@ -190,5 +215,28 @@ describe('AnswerPage', () => {
     await waitFor(() =>
       expect(screen.getByRole('alert').textContent).toContain('Usa como máximo 5 caracteres.'),
     )
+  })
+
+  it('forwards the invitation token of the link to every request and explains a refusal', async () => {
+    renderPage('by-invitation')
+    await waitFor(() =>
+      expect(
+        screen.getByText('Esta encuesta se responde por invitación: abre el enlace que recibiste.'),
+      ).toBeTruthy(),
+    )
+    cleanup()
+
+    renderPage('by-invitation', '?invitation=used-token')
+    await waitFor(() => expect(screen.getByText('Esta invitación ya se ha usado.')).toBeTruthy())
+    cleanup()
+
+    renderPage('by-invitation', '?invitation=good-token')
+    await waitFor(() => expect(question(/Tienes coche/)).toBeTruthy())
+    fireEvent.click(screen.getByLabelText('No'))
+    fireEvent.click(await readySubmitButton())
+    await waitFor(() => expect(screen.getByText('Gracias')).toBeTruthy())
+    expect(submitted).toHaveLength(1)
+    expect(tokensSeen.filter((t) => t === 'good-token').length).toBeGreaterThanOrEqual(3)
+    expect(tokensSeen.slice(-3)).toEqual(['good-token', 'good-token', 'good-token'])
   })
 })
