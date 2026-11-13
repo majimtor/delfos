@@ -47,6 +47,8 @@ tags:
     description: Single-use invitations of a survey in invited mode.
   - name: accounts
     description: Manager accounts, for administrators.
+  - name: events
+    description: Server-sent events about the results of a survey.
   - name: public
     description: Answering a published survey; no authentication.
   - name: demo
@@ -618,6 +620,46 @@ paths:
           $ref: "#/components/responses/NotModified"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /surveys/{surveyId}/results/events:
+    parameters:
+      - $ref: "#/components/parameters/SurveyId"
+    get:
+      tags: [events]
+      summary: Follow the results of a survey as server-sent events
+      operationId: streamResultsEvents
+      description: |
+        A `text/event-stream` that stays open. On connection and whenever a
+        response arrives for any version of the survey, a `results` event
+        carries `{"responseCount": n, "lastSubmittedAt": "..."}`; the
+        client then reads the results it shows. Between events the server
+        writes a comment line every `heartbeat` seconds so that proxies
+        keep the connection; `0` disables the heartbeat, which is only
+        useful to measure a proxy. The stream ends after ten minutes and the
+        client reconnects. The session travels in the cookie, as an
+        `EventSource` sends no headers.
+      parameters:
+        - name: heartbeat
+          in: query
+          required: false
+          description: Seconds between heartbeat comments; defaults to 20.
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 60
+            default: 20
+      responses:
+        "200":
+          description: The stream of events.
+          content:
+            text/event-stream:
+              schema:
+                type: string
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
