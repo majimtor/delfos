@@ -109,6 +109,28 @@ jobs:
         # Apple silicon runner: the simulator test runs here and is skipped on Intel hosts.
         run: ./gradlew -p shared iosSimulatorArm64Test -Pdelfos.ios=true --no-daemon --console=plain
 
+  mobile:
+    name: Mobile app
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+      - name: Run the host tests and build the debug APK
+        # The Android SDK of the runner image serves the build; the APK talks to the public API.
+        run: ./gradlew -p mobile :app:testAndroidHostTest :androidApp:assembleDebug --no-daemon --console=plain
+      - name: Keep the debug APK
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: delfos-debug-apk
+          path: mobile/androidApp/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
   api:
     name: API module
     runs-on: ubuntu-24.04
