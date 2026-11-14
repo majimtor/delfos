@@ -30,4 +30,9 @@ rootProject.name = "mobile"
 
 include(":app", ":androidApp")
 
+// Included builds read only the properties passed on the command line, not this build's
+// gradle.properties; the flags of the shared module are set here as if they had been passed.
+gradle.startParameter.projectProperties = gradle.startParameter.projectProperties +
+    mapOf("delfos.android" to "true", "delfos.ios" to "true")
+
 includeBuild("../shared")
