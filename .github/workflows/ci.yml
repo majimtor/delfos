@@ -122,10 +122,11 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
       - name: Build the application for the iOS simulator
-        # Xcode runs the Gradle task that links the Kotlin framework; no signing, no distribution (ADR 0005).
+        # Xcode runs the Gradle task that links the Kotlin framework; no signing, no distribution
+        # (ADR 0005). The architecture is fixed because the module has no x86_64 simulator target.
         run: >-
           xcodebuild -project mobile/iosApp/iosApp.xcodeproj -target iosApp -sdk iphonesimulator
-          -configuration Debug CODE_SIGNING_ALLOWED=NO build
+          -configuration Debug ARCHS=arm64 ONLY_ACTIVE_ARCH=NO CODE_SIGNING_ALLOWED=NO build
 
   mobile:
     name: Mobile app
