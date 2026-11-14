@@ -64,12 +64,15 @@ internal data class Problem(
     val errors: List<FieldError>? = null,
 )
 
-/** Mirrors `CreateSessionRequest`; the token travels as a bearer afterwards. */
+/**
+ * Mirrors `CreateSessionRequest`. The transport is stated on purpose: a default value would be
+ * left out of the JSON and the server would fall back to the cookie transport.
+ */
 @Serializable
 internal data class CreateSessionRequest(
     val username: String,
     val password: String,
-    val transport: String = "BEARER",
+    val transport: String,
 )
 
 /** Mirrors `Session`; `token` is present once, at creation, with the bearer transport. */

@@ -49,7 +49,7 @@ internal class LoginViewModel(
         }
         state0.value = current.copy(submitting = true, error = null)
         viewModelScope.launch {
-            val result = api.createSession(CreateSessionRequest(current.username.trim(), current.password))
+            val result = api.createSession(CreateSessionRequest(current.username.trim(), current.password, transport = BEARER))
             state0.value = when (result) {
                 is ApiResult.Success -> {
                     session.signIn(result.value)
@@ -69,6 +69,7 @@ internal class LoginViewModel(
     }
 
     private companion object {
+        const val BEARER = "BEARER"
         const val TOO_MANY_REQUESTS = 429
     }
 }

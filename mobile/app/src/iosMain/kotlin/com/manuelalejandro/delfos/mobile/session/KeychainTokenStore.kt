@@ -1,7 +1,6 @@
 package com.manuelalejandro.delfos.mobile.session
 
 import kotlinx.cinterop.BetaInteropApi
-import kotlinx.cinterop.CFTypeRefVar
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
@@ -12,6 +11,7 @@ import platform.CoreFoundation.CFDictionaryCreateMutable
 import platform.CoreFoundation.CFMutableDictionaryRef
 import platform.CoreFoundation.CFRelease
 import platform.CoreFoundation.CFTypeRef
+import platform.CoreFoundation.CFTypeRefVar
 import platform.CoreFoundation.kCFBooleanTrue
 import platform.Foundation.CFBridgingRelease
 import platform.Foundation.CFBridgingRetain
