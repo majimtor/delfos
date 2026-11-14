@@ -314,8 +314,8 @@ axe against a locally seeded API. Every gate blocks the merge; none is
 advisory. Releases: `release-please` reads the Conventional Commits on
 `main`, keeps a release pull request open with the changelog and the next
 version, and tags the version when that pull request merges; the same
-workflow then attaches the Android APK to the release; 1.0.0 is reserved
-for the launch (ADR 0013). Secrets: Neon credentials in Render's
+workflow then attaches the Android APK to the release; 1.0.0 marked the
+launch on 2026-11-14 (ADR 0013). Secrets: Neon credentials in Render's
 environment; the Cloudflare API token and account identifier, the
 demo-reset secret and the release token in Actions secrets; nothing in the
 repository.
@@ -501,6 +501,12 @@ Launch is observable: version 1.0.0 tagged; S0 to S2 done; the demo at
 with the three demo accounts working; the README with video and
 screenshots; the quarterly check performed once; the clean-machine drill of
 section 17 performed once.
+
+Status on 2026-11-14: version 1.0.0 tagged from the release pull request,
+with `delfos-v1.0.0.apk` attached by the release workflow on its first
+run; the drill performed and recorded in `docs/known-issues.md`; the
+portfolio link waits for the maintainer's page, and the first quarterly
+check is due in February 2027.
 
 Delfos becomes the primary portfolio reference after S4: mobile APK on
 Releases, iOS compiled in CI, `docs/known-issues.md` current, and the
