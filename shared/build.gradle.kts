@@ -62,7 +62,11 @@ kotlin {
         // The Android target is configured by name: its DSL is reachable only with the plugin applied.
         extensions.configure<com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget>("androidLibrary") {
             namespace = "com.manuelalejandro.delfos.shared"
-            compileSdk = libs.versions.android.compileSdk.get().toInt()
+            compileSdk {
+                version = release(libs.versions.android.compileSdk.get().toInt()) {
+                    minorApiLevel = libs.versions.android.compileSdkMinor.get().toInt()
+                }
+            }
             minSdk = libs.versions.android.minSdk.get().toInt()
             compilerOptions {
                 jvmTarget.set(JvmTarget.JVM_17)

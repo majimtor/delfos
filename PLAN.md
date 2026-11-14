@@ -273,7 +273,7 @@ delfos/
   api/       Kotlin, Spring Boot, Gradle; Flyway migrations
   shared/    Kotlin Multiplatform: rules evaluator and validator, contract models
   web/       React, Vite, npm
-  mobile/    Kotlin Multiplatform with Compose (from S4)
+  mobile/    Kotlin Multiplatform with Compose: the application, Android shell
   deploy/    Dockerfile, compose.yaml, render.yaml
   .github/   workflows, dependabot.yml, pull_request_template.md
 ```

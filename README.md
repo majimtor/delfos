@@ -143,6 +143,21 @@ through `ANDROID_HOME` or `shared/local.properties`) and `-Pdelfos.ios=true`
 (needs Xcode); `check` then runs the conformance suite on every target that
 the machine can run.
 
+The mobile client lives in `mobile/`: the whole application is a Compose
+Multiplatform library (`mobile/app`) and `mobile/androidApp` is the Android
+application around it. With the Android SDK installed, the host tests and the
+debug APK build with:
+
+```sh
+./gradlew -p mobile :app:testAndroidHostTest :androidApp:assembleDebug
+```
+
+The APK talks to the public API. A debug build for the Android emulator
+reaches the compose stack on the development machine with
+`-Pdelfos.apiBaseUrl=http://10.0.2.2:8080/api/v1`. On a Mac with Xcode,
+`./gradlew -p mobile :app:linkDebugFrameworkIosSimulatorArm64` links the iOS
+framework.
+
 The web client lives in `web/` and needs the Node version in `web/.node-version`:
 
 ```sh
