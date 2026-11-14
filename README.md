@@ -145,8 +145,11 @@ the machine can run.
 
 The mobile client lives in `mobile/`: the whole application is a Compose
 Multiplatform library (`mobile/app`) and `mobile/androidApp` is the Android
-application around it. With the Android SDK installed, the host tests and the
-debug APK build with:
+application around it. It answers a survey from its code or link, with the
+rules evaluated on the device, and after logging in lists the manager's
+surveys and shows the results of a published version; the session token is
+kept in the Android keystore or the iOS keychain. With the Android SDK
+installed, the host tests and the debug APK build with:
 
 ```sh
 ./gradlew -p mobile :app:testAndroidHostTest :androidApp:assembleDebug

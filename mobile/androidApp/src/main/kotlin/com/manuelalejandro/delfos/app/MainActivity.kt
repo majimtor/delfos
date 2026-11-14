@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.manuelalejandro.delfos.mobile.App
 import com.manuelalejandro.delfos.mobile.parseSurveyLink
+import com.manuelalejandro.delfos.mobile.session.KeystoreTokenStore
 
 /** The only activity: the whole application lives in the shared Compose module. */
 class MainActivity : ComponentActivity() {
@@ -13,6 +14,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         val deepLink = intent?.dataString?.let(::parseSurveyLink)
-        setContent { App(deepLink = deepLink) }
+        val tokenStore = KeystoreTokenStore(applicationContext)
+        setContent { App(deepLink = deepLink, tokenStore = tokenStore) }
     }
 }

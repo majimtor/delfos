@@ -38,4 +38,44 @@
     <string name="error_too_many_selections">Elige como máximo %1$s.</string>
     <string name="error_hidden_answered">Esta pregunta ya no aplica.</string>
     <string name="error_invalid_value">Este valor no es válido.</string>
+    <string name="home_surveys">Mis encuestas</string>
+    <string name="login_title">Entrar</string>
+    <string name="login_username">Usuario</string>
+    <string name="login_password">Contraseña</string>
+    <string name="login_submit">Entrar</string>
+    <string name="login_required">Obligatorio.</string>
+    <string name="login_demo_hint">Cuentas de demostración: demo-manager, demo-manager-2 y demo-admin, todas con la contraseña delfos-demo.</string>
+    <string name="login_error_invalid_credentials">El usuario o la contraseña no son correctos.</string>
+    <string name="login_error_account_disabled">Esta cuenta está deshabilitada.</string>
+    <string name="login_error_rate_limited">Demasiados intentos. Espera un minuto y vuelve a probar.</string>
+    <string name="login_error_generic">No hemos podido iniciar sesión. Inténtalo de nuevo.</string>
+    <string name="surveys_title">Mis encuestas</string>
+    <string name="surveys_logout">Salir</string>
+    <string name="surveys_empty">Todavía no tienes encuestas.</string>
+    <string name="surveys_load_failed">No se han podido cargar las encuestas.</string>
+    <string name="surveys_load_more">Cargar más</string>
+    <string name="surveys_status_draft">Borrador</string>
+    <string name="surveys_status_published">Publicada</string>
+    <string name="surveys_status_closed">Cerrada</string>
+    <string name="surveys_not_published">Sin publicar todavía</string>
+    <string name="surveys_open_results">Resultados</string>
+    <plurals name="surveys_responses">
+        <item quantity="one">%1$s respuesta</item>
+        <item quantity="other">%1$s respuestas</item>
+    </plurals>
+    <string name="results_version">Versión %1$s</string>
+    <string name="results_updated">actualizado a las %1$s</string>
+    <string name="results_refresh">Actualizar</string>
+    <string name="results_load_failed">No se han podido cargar los resultados.</string>
+    <string name="results_mean">Media</string>
+    <string name="results_min">Mínimo</string>
+    <string name="results_max">Máximo</string>
+    <plurals name="results_responses">
+        <item quantity="one">%1$s respuesta</item>
+        <item quantity="other">%1$s respuestas</item>
+    </plurals>
+    <plurals name="results_answers">
+        <item quantity="one">%1$s contestación</item>
+        <item quantity="other">%1$s contestaciones</item>
+    </plurals>
 </resources>

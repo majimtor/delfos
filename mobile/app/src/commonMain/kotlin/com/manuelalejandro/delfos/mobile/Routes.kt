@@ -12,6 +12,20 @@ public data class AnswerRoute(
     val invitation: String? = null,
 )
 
+@Serializable
+internal data object LoginRoute
+
+@Serializable
+internal data object SurveysRoute
+
+/** The results of one published version; the title is carried so that the screen has it at once. */
+@Serializable
+internal data class ResultsRoute(
+    val surveyId: String,
+    val versionNumber: Int,
+    val title: String,
+)
+
 private val PUBLIC_ID = Regex("^[A-Za-z0-9_-]{8,32}$")
 
 /**
