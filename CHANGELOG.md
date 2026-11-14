@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.2.0](https://github.com/majimtor/delfos/compare/v0.1.0...v0.2.0) (2026-11-14)
+
+
+### Features
+
+* **api:** add invited mode with single-use invitations ([#35](https://github.com/majimtor/delfos/issues/35)) ([e79eac0](https://github.com/majimtor/delfos/commit/e79eac0b505456911269be9c29acc7151e45c7ed))
+* **api:** export the responses of a version as a workbook ([#39](https://github.com/majimtor/delfos/issues/39)) ([c3e79c5](https://github.com/majimtor/delfos/commit/c3e79c5f7662e033bfd551f20a165453b9c591ea))
+* **api:** stream the results of a survey as server-sent events ([#40](https://github.com/majimtor/delfos/issues/40)) ([a6b5aa8](https://github.com/majimtor/delfos/commit/a6b5aa8bab991b38b15f8d9be0e7fcadb3997680))
+* let administrators create, list and disable accounts ([#38](https://github.com/majimtor/delfos/issues/38)) ([dbac835](https://github.com/majimtor/delfos/commit/dbac835d5d399390247e234721d144d9769d5188))
+* **mobile:** add the Compose Multiplatform client that answers a survey with the rules evaluated on the device ([#44](https://github.com/majimtor/delfos/issues/44)) ([90fc472](https://github.com/majimtor/delfos/commit/90fc472be9e0d88fda7a65aca7f3ab9ea5e5cc97))
+* **mobile:** add the iOS application project, build it in CI and close the fourth slice ([#47](https://github.com/majimtor/delfos/issues/47)) ([1c305f8](https://github.com/majimtor/delfos/commit/1c305f86712e0c79fc45b2fd354393dc4a607cae))
+* **mobile:** log in with a bearer session kept in the keystore or keychain, list the surveys and show the results ([#45](https://github.com/majimtor/delfos/issues/45)) ([66365ea](https://github.com/majimtor/delfos/commit/66365ea5540d0eb723d7ec7ad23724f85c1fa67b))
+* **web:** follow the results through server-sent events with polling as the fallback ([#41](https://github.com/majimtor/delfos/issues/41)) ([e389559](https://github.com/majimtor/delfos/commit/e389559fdd4743581078fb1e95b25173f5345a20))
+* **web:** make the web installable and close the third slice with the known issues ([#42](https://github.com/majimtor/delfos/issues/42)) ([4a52d02](https://github.com/majimtor/delfos/commit/4a52d027e5e832ce190824fd96ec4ec91cff2411))
+* **web:** manage invitations and answer an invited survey from its link ([#37](https://github.com/majimtor/delfos/issues/37)) ([d0a7341](https://github.com/majimtor/delfos/commit/d0a734190b6a0734b99236653097aafee86052f1))
+
 ## 0.1.0 (2026-11-13)
 
 
