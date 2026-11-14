@@ -24,7 +24,13 @@ android {
     }
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // The published APK is signed with the debug key generated on the build machine: a
+            // stable release key would be a secret in the repository or the CI, and the budget of
+            // this project is zero secrets for distribution (PLAN, section 15; docs/known-issues.md).
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {

@@ -11,6 +11,10 @@ answer from the web or from a mobile application.
 
 - Web: <https://delfos.manuelalejandro.com>
 - API: <https://api.delfos.manuelalejandro.com/api/v1/health>
+- Android: the APK attached to the
+  [latest release](https://github.com/majimtor/delfos/releases/latest),
+  signed with a throwaway debug key, so Android warns at install and a
+  newer release installs only after removing the previous one.
 
 The demo runs on free tiers: the API sleeps after fifteen minutes without
 traffic and takes up to two minutes to wake outside the hours when
@@ -154,6 +158,9 @@ installed, the host tests and the debug APK build with:
 ```sh
 ./gradlew -p mobile :app:testAndroidHostTest :androidApp:assembleDebug
 ```
+
+`:androidApp:assembleRelease` builds the minified APK that the release
+workflow attaches to each GitHub release.
 
 The APK talks to the public API. A debug build for the Android emulator
 reaches the compose stack on the development machine with

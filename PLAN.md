@@ -313,8 +313,9 @@ to the GitHub registry on `main`; the end-to-end path with Playwright and
 axe against a locally seeded API. Every gate blocks the merge; none is
 advisory. Releases: `release-please` reads the Conventional Commits on
 `main`, keeps a release pull request open with the changelog and the next
-version, and tags the version when that pull request merges; 1.0.0 is
-reserved for the launch (ADR 0013). Secrets: Neon credentials in Render's
+version, and tags the version when that pull request merges; the same
+workflow then attaches the Android APK to the release; 1.0.0 is reserved
+for the launch (ADR 0013). Secrets: Neon credentials in Render's
 environment; the Cloudflare API token and account identifier, the
 demo-reset secret and the release token in Actions secrets; nothing in the
 repository.
