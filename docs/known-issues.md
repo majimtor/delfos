@@ -39,3 +39,18 @@ Render come from their dashboards.
 The first is due in February 2027; the procedure is in section 17 of the
 plan. Each check adds a row above and a line here with its date and what
 it changed.
+
+## Clean-machine drill
+
+Performed on 2026-11-14 on a fresh clone in a new directory, as section 17
+of the plan asks: clone, hooks path set, `docker compose up --build`
+(2 min 59 s to a healthy stack, the API ready 13 s later), the shared
+module checks on the JVM and Android (35 s), the API tests with
+Testcontainers (49 s), the mobile host tests and debug APK (53 s), the web
+checks (`npm ci` 14 s, `npm run check` 32 s), the web build and the
+end-to-end path against the compose stack (45 s); 7 minutes in all, every
+step green. The commit identity of the clone came from the repository's
+own configuration. The Java on the path was 19 and the Node 22; Gradle
+provisioned the JDK it declares and the web was run with the Node version
+of `web/.node-version`, as the README says. The change made through a
+pull request afterwards was the one that set the release version to 1.0.0.
