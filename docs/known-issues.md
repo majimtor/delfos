@@ -23,6 +23,7 @@ file when its issue is fixed, with the pull request that fixed it.
 | The tour video of the README is WebM | 2026-11-12 | Safari before 14.1 does not play it | Accepted |
 | The mobile client has no wait screen: while the API wakes from its sleep, opening a survey or logging in fails with "could not be loaded" or "we could not log you in" | 2026-11-14 | The first user after a sleep retries after a minute or two | A wake screen like the web's is a follow-up; the Try again action covers it meanwhile |
 | The APK on each release is signed with a debug key generated on the runner at that moment, so every release carries a different signature | 2026-11-14 | Android warns that the developer is unknown, and a newer release does not install over an older one until the older one is removed | Accepted: a stable key would have to live in the repository or in the CI secrets, and this project distributes with none (plan, section 15; ADR 0005) |
+| The iOS application is compiled in CI for the simulator and never run there: the keychain store and the time formatting of its platform code have not executed on a device or a simulator | 2026-11-14 | A defect in that platform code would show only when someone builds and runs it on a Mac | Accepted (ADR 0005: iOS is a CI target, not a product); the maintainer's Mac is Intel and cannot run the Apple-silicon simulator binary |
 
 ## Operating figures
 
