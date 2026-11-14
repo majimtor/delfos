@@ -54,4 +54,3 @@ own configuration. The Java on the path was 19 and the Node 22; Gradle
 provisioned the JDK it declares and the web was run with the Node version
 of `web/.node-version`, as the README says. The change made through a
 pull request afterwards was the one that set the release version to 1.0.0.
-
