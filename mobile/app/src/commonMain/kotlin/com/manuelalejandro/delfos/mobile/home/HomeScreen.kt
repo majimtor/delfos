@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -34,12 +35,13 @@ import com.manuelalejandro.delfos.mobile.resources.home_code_label
 import com.manuelalejandro.delfos.mobile.resources.home_demo_hint
 import com.manuelalejandro.delfos.mobile.resources.home_intro
 import com.manuelalejandro.delfos.mobile.resources.home_open
+import com.manuelalejandro.delfos.mobile.resources.home_surveys
 import com.manuelalejandro.delfos.mobile.resources.home_title
 import org.jetbrains.compose.resources.stringResource
 
-/** Where a respondent types the survey code or pastes the link received. */
+/** Where a respondent types the survey code or pastes the link received, and a manager goes to the surveys. */
 @Composable
-internal fun HomeScreen(onOpen: (AnswerRoute) -> Unit) {
+internal fun HomeScreen(onOpen: (AnswerRoute) -> Unit, onManage: () -> Unit) {
     var input by rememberSaveable { mutableStateOf("") }
     var invalid by rememberSaveable { mutableStateOf(false) }
     val open = {
@@ -83,6 +85,10 @@ internal fun HomeScreen(onOpen: (AnswerRoute) -> Unit) {
             Spacer(Modifier.height(16.dp))
             Button(onClick = open, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(Res.string.home_open))
+            }
+            Spacer(Modifier.height(40.dp))
+            OutlinedButton(onClick = onManage, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(Res.string.home_surveys))
             }
         }
     }

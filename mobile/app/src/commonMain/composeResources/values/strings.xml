@@ -38,4 +38,44 @@
     <string name="error_too_many_selections">Choose at most %1$s.</string>
     <string name="error_hidden_answered">This question no longer applies.</string>
     <string name="error_invalid_value">This value is not valid.</string>
+    <string name="home_surveys">My surveys</string>
+    <string name="login_title">Log in</string>
+    <string name="login_username">Username</string>
+    <string name="login_password">Password</string>
+    <string name="login_submit">Enter</string>
+    <string name="login_required">Required.</string>
+    <string name="login_demo_hint">Demo accounts: demo-manager, demo-manager-2 and demo-admin, all with the password delfos-demo.</string>
+    <string name="login_error_invalid_credentials">The username or the password is not right.</string>
+    <string name="login_error_account_disabled">This account is disabled.</string>
+    <string name="login_error_rate_limited">Too many attempts. Wait a minute and try again.</string>
+    <string name="login_error_generic">We could not log you in. Try again.</string>
+    <string name="surveys_title">My surveys</string>
+    <string name="surveys_logout">Log out</string>
+    <string name="surveys_empty">You have no surveys yet.</string>
+    <string name="surveys_load_failed">The surveys could not be loaded.</string>
+    <string name="surveys_load_more">Load more</string>
+    <string name="surveys_status_draft">Draft</string>
+    <string name="surveys_status_published">Published</string>
+    <string name="surveys_status_closed">Closed</string>
+    <string name="surveys_not_published">Not published yet</string>
+    <string name="surveys_open_results">Results</string>
+    <plurals name="surveys_responses">
+        <item quantity="one">%1$s response</item>
+        <item quantity="other">%1$s responses</item>
+    </plurals>
+    <string name="results_version">Version %1$s</string>
+    <string name="results_updated">updated at %1$s</string>
+    <string name="results_refresh">Refresh</string>
+    <string name="results_load_failed">The results could not be loaded.</string>
+    <string name="results_mean">Mean</string>
+    <string name="results_min">Minimum</string>
+    <string name="results_max">Maximum</string>
+    <plurals name="results_responses">
+        <item quantity="one">%1$s response</item>
+        <item quantity="other">%1$s responses</item>
+    </plurals>
+    <plurals name="results_answers">
+        <item quantity="one">%1$s answer</item>
+        <item quantity="other">%1$s answers</item>
+    </plurals>
 </resources>
