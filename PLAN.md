@@ -443,7 +443,8 @@ Totals as first written, kept for the record: to the public threshold
 (S0 to S2) 208 / 297 / 418 hours, 21 / 30 / 42 weeks; to the full vision
 (S0 to S4) 338 / 487 / 698 hours, 34 / 49 / 70 weeks. Remaining after the
 revision of 2026-11-13 below: to the full vision (S3 + S4) 28 / 47 / 80
-hours, that is 3 / 5 / 8 weeks; S5 is extra and conditional.
+hours, that is 3 / 5 / 8 weeks; S5 is extra and conditional. S4 closed on
+2026-11-14, so the full vision is delivered and only S5 remains, by trigger.
 
 Assumptions: the maintainer works daily with Spring Boot, React and
 TypeScript and is new to Kotlin and Compose, so S1a includes 25 to 40 hours
@@ -472,6 +473,7 @@ next to them.
 | S1b Second language and polish | 45 h | 2026-11-11 19:02 to 2026-11-12 08:39 for the last content change, 14 h elapsed; 5 pull requests, the closing one included |
 | S2 Build surveys | 85 h | 2026-11-12 10:56 to 2026-11-12 22:24 for the last content change, 11 h elapsed; 5 pull requests, the closing one included |
 | S3 Invitations, administration, live updates | 12 h | 2026-11-13 10:41 to 2026-11-13 13:19 for the last content change, 2 h 38 min elapsed; 7 pull requests, the closing one included |
+| S4 Mobile | 35 h | 2026-11-13 23:47 to 2026-11-14 02:23 for the last content change, 2 h 36 min elapsed; 5 pull requests, the closing one included |
 
 Definition of done, S1a: a stranger opens the demo, answers a seeded
 Spanish survey whose later questions appear and disappear as they answer,

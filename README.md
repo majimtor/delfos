@@ -21,10 +21,11 @@ traffic and takes up to two minutes to wake outside the hours when
 the keep-alive workflow keeps it up (06:00 to 24:00 UTC); the web shows a
 wait screen meanwhile. The demo data is reset every day and at every start
 of the API. Log in with the accounts listed under [Demo data](#demo-data).
-Three slices are in: answering surveys with conditional logic and live
-results, building them in the browser with versions and exports, and the
-invited mode, the administrators' accounts and results pushed as events;
-the next ones are in [PLAN.md](PLAN.md).
+Four slices are in: answering surveys with conditional logic and live
+results, building them in the browser with versions and exports, the
+invited mode, the administrators' accounts and results pushed as events,
+and the mobile client that answers surveys and shows results on Android,
+with iOS compiled in CI; what remains is in [PLAN.md](PLAN.md).
 
 ## A tour
 
@@ -165,8 +166,11 @@ workflow attaches to each GitHub release.
 The APK talks to the public API. A debug build for the Android emulator
 reaches the compose stack on the development machine with
 `-Pdelfos.apiBaseUrl=http://10.0.2.2:8080/api/v1`. On a Mac with Xcode,
-`./gradlew -p mobile :app:linkDebugFrameworkIosSimulatorArm64` links the iOS
-framework.
+`mobile/iosApp/iosApp.xcodeproj` builds and runs the iOS application in the
+simulator: its build phase runs the Gradle task that links the Kotlin
+framework, and Xcode needs `JAVA_HOME` (for example through
+`org.gradle.java.home` in `~/.gradle/gradle.properties`). The iOS
+application is compiled in CI and not distributed (ADR 0005).
 
 The web client lives in `web/` and needs the Node version in `web/.node-version`:
 
