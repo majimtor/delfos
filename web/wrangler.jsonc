@@ -1,13 +1,25 @@
-// Cloudflare Worker that serves the built single-page application as static assets, with no
-// script: unknown paths fall back to index.html so the client router handles them. The CI
-// workflow deploys it from main; the custom domain, its DNS record and its certificate are
+// Cloudflare Worker that serves the built single-page application as static assets and, on a
+// schedule, requests the liveness probe of the API so the free instance stays awake during the day
+// (plan, section 12). Navigations and files are answered from the assets without running the
+// script in src/worker; unknown paths fall back to index.html so the client router handles them.
+// The CI workflow deploys it from main; the custom domain, its DNS record and its certificate are
 // created by Cloudflare from the route below.
 {
   "name": "delfos-web",
+  "main": "src/worker/index.ts",
   "compatibility_date": "2026-11-01",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application",
+  },
+  "vars": {
+    "API_LIVENESS_URL": "https://api.delfos.manuelalejandro.com/actuator/health/liveness",
+  },
+  "triggers": {
+    // Every ten minutes from 06:00 to 23:59 UTC: eighteen hours a day stay well under the 750 free
+    // instance hours a month, and the nightly sleep restarts the instance with a fresh seed.
+    "crons": ["*/10 6-23 * * *"],
   },
   "routes": [{ "pattern": "delfos.manuelalejandro.com", "custom_domain": true }],
   "workers_dev": false,

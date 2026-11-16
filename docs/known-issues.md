@@ -9,7 +9,7 @@ file when its issue is fixed, with the pull request that fixed it.
 
 | Issue | Seen | Effect | Answer |
 | --- | --- | --- | --- |
-| GitHub runs scheduled workflows late or not at all: the keep-alive, scheduled every ten minutes from 06:00 to 24:00 UTC, ran five times between 2026-11-11 23:37 and 2026-11-13 02:08, and the daily demo reset of 05:50 ran at 14:00 | 2026-11-13 | The API sleeps between runs; the wait screen covers the wake, up to two minutes with the seed | Accepted for now; a cron trigger on the Cloudflare Worker that serves the web is the reliable replacement if it matters (plan, section 12) |
+| GitHub runs scheduled workflows late or not at all: the daily demo reset of 05:50 ran at 14:00 on 2026-11-12, and the keep-alive, then a workflow scheduled every ten minutes, ran five times between 2026-11-11 23:37 and 2026-11-13 02:08 | 2026-11-13 | A reset later than announced; the API also reseeds at every start | The keep-alive moved to a cron trigger on the Cloudflare Worker on 2026-11-16 (plan, section 12); the reset could follow, with its token as a Worker secret, if a late reset ever matters |
 | The API wakes in 47 seconds without the seed and in about 95 with it | 2026-11-11 | The first visitor after a sleep waits | The wait screen, which explains and counts |
 | Anyone with the link can answer an anonymous survey several times | By design | Duplicates in the results of the demo surveys | Invited mode, with one response per single-use link, for the cases that need one per person |
 | The invitation tokens of the demo surveys are public, `<public id>-<n>` | By design | Anyone can use the pending ones | Real invitations get random tokens shown once |
@@ -29,9 +29,10 @@ file when its issue is fixed, with the pull request that fixed it.
 Read at the quarterly check; one row per reading. The hours of Neon and
 Render come from their dashboards.
 
-| Date | Cold start | Neon compute hours (of 100 a month) | Neon storage (of 1 GB) | Render instance hours (of 750 a month) | Last successful demo reset | Dependabot |
-| --- | --- | --- | --- | --- | --- | --- |
-| 2026-11-13 | 47 s without the seed, 95 s with it, measured on 2026-11-11 | not read | not read | not read | 2026-11-12 14:00 UTC, scheduled and late | nothing open |
+| Date | Cold start | Results of the mobility survey | Neon compute hours (of 100 a month) | Neon storage (of 1 GB) | Render instance hours (of 750 a month) | Last successful demo reset | Dependabot |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | 47 s without the seed, 95 s with it, measured on 2026-11-11 | not read | not read | not read | not read | 2026-11-12 14:00 UTC, scheduled and late | nothing open |
+| 2026-11-16 | 91 s with the seed; 2.26 s for the first call after it | 0.27 to 0.38 s warm, 0.58 s for the workbook export | not read | not read | not read | 2026-11-15 12:58 UTC, scheduled and seven hours late | nothing open |
 
 ## Quarterly checks
 

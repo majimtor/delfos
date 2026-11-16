@@ -293,11 +293,19 @@ and flow: ADR 0013 and the engineering rules.
 | One end-to-end path with Playwright and axe on a locally seeded instance: answer a branching survey, see results | The product not working as a whole; accessibility regressions on the public pages | S1a | 3 to 5 minutes |
 | Contract compatibility (`oasdiff`) | A breaking change without a version bump | S1a | seconds |
 | Mobile unit tests on the shared module per target | Evaluator divergence across targets | S4 | 2 to 4 minutes |
+| Mutation testing of the shared module with pitest on the JVM target, failing under a mutation score of 75 % | A conformance case missing for a wrong operator or a boundary off by one | S5 | about 1 minute |
 
-Deferred with triggers: mobile end-to-end tests (when a mobile client
-exists and a flow breaks twice), mutation testing (when the domain exceeds
-thirty business rules), performance tests (when a results query exceeds
-500 ms on the seed). Coverage is reported, never targeted.
+Deferred with triggers: mobile end-to-end tests (when a mobile client exists
+and a flow breaks twice), performance tests (when a results query exceeds 500
+ms on the seed; 0.27 to 0.38 s on 2026-11-16). Mutation testing had the
+trigger of thirty business rules and joined the table on 2026-11-16, when the
+domain counted fifteen operators and twenty-six validation codes: the first
+run scored 82 % over 323 mutants, and most of what survived were inclusive
+bounds the conformance suite did not pin: a number or a scale answered
+exactly at its limit, and a definition with a limit at its bound, such as
+fifty options or equal selection limits. Coverage is reported, never
+targeted; the mutation threshold is a floor under the measured score, not a
+target.
 
 ## 11. CI/CD and containers
 
@@ -350,18 +358,17 @@ first-level subdomains only.
 
 Cold start: 47 seconds measured after sleep on the throwaway service and 95
 seconds on the deployed API on 2026-11-11, migration and seed included.
-Mitigations, cumulative: a scheduled workflow requesting the liveness
-endpoint every ten minutes from 06:00 to 24:00 UTC while the repository
-has activity, meant to keep the instance awake eighteen hours a day, within
-the free hours, without touching the database so Neon can sleep; a wait
-screen in the web and mobile clients while the API is unreachable, with
-retries; and,
-as an experiment with a trigger, a native image (section 18). Measured on
-2026-11-13: GitHub ran that ten-minute schedule five times in two days
-and the daily reset eight hours late, so the keep-alive is best effort and
-the wait screen is what covers visitors; if a reliable one matters, a cron
-trigger on the Cloudflare Worker that serves the web replaces it, decided
-at a quarterly check. The record is in `docs/known-issues.md`.
+Mitigations, cumulative: a cron trigger on the Cloudflare Worker that serves
+the web, requesting the liveness endpoint every ten minutes from 06:00 to
+24:00 UTC to keep the instance awake eighteen hours a day, within the free
+hours, without touching the database so Neon can sleep; a wait screen in the
+web and mobile clients while the API is unreachable, with retries; and, as an
+experiment with a trigger, a native image (section 18). The keep-alive was a
+scheduled GitHub workflow until 2026-11-16: measured on 2026-11-13, GitHub
+ran that ten-minute schedule five times in two days and the daily reset eight
+hours late, so the Worker's cron, which GitHub's scheduling and its 60-day
+inactivity rule do not touch, replaced it; the wait screens cover the night
+and the restarts. The record is in `docs/known-issues.md`.
 
 Demo: fixed accounts from the seed, documented in the README; the seed
 reset daily at 05:50 UTC by a scheduled workflow through a protected
@@ -376,10 +383,11 @@ image with the same seed; there is no switch and no second code path,
 because the system has no external service other than the database.
 
 What survives six months without the maintainer: Neon and Render keep
-running; TLS and the domain renew automatically; the two scheduled
-workflows are disabled by GitHub after 60 days without repository activity
-(checked 2026-11-05), so the API sleeps between visits and the wait screen
-covers it, and the seed is reset by hand at the quarterly check.
+running; TLS and the domain renew automatically; the Worker's cron keeps
+requesting the probe during the day; the seed-reset workflow is disabled by
+GitHub after 60 days without repository activity (checked 2026-11-05), so the
+seed is reset by hand at the quarterly check, and the API still reseeds at
+every start.
 
 ## 13. Accessibility and internationalisation
 
@@ -445,7 +453,8 @@ Totals as first written, kept for the record: to the public threshold
 (S0 to S4) 338 / 487 / 698 hours, 34 / 49 / 70 weeks. Remaining after the
 revision of 2026-11-13 below: to the full vision (S3 + S4) 28 / 47 / 80
 hours, that is 3 / 5 / 8 weeks; S5 is extra and conditional. S4 closed on
-2026-11-14, so the full vision is delivered and only S5 remains, by trigger.
+2026-11-14, so the full vision is delivered; S5 was read on 2026-11-16,
+adopted mutation testing and keeps the rest by trigger.
 
 Assumptions: the maintainer works daily with Spring Boot, React and
 TypeScript and is new to Kotlin and Compose, so S1a includes 25 to 40 hours
@@ -475,6 +484,7 @@ next to them.
 | S2 Build surveys | 85 h | 2026-11-12 10:56 to 2026-11-12 22:24 for the last content change, 11 h elapsed; 5 pull requests, the closing one included |
 | S3 Invitations, administration, live updates | 12 h | 2026-11-13 10:41 to 2026-11-13 13:19 for the last content change, 2 h 38 min elapsed; 7 pull requests, the closing one included |
 | S4 Mobile | 35 h | 2026-11-13 23:47 to 2026-11-14 02:23 for the last content change, 2 h 36 min elapsed; 5 pull requests, the closing one included |
+| S5 Optional, by trigger | 15 h | Read on 2026-11-16: mutation testing adopted, its trigger met (section 10); performance tests and the PDF report not triggered, the results endpoint answering in 0.27 to 0.38 s warm and 2.26 s on the first call after a wake, the workbook export in 0.58 s; the native image decided against (section 19) |
 
 Definition of done, S1a: a stranger opens the demo, answers a seeded
 Spanish survey whose later questions appear and disappear as they answer,
@@ -520,17 +530,19 @@ Maintenance: about three hours a month, of which one for dependency
 updates, one for the quarterly check amortised, one for small fixes.
 
 The quarterly check, fifteen minutes with a calendar reminder: open the
-demo cold and time it; log in with a demo account; reset the seed; look at
-Neon usage and Render hours; merge Dependabot groups; confirm the two
-scheduled workflows are enabled and re-enable them if not; note the date in
+demo cold and time it; log in with a demo account; time the results of the
+mobility survey; reset the seed; look at Neon usage and Render hours; merge
+Dependabot groups; confirm the seed-reset workflow is enabled and re-enable
+it if not; confirm in the Cloudflare dashboard that the Worker's cron ran
+that day; note the date in
 `docs/known-issues.md`.
 
 What dies without attention, and its answer:
 
 | Piece | What happens | Signal | Answer |
 | --- | --- | --- | --- |
-| Keep-alive workflow | Disabled after 60 days without repository activity | GitHub notification | API sleeps; wait screen covers a 47-second wake; accepted |
-| Seed reset workflow | Same | Same | Reset by hand at the quarterly check |
+| Keep-alive cron on the Worker | Nothing scheduled stops it; a change of Cloudflare's free plan could | Cold wakes during the day; the cron events of the Worker in the Cloudflare dashboard | API sleeps; the wait screens cover the wake; accepted |
+| Seed reset workflow | Disabled after 60 days without repository activity | GitHub notification | Reset by hand at the quarterly check; the API reseeds at every start |
 | Render free instance | May restart at any time; never expires | Render email on failed deploys | Immutable image; a restart is a cold start |
 | Neon free project | Not paused for inactivity; monthly caps | Neon email near the cap | Keep-alive hits liveness, not the database |
 | Certificates and domain | Renewed automatically; domain on auto-renewal | Registrar emails | Nothing to do |
@@ -591,8 +603,12 @@ moment indicated, each with the recommended option first:
 - Live updates: server-sent events with polling as the fallback, decided
   on 2026-11-13 after the proxy test of section 18; polling alone was the
   choice of S1a.
-- Native image: decide at S5 from the measured wake-up with the keep-alive
-  running and not running.
+- Native image: decided against on 2026-11-16. With the keep-alive the API
+  answers in 0.3 s warm and in 2.3 s on the first call after a wake; without it
+  the wake takes 91 to 95 s, which the wait screens of the web and the mobile
+  client explain; a native build would add a long step to CI and reflection
+  metadata for Spring, Hibernate and Kotlin against the budget of ADR 0016. The
+  trigger of section 18 stays.
 - Demo reset cadence: daily, decided on 2026-11-11 with the reset workflow.
 
 ## 20. Architecture decision records
