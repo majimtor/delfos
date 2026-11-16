@@ -92,6 +92,8 @@ jobs:
       - name: Build and test on the JVM and Android
         # The Android SDK of the runner image serves the Android target; iOS needs macOS, below.
         run: ./gradlew -p shared check -Pdelfos.android=true --no-daemon --console=plain
+      - name: Mutation testing on the JVM
+        run: ./gradlew -p shared mutationTest -Pdelfos.android=true --no-daemon --console=plain
 
   ios:
     name: Shared module on iOS

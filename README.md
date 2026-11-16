@@ -142,6 +142,8 @@ start Gradle (Java 17 or newer):
 ```
 
 The API tests start PostgreSQL 18 in a container, so Docker must be running.
+`./gradlew -p shared mutationTest` runs pitest on the JVM target of the
+shared module and writes its report to `shared/build/reports/pitest`.
 
 The shared module builds for the JVM by default. Its Android and iOS targets
 are switched on with `-Pdelfos.android=true` (needs the Android SDK, found
