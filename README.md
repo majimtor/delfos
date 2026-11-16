@@ -18,9 +18,10 @@ answer from the web or from a mobile application.
 
 The demo runs on free tiers: the API sleeps after fifteen minutes without
 traffic and takes up to two minutes to wake outside the hours when
-the keep-alive workflow keeps it up (06:00 to 24:00 UTC); the web shows a
-wait screen meanwhile. The demo data is reset every day and at every start
-of the API. Log in with the accounts listed under [Demo data](#demo-data).
+the keep-alive workflow keeps it up (06:00 to 24:00 UTC); the web and the
+mobile application show a wait screen meanwhile. The demo data is reset
+every day and at every start of the API. Log in with the accounts listed
+under [Demo data](#demo-data).
 Four slices are in: answering surveys with conditional logic and live
 results, building them in the browser with versions and exports, the
 invited mode, the administrators' accounts and results pushed as events,

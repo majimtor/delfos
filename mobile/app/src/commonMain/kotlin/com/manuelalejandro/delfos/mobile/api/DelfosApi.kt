@@ -6,6 +6,7 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -52,13 +53,19 @@ internal interface ManagerApi {
     suspend fun getVersionResults(surveyId: String, versionNumber: Int): ApiResult<VersionResults>
 }
 
+/** The liveness probe of the wake screen; a seam for the tests. */
+internal interface HealthApi {
+    /** One attempt to reach the API: true when it answers within a short timeout, false on any failure. */
+    suspend fun probeHealth(): Boolean
+}
+
 /** The API of Delfos over HTTP, at one base URL fixed when the application is built. */
 internal class DelfosApi(
     engine: HttpClientEngine,
     private val baseUrl: String = Config.API_BASE_URL,
     /** The bearer token of the current session, or null when nobody is signed in. */
     private val token: () -> String? = { null },
-) : PublicApi, ManagerApi {
+) : PublicApi, ManagerApi, HealthApi {
     private val json = Json {
         ignoreUnknownKeys = true
         explicitNulls = false
@@ -108,6 +115,14 @@ internal class DelfosApi(
 
     override suspend fun getVersionResults(surveyId: String, versionNumber: Int): ApiResult<VersionResults> = call {
         client.get("$baseUrl/surveys/${surveyId.encodeURLPathPart()}/versions/$versionNumber/results") { bearer() }
+    }
+
+    override suspend fun probeHealth(): Boolean = try {
+        client.get("$baseUrl/health") { timeout { requestTimeoutMillis = PROBE_TIMEOUT_MS } }.status.isSuccess()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        false
     }
 
     private fun HttpRequestBuilder.bearer() {
@@ -168,6 +183,7 @@ internal class DelfosApi(
     private companion object {
         const val CONNECT_TIMEOUT_MS = 20_000L
         const val REQUEST_TIMEOUT_MS = 150_000L
+        const val PROBE_TIMEOUT_MS = 8_000L
         const val PAGE_SIZE = 50
     }
 }
