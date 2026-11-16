@@ -29,9 +29,10 @@ file when its issue is fixed, with the pull request that fixed it.
 Read at the quarterly check; one row per reading. The hours of Neon and
 Render come from their dashboards.
 
-| Date | Cold start | Neon compute hours (of 100 a month) | Neon storage (of 1 GB) | Render instance hours (of 750 a month) | Last successful demo reset | Dependabot |
-| --- | --- | --- | --- | --- | --- | --- |
-| 2026-11-13 | 47 s without the seed, 95 s with it, measured on 2026-11-11 | not read | not read | not read | 2026-11-12 14:00 UTC, scheduled and late | nothing open |
+| Date | Cold start | Results of the mobility survey | Neon compute hours (of 100 a month) | Neon storage (of 1 GB) | Render instance hours (of 750 a month) | Last successful demo reset | Dependabot |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | 47 s without the seed, 95 s with it, measured on 2026-11-11 | not read | not read | not read | not read | 2026-11-12 14:00 UTC, scheduled and late | nothing open |
+| 2026-11-16 | 91 s with the seed; 2.26 s for the first call after it | 0.27 to 0.38 s warm, 0.58 s for the workbook export | not read | not read | not read | 2026-11-15 12:58 UTC, scheduled and seven hours late | nothing open |
 
 ## Quarterly checks
 
