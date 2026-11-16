@@ -300,11 +300,12 @@ and a flow breaks twice), performance tests (when a results query exceeds 500
 ms on the seed; 0.27 to 0.38 s on 2026-11-16). Mutation testing had the
 trigger of thirty business rules and joined the table on 2026-11-16, when the
 domain counted fifteen operators and twenty-six validation codes: the first
-run scored 82 % over 323 mutants, and most of what survived were boundaries
-the conformance suite does not pin, such as an answer with exactly the
-minimum selections or a text of exactly the maximum length. Coverage is
-reported, never targeted; the mutation threshold is a floor under the
-measured score, not a target.
+run scored 82 % over 323 mutants, and most of what survived were inclusive
+bounds the conformance suite did not pin: a number or a scale answered
+exactly at its limit, and a definition with a limit at its bound, such as
+fifty options or equal selection limits. Coverage is reported, never
+targeted; the mutation threshold is a floor under the measured score, not a
+target.
 
 ## 11. CI/CD and containers
 
@@ -357,18 +358,17 @@ first-level subdomains only.
 
 Cold start: 47 seconds measured after sleep on the throwaway service and 95
 seconds on the deployed API on 2026-11-11, migration and seed included.
-Mitigations, cumulative: a scheduled workflow requesting the liveness
-endpoint every ten minutes from 06:00 to 24:00 UTC while the repository
-has activity, meant to keep the instance awake eighteen hours a day, within
-the free hours, without touching the database so Neon can sleep; a wait
-screen in the web and mobile clients while the API is unreachable, with
-retries; and,
-as an experiment with a trigger, a native image (section 18). Measured on
-2026-11-13: GitHub ran that ten-minute schedule five times in two days
-and the daily reset eight hours late, so the keep-alive is best effort and
-the wait screen is what covers visitors; if a reliable one matters, a cron
-trigger on the Cloudflare Worker that serves the web replaces it, decided
-at a quarterly check. The record is in `docs/known-issues.md`.
+Mitigations, cumulative: a cron trigger on the Cloudflare Worker that serves
+the web, requesting the liveness endpoint every ten minutes from 06:00 to
+24:00 UTC to keep the instance awake eighteen hours a day, within the free
+hours, without touching the database so Neon can sleep; a wait screen in the
+web and mobile clients while the API is unreachable, with retries; and, as an
+experiment with a trigger, a native image (section 18). The keep-alive was a
+scheduled GitHub workflow until 2026-11-16: measured on 2026-11-13, GitHub
+ran that ten-minute schedule five times in two days and the daily reset eight
+hours late, so the Worker's cron, which GitHub's scheduling and its 60-day
+inactivity rule do not touch, replaced it; the wait screens cover the night
+and the restarts. The record is in `docs/known-issues.md`.
 
 Demo: fixed accounts from the seed, documented in the README; the seed
 reset daily at 05:50 UTC by a scheduled workflow through a protected
@@ -383,10 +383,11 @@ image with the same seed; there is no switch and no second code path,
 because the system has no external service other than the database.
 
 What survives six months without the maintainer: Neon and Render keep
-running; TLS and the domain renew automatically; the two scheduled
-workflows are disabled by GitHub after 60 days without repository activity
-(checked 2026-11-05), so the API sleeps between visits and the wait screen
-covers it, and the seed is reset by hand at the quarterly check.
+running; TLS and the domain renew automatically; the Worker's cron keeps
+requesting the probe during the day; the seed-reset workflow is disabled by
+GitHub after 60 days without repository activity (checked 2026-11-05), so the
+seed is reset by hand at the quarterly check, and the API still reseeds at
+every start.
 
 ## 13. Accessibility and internationalisation
 
@@ -530,17 +531,18 @@ updates, one for the quarterly check amortised, one for small fixes.
 
 The quarterly check, fifteen minutes with a calendar reminder: open the
 demo cold and time it; log in with a demo account; time the results of the
-mobility survey; reset the seed; look at
-Neon usage and Render hours; merge Dependabot groups; confirm the two
-scheduled workflows are enabled and re-enable them if not; note the date in
+mobility survey; reset the seed; look at Neon usage and Render hours; merge
+Dependabot groups; confirm the seed-reset workflow is enabled and re-enable
+it if not; confirm in the Cloudflare dashboard that the Worker's cron ran
+that day; note the date in
 `docs/known-issues.md`.
 
 What dies without attention, and its answer:
 
 | Piece | What happens | Signal | Answer |
 | --- | --- | --- | --- |
-| Keep-alive workflow | Disabled after 60 days without repository activity | GitHub notification | API sleeps; wait screen covers a 47-second wake; accepted |
-| Seed reset workflow | Same | Same | Reset by hand at the quarterly check |
+| Keep-alive cron on the Worker | Nothing scheduled stops it; a change of Cloudflare's free plan could | Cold wakes during the day; the cron events of the Worker in the Cloudflare dashboard | API sleeps; the wait screens cover the wake; accepted |
+| Seed reset workflow | Disabled after 60 days without repository activity | GitHub notification | Reset by hand at the quarterly check; the API reseeds at every start |
 | Render free instance | May restart at any time; never expires | Render email on failed deploys | Immutable image; a restart is a cold start |
 | Neon free project | Not paused for inactivity; monthly caps | Neon email near the cap | Keep-alive hits liveness, not the database |
 | Certificates and domain | Renewed automatically; domain on auto-renewal | Registrar emails | Nothing to do |
