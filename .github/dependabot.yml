@@ -1,12 +1,78 @@
-# Grouped weekly updates, one pull request per ecosystem.
-# Gradle, npm and Docker entries are added together with their manifests.
+# Weekly version updates, one grouped pull request per ecosystem and update type (ADR 0012): the
+# patch-and-minor groups merge on their own through the dependabot-auto-merge workflow once the
+# required checks pass, and the major groups wait for a human with the migration notes. Each
+# ecosystem waits a week after a release before proposing it, which keeps a withdrawn or
+# compromised release out of the queue. The messages follow the Conventional Commits of the
+# repository.
 version: 2
 updates:
+  # Every JVM version lives in gradle/libs.versions.toml; the composite root includes the shared
+  # and API builds, and the mobile build reads the same catalogue.
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      gradle-patch-and-minor:
+        update-types: [patch, minor]
+      gradle-major:
+        update-types: [major]
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      npm-patch-and-minor:
+        update-types: [patch, minor]
+      npm-major:
+        update-types: [major]
+  # The base images of the Dockerfile and the database image of the compose file.
+  - package-ecosystem: docker
+    directory: /deploy
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      docker:
+        patterns: ["*"]
+    ignore:
+      # Java moves once a year to the next long-term release, by hand (plan, section 17).
+      - dependency-name: eclipse-temurin
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: docker-compose
+    directory: /deploy
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      docker-compose:
+        patterns: ["*"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci
     groups:
       actions:
-        patterns:
-          - "*"
+        patterns: ["*"]

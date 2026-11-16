@@ -1,0 +1,28 @@
+name: Dependabot auto-merge
+
+# Lets the patch and minor groups of Dependabot merge on their own once the required checks pass
+# (ADR 0012); majors wait for a human. The token is the workflow's own, raised to write on the
+# pull request, and the repository must allow auto-merge.
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Enable auto-merge for patch and minor updates
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'majimtor/delfos'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Read the update type
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+      - name: Enable auto-merge
+        if: >-
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"
