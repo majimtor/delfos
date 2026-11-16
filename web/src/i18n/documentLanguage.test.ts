@@ -3,7 +3,9 @@ import html from '../../index.html?raw'
 import { LOCALE_STORAGE_KEY, initialLocale } from './locale'
 
 // The inline script of index.html runs before the application and must choose as it does.
-const inlineScript = /<script>([\s\S]*?)<\/script>/.exec(html)?.[1] ?? ''
+const inlineScript =
+  new DOMParser().parseFromString(html, 'text/html').querySelector('script:not([src])')
+    ?.textContent ?? ''
 
 function languageChosenBeforeTheApp(navigatorLanguage: string, stored: string | null): string {
   Object.defineProperty(window.navigator, 'language', {
