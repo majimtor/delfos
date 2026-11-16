@@ -354,7 +354,8 @@ Mitigations, cumulative: a scheduled workflow requesting the liveness
 endpoint every ten minutes from 06:00 to 24:00 UTC while the repository
 has activity, meant to keep the instance awake eighteen hours a day, within
 the free hours, without touching the database so Neon can sleep; a wait
-screen in the web client while the API is unreachable, with retries; and,
+screen in the web and mobile clients while the API is unreachable, with
+retries; and,
 as an experiment with a trigger, a native image (section 18). Measured on
 2026-11-13: GitHub ran that ten-minute schedule five times in two days
 and the daily reset eight hours late, so the keep-alive is best effort and

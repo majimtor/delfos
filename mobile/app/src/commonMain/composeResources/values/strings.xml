@@ -21,6 +21,10 @@
     <string name="answer_invitation_required">This survey is answered by invitation: open the link you received.</string>
     <string name="answer_invitation_invalid">This invitation is not valid for this survey.</string>
     <string name="answer_invitation_used">This invitation has already been used.</string>
+    <string name="wake_title">The service is waking up</string>
+    <string name="wake_body">The demo sleeps when nobody uses it and takes up to two minutes to start. Please wait.</string>
+    <string name="wake_elapsed">Waiting for %1$s seconds.</string>
+    <string name="wake_failed">We could not reach the service.</string>
     <string name="scale_labels">%1$s · %2$s</string>
     <string name="hint_selections">Choose between %1$s and %2$s.</string>
     <string name="hint_max_length">Up to %1$s characters.</string>

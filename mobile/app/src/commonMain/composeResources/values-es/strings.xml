@@ -21,6 +21,10 @@
     <string name="answer_invitation_required">Esta encuesta se responde por invitación: abre el enlace que recibiste.</string>
     <string name="answer_invitation_invalid">Esta invitación no es válida para esta encuesta.</string>
     <string name="answer_invitation_used">Esta invitación ya se ha usado.</string>
+    <string name="wake_title">El servicio se está despertando</string>
+    <string name="wake_body">La demostración duerme cuando nadie la usa y tarda hasta dos minutos en arrancar. Espera un momento.</string>
+    <string name="wake_elapsed">Llevamos %1$s segundos esperando.</string>
+    <string name="wake_failed">No hemos podido conectar con el servicio.</string>
     <string name="scale_labels">%1$s · %2$s</string>
     <string name="hint_selections">Elige entre %1$s y %2$s.</string>
     <string name="hint_max_length">Hasta %1$s caracteres.</string>
