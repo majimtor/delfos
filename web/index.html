@@ -9,6 +9,25 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>Delfos</title>
+    <script>
+      // The interface language before the application runs: Chrome decides whether to offer a
+      // translation when parsing ends, and assistive technology reads the attribute from the first
+      // paint. The same rule as initialLocale in src/i18n/locale.ts; a test keeps them in step.
+      ;(function () {
+        let stored = null
+        try {
+          stored = localStorage.getItem('delfos.locale')
+        } catch {
+          // Without storage the preference is simply not read.
+        }
+        document.documentElement.lang =
+          stored === 'es' || stored === 'en'
+            ? stored
+            : navigator.language.toLowerCase().startsWith('en')
+              ? 'en'
+              : 'es'
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
