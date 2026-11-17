@@ -42,6 +42,11 @@ updates:
         update-types: [patch, minor]
       npm-major:
         update-types: [major]
+    ignore:
+      # TypeScript 7 is the new compiler and openapi-typescript accepts TypeScript 5 only, so that
+      # major is adopted by hand once the tooling follows (plan, section 17).
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
   # The base images of the Dockerfile and the database image of the compose file.
   - package-ecosystem: docker
     directory: /deploy
