@@ -117,11 +117,12 @@ and the same seed.
 
 ## Reopen when
 
-Render, Neon or Cloudflare change their free plans; the keep-alive stops
-and the measured wake-up exceeds what the wait screens can excuse; Neon's console shows the compute active while the API is idle, so
-that the monthly compute hours come within reach; the API token proves
-unable to manage the custom domain and the domain has to be managed by
-hand; or the budget decision changes.
+Render, Neon or Cloudflare change their free plans; the keep-alive stops and
+the measured wake-up exceeds what the wait screens can excuse; Neon's console
+shows the compute active while the API is idle, so that the monthly compute
+hours come within reach; the API token proves unable to manage the custom
+domain and the domain has to be managed by hand; or the budget decision
+changes.
 
 ## Links
 
