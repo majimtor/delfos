@@ -22,6 +22,12 @@ updates:
         update-types: [patch, minor]
       gradle-major:
         update-types: [major]
+    ignore:
+      # Paired by hand with the version that manages them, as gradle/libs.versions.toml says:
+      # JUnit follows Spring Boot, and Material 3 follows Compose Multiplatform.
+      - dependency-name: org.junit.jupiter:junit-jupiter
+      - dependency-name: org.junit.platform:junit-platform-launcher
+      - dependency-name: org.jetbrains.compose.material3:material3
   - package-ecosystem: npm
     directory: /web
     schedule:
