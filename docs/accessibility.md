@@ -16,9 +16,11 @@ Spanish, the primary language, and checked for parity in English.
   Chromium for the name, role and state of every control and for the live
   regions; 200 % zoom and reflow at 320 px wide; the reduced-motion
   preference; the document language and the page titles.
-- Not done: a pass with a screen reader (VoiceOver or NVDA). The
-  accessibility tree stands in for it; the pass is pending and listed
-  below.
+- Screen reader: a pass with VoiceOver on Safari on 2026-11-17, in Spanish,
+  over the landing page, the answer page with its conditional questions and its
+  errors, the recorded-response message, the login, the survey list, the
+  results and the unknown route; it found nothing to fix. NVDA has not been
+  run.
 
 ## Findings and fixes
 
@@ -49,10 +51,9 @@ allows for data tables).
 
 ## Known limits
 
-- No screen-reader pass yet. It is the next step of this audit.
-- A scale question is a row of buttons: operable with Tab and Enter, with
-  one stop per value where a radio group would offer one. Kept for now;
-  revisit if the pass above finds it confusing.
+- A scale question is a row of buttons: operable with Tab and Enter, with one
+  stop per value where a radio group would offer one. Kept: the VoiceOver pass
+  found nothing confusing in it.
 - The theme is light only, while the page allows the browser a dark colour
   scheme for its native controls.
 - The manager pages (survey list, results, the new-survey form and the
