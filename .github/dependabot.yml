@@ -22,6 +22,12 @@ updates:
         update-types: [patch, minor]
       gradle-major:
         update-types: [major]
+    ignore:
+      # Paired by hand with the version that manages them, as gradle/libs.versions.toml says:
+      # JUnit follows Spring Boot, and Material 3 follows Compose Multiplatform.
+      - dependency-name: org.junit.jupiter:junit-jupiter
+      - dependency-name: org.junit.platform:junit-platform-launcher
+      - dependency-name: org.jetbrains.compose.material3:material3
   - package-ecosystem: npm
     directory: /web
     schedule:
@@ -36,6 +42,11 @@ updates:
         update-types: [patch, minor]
       npm-major:
         update-types: [major]
+    ignore:
+      # TypeScript 7 is the new compiler and openapi-typescript accepts TypeScript 5 only, so that
+      # major is adopted by hand once the tooling follows (plan, section 17).
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
   # The base images of the Dockerfile and the database image of the compose file.
   - package-ecosystem: docker
     directory: /deploy

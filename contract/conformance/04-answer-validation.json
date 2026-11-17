@@ -485,6 +485,33 @@
         ],
         "missingRequiredQuestionKeys": []
       }
+    },
+    {
+      "name": "exactly the maximum selections fit",
+      "answers": [
+        {
+          "questionKey": "v1",
+          "optionKey": "o2"
+        },
+        {
+          "questionKey": "v2",
+          "optionKeys": [
+            "m1",
+            "m2",
+            "m3"
+          ]
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "v1",
+          "v2",
+          "v3",
+          "v4"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
     }
   ]
 }

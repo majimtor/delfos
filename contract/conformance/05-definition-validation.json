@@ -998,6 +998,318 @@
           "code": "INVALID_VALUE"
         }
       ]
+    },
+    {
+      "name": "limits at their bounds are valid: two and fifty options, equal selection limits, a maximum of every option, equal number bounds, scale maxima of 3 and 10, a BETWEEN with equal bounds",
+      "mode": "publish",
+      "definition": {
+        "questions": [
+          {
+            "key": "q1",
+            "type": "SINGLE_CHOICE",
+            "text": "Two options",
+            "required": false,
+            "options": [
+              {
+                "key": "a",
+                "label": "A"
+              },
+              {
+                "key": "b",
+                "label": "B"
+              }
+            ]
+          },
+          {
+            "key": "q2",
+            "type": "MULTIPLE_CHOICE",
+            "text": "Fifty options, exactly two of them",
+            "required": false,
+            "options": [
+              {
+                "key": "o01",
+                "label": "Option 1"
+              },
+              {
+                "key": "o02",
+                "label": "Option 2"
+              },
+              {
+                "key": "o03",
+                "label": "Option 3"
+              },
+              {
+                "key": "o04",
+                "label": "Option 4"
+              },
+              {
+                "key": "o05",
+                "label": "Option 5"
+              },
+              {
+                "key": "o06",
+                "label": "Option 6"
+              },
+              {
+                "key": "o07",
+                "label": "Option 7"
+              },
+              {
+                "key": "o08",
+                "label": "Option 8"
+              },
+              {
+                "key": "o09",
+                "label": "Option 9"
+              },
+              {
+                "key": "o10",
+                "label": "Option 10"
+              },
+              {
+                "key": "o11",
+                "label": "Option 11"
+              },
+              {
+                "key": "o12",
+                "label": "Option 12"
+              },
+              {
+                "key": "o13",
+                "label": "Option 13"
+              },
+              {
+                "key": "o14",
+                "label": "Option 14"
+              },
+              {
+                "key": "o15",
+                "label": "Option 15"
+              },
+              {
+                "key": "o16",
+                "label": "Option 16"
+              },
+              {
+                "key": "o17",
+                "label": "Option 17"
+              },
+              {
+                "key": "o18",
+                "label": "Option 18"
+              },
+              {
+                "key": "o19",
+                "label": "Option 19"
+              },
+              {
+                "key": "o20",
+                "label": "Option 20"
+              },
+              {
+                "key": "o21",
+                "label": "Option 21"
+              },
+              {
+                "key": "o22",
+                "label": "Option 22"
+              },
+              {
+                "key": "o23",
+                "label": "Option 23"
+              },
+              {
+                "key": "o24",
+                "label": "Option 24"
+              },
+              {
+                "key": "o25",
+                "label": "Option 25"
+              },
+              {
+                "key": "o26",
+                "label": "Option 26"
+              },
+              {
+                "key": "o27",
+                "label": "Option 27"
+              },
+              {
+                "key": "o28",
+                "label": "Option 28"
+              },
+              {
+                "key": "o29",
+                "label": "Option 29"
+              },
+              {
+                "key": "o30",
+                "label": "Option 30"
+              },
+              {
+                "key": "o31",
+                "label": "Option 31"
+              },
+              {
+                "key": "o32",
+                "label": "Option 32"
+              },
+              {
+                "key": "o33",
+                "label": "Option 33"
+              },
+              {
+                "key": "o34",
+                "label": "Option 34"
+              },
+              {
+                "key": "o35",
+                "label": "Option 35"
+              },
+              {
+                "key": "o36",
+                "label": "Option 36"
+              },
+              {
+                "key": "o37",
+                "label": "Option 37"
+              },
+              {
+                "key": "o38",
+                "label": "Option 38"
+              },
+              {
+                "key": "o39",
+                "label": "Option 39"
+              },
+              {
+                "key": "o40",
+                "label": "Option 40"
+              },
+              {
+                "key": "o41",
+                "label": "Option 41"
+              },
+              {
+                "key": "o42",
+                "label": "Option 42"
+              },
+              {
+                "key": "o43",
+                "label": "Option 43"
+              },
+              {
+                "key": "o44",
+                "label": "Option 44"
+              },
+              {
+                "key": "o45",
+                "label": "Option 45"
+              },
+              {
+                "key": "o46",
+                "label": "Option 46"
+              },
+              {
+                "key": "o47",
+                "label": "Option 47"
+              },
+              {
+                "key": "o48",
+                "label": "Option 48"
+              },
+              {
+                "key": "o49",
+                "label": "Option 49"
+              },
+              {
+                "key": "o50",
+                "label": "Option 50"
+              }
+            ],
+            "minSelections": 2,
+            "maxSelections": 2
+          },
+          {
+            "key": "q3",
+            "type": "MULTIPLE_CHOICE",
+            "text": "Up to every option",
+            "required": false,
+            "options": [
+              {
+                "key": "x",
+                "label": "X"
+              },
+              {
+                "key": "y",
+                "label": "Y"
+              },
+              {
+                "key": "z",
+                "label": "Z"
+              }
+            ],
+            "maxSelections": 3
+          },
+          {
+            "key": "q4",
+            "type": "MULTIPLE_CHOICE",
+            "text": "At most one, with the default minimum",
+            "required": false,
+            "options": [
+              {
+                "key": "p",
+                "label": "P"
+              },
+              {
+                "key": "q",
+                "label": "Q"
+              }
+            ],
+            "maxSelections": 1
+          },
+          {
+            "key": "q5",
+            "type": "NUMBER",
+            "text": "Exactly ten",
+            "required": false,
+            "min": 10,
+            "max": 10
+          },
+          {
+            "key": "q6",
+            "type": "SCALE",
+            "text": "Three points",
+            "required": false,
+            "max": 3
+          },
+          {
+            "key": "q7",
+            "type": "SCALE",
+            "text": "Zero to ten",
+            "required": false,
+            "min": 0,
+            "max": 10
+          }
+        ],
+        "rules": [
+          {
+            "targetQuestionKey": "q6",
+            "match": "ALL",
+            "conditions": [
+              {
+                "sourceQuestionKey": "q5",
+                "operator": "BETWEEN",
+                "value": {
+                  "min": 10,
+                  "max": 10
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "expectedErrors": []
     }
   ]
 }
