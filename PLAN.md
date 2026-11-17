@@ -267,7 +267,7 @@ from the top level alone:
 
 ```text
 delfos/
-  README.md  PLAN.md  LICENSE
+  README.md  PLAN.md  LICENSE  SECURITY.md  CONTRIBUTING.md
   docs/adr/  docs/engineering-rules.md  docs/known-issues.md
   contract/  openapi.yaml, conformance/*.json, CHANGELOG.md
   api/       Kotlin, Spring Boot, Gradle; Flyway migrations
@@ -420,6 +420,7 @@ each with its test or review:
 | Cookie attributes and CSRF header enforced | API test |
 | One error shape, no stack traces or internals in responses | API test on an induced failure |
 | CORS restricted to the web origin; security headers on every response | API test |
+| Security headers and a content security policy on the web: scripts from its origin only, connections to the API only | `web/public/_headers`; the end-to-end path served by `wrangler dev` on 2026-11-17, five scenarios green; CI serves the path through Vite's preview, without the headers |
 | Secrets only from the environment; missing value stops startup | Startup test with a missing variable |
 | No IP addresses or bodies in logs | Review of the logging configuration at each slice |
 | Secret scanning hook before commit and in CI; push protection on | CI gate |
