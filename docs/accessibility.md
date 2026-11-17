@@ -25,7 +25,7 @@ Spanish, the primary language, and checked for parity in English.
 | Finding | Criterion | Fix |
 | --- | --- | --- |
 | The status chip of a draft showed white text on an orange of 3.2:1 | 1.4.3 | A darker warning colour in the theme, 5:1 |
-| The document language was always Spanish, whatever the interface showed | 3.1.1 | An inline script in `index.html` sets the `lang` attribute from the stored preference or the browser language before the application runs, and the interface keeps it in step afterwards |
+| The document language was always Spanish, whatever the interface showed | 3.1.1 | A script loaded first by `index.html` sets the `lang` attribute from the stored preference or the browser language before the application runs, and the interface keeps it in step afterwards |
 | Every page shared the title "Delfos" | 2.4.2 | A title per page: the survey, the results, the login, the list, the unknown route |
 | No way to skip the header with the keyboard | 2.4.1 | A skip link as the first tab stop, visible when focused |
 | After a navigation the focus stayed wherever it was | 2.4.3 | The focus moves to the main region on every route change |
