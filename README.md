@@ -217,7 +217,8 @@ Everything that deploys the demo is declared in the repository:
 - `web/wrangler.jsonc`: the web as a Cloudflare Worker that serves the
   built files as static assets and, through a cron trigger, requests the
   liveness probe of the API every ten minutes from 06:00 to 24:00 UTC
-  (`web/src/worker/index.ts`); deployed by the `web-deploy` job of the CI
+  (`web/src/worker/index.ts`), with the response headers of
+  `web/public/_headers`; deployed by the `web-deploy` job of the CI
   workflow after the same checks, with `CLOUDFLARE_API_TOKEN` and
   `CLOUDFLARE_ACCOUNT_ID` from the repository secrets.
 - `.github/workflows/demo-reset.yml`: applies the demo seed again every day
