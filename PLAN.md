@@ -514,11 +514,12 @@ with the three demo accounts working; the README with video and
 screenshots; the quarterly check performed once; the clean-machine drill of
 section 17 performed once.
 
-Status on 2026-11-14: version 1.0.0 tagged from the release pull request,
-with `delfos-v1.0.0.apk` attached by the release workflow on its first
-run; the drill performed and recorded in `docs/known-issues.md`; the
-portfolio link waits for the maintainer's page, and the first quarterly
-check is due in February 2027.
+Status on 2026-11-17: versions 1.0.0 and 1.1.0 tagged from their release pull
+requests, each with its APK attached by the release workflow; the drill
+performed and recorded in `docs/known-issues.md`; the first quarterly check
+performed on 2026-11-17 and recorded there, with the next due on 2027-02-15;
+the screen-reader pass of section 13 done; the portfolio link waits for the
+maintainer's page.
 
 Delfos becomes the primary portfolio reference after S4: mobile APK on
 Releases, iOS compiled in CI, `docs/known-issues.md` current, and the
