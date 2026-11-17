@@ -429,6 +429,58 @@
         ],
         "missingRequiredQuestionKeys": []
       }
+    },
+    {
+      "name": "an age at its lower bound and a mood at its minimum are inside their ranges",
+      "answers": [
+        {
+          "questionKey": "n1",
+          "number": 0
+        },
+        {
+          "questionKey": "s1",
+          "number": 1
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "n1",
+          "s1",
+          "x1",
+          "t_ne",
+          "t_lt",
+          "t_lte",
+          "t_text_not"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
+    },
+    {
+      "name": "an age at its upper bound and a mood at its maximum are inside their ranges",
+      "answers": [
+        {
+          "questionKey": "n1",
+          "number": 120
+        },
+        {
+          "questionKey": "s1",
+          "number": 7
+        }
+      ],
+      "expected": {
+        "visibleQuestionKeys": [
+          "n1",
+          "s1",
+          "x1",
+          "t_ne",
+          "t_gt",
+          "t_gte",
+          "t_text_not"
+        ],
+        "errors": [],
+        "missingRequiredQuestionKeys": []
+      }
     }
   ]
 }
