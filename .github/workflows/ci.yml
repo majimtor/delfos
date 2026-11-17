@@ -92,6 +92,8 @@ jobs:
       - name: Build and test on the JVM and Android
         # The Android SDK of the runner image serves the Android target; iOS needs macOS, below.
         run: ./gradlew -p shared check -Pdelfos.android=true --no-daemon --console=plain
+      - name: Mutation testing on the JVM
+        run: ./gradlew -p shared mutationTest -Pdelfos.android=true --no-daemon --console=plain
 
   ios:
     name: Shared module on iOS
@@ -112,6 +114,9 @@ jobs:
   mobile-ios:
     name: Mobile app on iOS
     runs-on: macos-15
+    # After the shared module, which the application compiles against: one macOS runner at a
+    # time, because a second one queued at the same moment is what GitHub cancels for capacity.
+    needs: ios
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
@@ -232,7 +237,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx --yes wrangler@4.160.0 deploy
+        run: npx wrangler deploy
 
   e2e:
     name: End-to-end path

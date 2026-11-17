@@ -18,7 +18,7 @@ answer from the web or from a mobile application.
 
 The demo runs on free tiers: the API sleeps after fifteen minutes without
 traffic and takes up to two minutes to wake outside the hours when
-the keep-alive workflow keeps it up (06:00 to 24:00 UTC); the web and the
+the web's Worker keeps it up (06:00 to 24:00 UTC); the web and the
 mobile application show a wait screen meanwhile. The demo data is reset
 every day and at every start of the API. Log in with the accounts listed
 under [Demo data](#demo-data).
@@ -142,6 +142,8 @@ start Gradle (Java 17 or newer):
 ```
 
 The API tests start PostgreSQL 18 in a container, so Docker must be running.
+`./gradlew -p shared mutationTest` runs pitest on the JVM target of the
+shared module and writes its report to `shared/build/reports/pitest`.
 
 The shared module builds for the JVM by default. Its Android and iOS targets
 are switched on with `-Pdelfos.android=true` (needs the Android SDK, found
@@ -213,12 +215,11 @@ Everything that deploys the demo is declared in the repository:
   database is PostgreSQL on Neon; its credentials and the demo reset token
   live in the service's environment.
 - `web/wrangler.jsonc`: the web as a Cloudflare Worker that serves the
-  built files as static assets, deployed by the `web-deploy` job of the CI
+  built files as static assets and, through a cron trigger, requests the
+  liveness probe of the API every ten minutes from 06:00 to 24:00 UTC
+  (`web/src/worker/index.ts`); deployed by the `web-deploy` job of the CI
   workflow after the same checks, with `CLOUDFLARE_API_TOKEN` and
   `CLOUDFLARE_ACCOUNT_ID` from the repository secrets.
-- `.github/workflows/keep-alive.yml`: requests the liveness probe every ten
-  minutes from 06:00 to 24:00 UTC, as far as GitHub runs the schedule
-  (see `docs/known-issues.md`).
 - `.github/workflows/demo-reset.yml`: applies the demo seed again every day
   at 05:50 UTC through `POST /api/v1/demo/reset`, with
   `DELFOS_SEED_RESET_TOKEN` from the repository secrets.

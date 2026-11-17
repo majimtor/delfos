@@ -88,3 +88,45 @@ kotlin {
         }
     }
 }
+
+// Mutation testing of the JVM target with pitest (plan, section 10): the mutants that survive the
+// conformance suite show what the suite does not pin down. The threshold is a floor under the
+// measured score, not a target. The tests and the generated serializers are not mutated; the null
+// checks Kotlin compiles into every public function yield mutants no test can kill, and they count.
+val pitest: Configuration by configurations.creating
+dependencies {
+    pitest(libs.pitest.command.line)
+    pitest(libs.pitest.junit5.plugin)
+}
+val jvmMainCompilation = kotlin.jvm().compilations.getByName("main")
+val jvmTestCompilation = kotlin.jvm().compilations.getByName("test")
+tasks.register<JavaExec>("mutationTest") {
+    group = "verification"
+    description = "Runs pitest on the JVM target and fails under the recorded mutation score."
+    dependsOn(jvmTestCompilation.compileAllTaskName)
+    classpath = pitest
+    mainClass.set("org.pitest.mutationtest.commandline.MutationCoverageReport")
+    // Local values: the argument provider may not reach the project, for the configuration cache.
+    val mutated = jvmMainCompilation.output.classesDirs
+    val tests = jvmTestCompilation.output.classesDirs
+    val runtime = jvmTestCompilation.runtimeDependencyFiles
+    val sources = listOf("src/commonMain/kotlin", "src/jvmMain/kotlin").map { projectDir.resolve(it) }
+    val report = layout.buildDirectory.dir("reports/pitest")
+    val threads = Runtime.getRuntime().availableProcessors().toString()
+    inputs.files(mutated, tests, runtime)
+    outputs.dir(report)
+    argumentProviders.add {
+        listOf(
+            "--classPath", (mutated + tests + runtime).files.joinToString(",") { it.path },
+            "--targetClasses", "com.manuelalejandro.delfos.*",
+            "--excludedClasses", "*Test*,*\$\$serializer",
+            "--targetTests", "com.manuelalejandro.delfos.*",
+            "--sourceDirs", sources.joinToString(",") { it.path },
+            "--reportDir", report.get().asFile.path,
+            "--outputFormats", "HTML,XML",
+            "--timestampedReports", "false",
+            "--threads", threads,
+            "--mutationThreshold", "75",
+        )
+    }
+}
