@@ -267,7 +267,7 @@ from the top level alone:
 
 ```text
 delfos/
-  README.md  PLAN.md  LICENSE
+  README.md  PLAN.md  LICENSE  SECURITY.md  CONTRIBUTING.md
   docs/adr/  docs/engineering-rules.md  docs/known-issues.md
   contract/  openapi.yaml, conformance/*.json, CHANGELOG.md
   api/       Kotlin, Spring Boot, Gradle; Flyway migrations
