@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/majimtor/delfos/compare/v1.1.0...v1.2.0) (2026-11-17)
+
+
+### Features
+
+* **web:** send security headers and a content security policy from the Worker ([#65](https://github.com/majimtor/delfos/issues/65)) ([f7eed8d](https://github.com/majimtor/delfos/commit/f7eed8d06f7649e8185d7160a25c3080e054d71f))
+
 ## [1.1.0](https://github.com/majimtor/delfos/compare/v1.0.0...v1.1.0) (2026-11-17)
 
 
