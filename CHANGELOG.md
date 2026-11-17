@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/majimtor/delfos/compare/v1.0.0...v1.1.0) (2026-11-17)
+
+
+### Features
+
+* **mobile:** show a wait screen while the API wakes up ([#50](https://github.com/majimtor/delfos/issues/50)) ([98a0ad1](https://github.com/majimtor/delfos/commit/98a0ad12530f75ce00e082cf0490b5c6d75e54db))
+* **web:** keep the API awake from a cron trigger of the Worker ([#55](https://github.com/majimtor/delfos/issues/55)) ([6389eb8](https://github.com/majimtor/delfos/commit/6389eb844c3f7b15d85665788184c5d89cc5eaae))
+
+
+### Bug Fixes
+
+* **web:** set the document language before the application runs ([#53](https://github.com/majimtor/delfos/issues/53)) ([da38971](https://github.com/majimtor/delfos/commit/da38971754dbafc3483231575551c89507896580))
+
 ## [1.0.0](https://github.com/majimtor/delfos/compare/v0.1.0...v1.0.0) (2026-11-14)
 
 
