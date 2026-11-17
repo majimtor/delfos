@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import html from '../../index.html?raw'
+import inlineScript from '../../public/lang.js?raw'
 import { LOCALE_STORAGE_KEY, initialLocale } from './locale'
 
-// The inline script of index.html runs before the application and must choose as it does.
-const inlineScript =
-  new DOMParser().parseFromString(html, 'text/html').querySelector('script:not([src])')
-    ?.textContent ?? ''
+// The script index.html loads first, before the application, must choose as initialLocale does.
 
 function languageChosenBeforeTheApp(navigatorLanguage: string, stored: string | null): string {
   Object.defineProperty(window.navigator, 'language', {
@@ -20,7 +18,8 @@ function languageChosenBeforeTheApp(navigatorLanguage: string, stored: string | 
 }
 
 describe('the document language before the application runs', () => {
-  it('is set by an inline script of index.html', () => {
+  it('is set by the script index.html loads before the application', () => {
+    expect(html).toContain('<script src="/lang.js"></script>')
     expect(inlineScript).toContain('document.documentElement.lang')
   })
 
