@@ -130,6 +130,10 @@ rule is revisited.
 
 - The API sets the standard security headers on every response and
   restricts CORS to the configured web origin. A test asserts both.
+- The web sends the same headers and a content security policy from
+  `web/public/_headers`: scripts from its own origin only, connections to
+  the API only, nothing inline but styles. A script that must run before
+  the application is a file, never inline.
 - CI runs, in order: formatting and lint, unit tests, API tests against a
   real database, contract compatibility (`oasdiff`), web build in both
   languages with the untranslated-keys check, code scanning, image build.
