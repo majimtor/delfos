@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/majimtor/delfos/compare/v1.2.0...v1.3.0) (2026-11-19)
+
+
+### Features
+
+* **deploy:** add the measurement script of the quarterly check ([#71](https://github.com/majimtor/delfos/issues/71)) ([03b6fd8](https://github.com/majimtor/delfos/commit/03b6fd892f1c6a6ce2d56dc25186b9a0c0e84b10))
+
 ## [1.2.0](https://github.com/majimtor/delfos/compare/v1.1.0...v1.2.0) (2026-11-17)
 
 
