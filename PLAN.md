@@ -274,7 +274,8 @@ delfos/
   shared/    Kotlin Multiplatform: rules evaluator and validator, contract models
   web/       React, Vite, npm
   mobile/    Kotlin Multiplatform with Compose: the application, Android shell
-  deploy/    Dockerfile, compose.yaml, render.yaml
+    deploy/    Dockerfile, compose.yaml, render.yaml, quarterly-check.sh
+
   .github/   workflows, dependabot.yml, pull_request_template.md, ISSUE_TEMPLATE/
 ```
 
@@ -531,13 +532,14 @@ portfolio presents it as a project in progress with the demo link.
 Maintenance: about three hours a month, of which one for dependency
 updates, one for the quarterly check amortised, one for small fixes.
 
-The quarterly check, fifteen minutes with a calendar reminder: open the
-demo cold and time it; log in with a demo account; time the results of the
+The quarterly check, fifteen minutes with a calendar reminder: open the demo
+cold and time it; log in with a demo account; time the results of the
 mobility survey; reset the seed; look at Neon usage and Render hours; merge
 Dependabot groups; confirm the seed-reset workflow is enabled and re-enable
 it if not; confirm in the Cloudflare dashboard that the Worker's cron ran
-that day; note the date in
-`docs/known-issues.md`.
+that day; note the date in `docs/known-issues.md`. The script
+`deploy/quarterly-check.sh` does the measurable part and prints the figures
+for the row; the dashboards are read by hand.
 
 What dies without attention, and its answer:
 
