@@ -36,8 +36,9 @@ Render come from their dashboards.
 
 ## Quarterly checks
 
-The procedure is in section 17 of the plan. Each check adds a row above
-and a line here with its date and what it changed.
+The procedure is in section 17 of the plan and `deploy/quarterly-check.sh`
+prints the measured figures. Each check adds a row above and a line here
+with its date and what it changed.
 
 - 2026-11-17, the first, at launch: demo opened and logged in; the results of
   the mobility survey timed; seed reset by hand (the scheduled reset runs about

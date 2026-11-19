@@ -224,6 +224,9 @@ Everything that deploys the demo is declared in the repository:
 - `.github/workflows/demo-reset.yml`: applies the demo seed again every day
   at 05:50 UTC through `POST /api/v1/demo/reset`, with
   `DELFOS_SEED_RESET_TOKEN` from the repository secrets.
+- `deploy/quarterly-check.sh`: measures the demo for the quarterly check of
+  the plan (section 17) and prints the figures for `docs/known-issues.md`;
+  it needs `curl` and `python3`, and uses `gh` when present.
 - `.github/workflows/release-please.yml`: keeps a release pull request
   open with `CHANGELOG.md` and the next version in `version.txt`, computed
   from the Conventional Commits on `main`, and tags the version when that
