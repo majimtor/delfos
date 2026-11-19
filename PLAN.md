@@ -267,7 +267,7 @@ from the top level alone:
 
 ```text
 delfos/
-  README.md  PLAN.md  LICENSE  SECURITY.md  CONTRIBUTING.md
+  README.md  PLAN.md  LICENSE  SECURITY.md  CONTRIBUTING.md  CODE_OF_CONDUCT.md
   docs/adr/  docs/engineering-rules.md  docs/known-issues.md
   contract/  openapi.yaml, conformance/*.json, CHANGELOG.md
   api/       Kotlin, Spring Boot, Gradle; Flyway migrations
@@ -275,7 +275,7 @@ delfos/
   web/       React, Vite, npm
   mobile/    Kotlin Multiplatform with Compose: the application, Android shell
   deploy/    Dockerfile, compose.yaml, render.yaml
-  .github/   workflows, dependabot.yml, pull_request_template.md
+  .github/   workflows, dependabot.yml, pull_request_template.md, ISSUE_TEMPLATE/
 ```
 
 What a reviewer sees in the first minute: a README with a five-row table
