@@ -16,5 +16,6 @@ rules; issues and pull requests are welcome within them.
 - Code, comments and documents are in English; the interface is bilingual,
   Spanish first, through the message catalogues.
 - No secrets and no real personal data in any file, test or seed.
+- The code of conduct applies to every thread.
 - Anything on the plan's postponement list (section 18) needs its trigger
   first: open an issue to discuss it before coding.

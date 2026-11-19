@@ -1,0 +1,37 @@
+name: Bug report
+description: Something does not work as the README or the plan says.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include real personal data. The demo accounts and the seed are public.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - Web
+        - Android application
+        - API
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what you saw, with the survey or the page when it matters.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or environment
+      placeholder: "1.2.0 on Android 15; Chrome 124 on the demo; main at 7f9d8e3"
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before sending
+      options:
+        - label: I looked for it in docs/known-issues.md
+          required: true

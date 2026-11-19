@@ -1,0 +1,26 @@
+name: Proposal
+description: A change to what Delfos does or to how it is built.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What and why
+      description: The change and the problem it solves.
+    validations:
+      required: true
+  - type: dropdown
+    id: postponed
+    attributes:
+      label: Is it on the plan's postponement list (PLAN.md, section 18)?
+      options:
+        - "No"
+        - "Yes, and its trigger has fired"
+        - "Yes, and its trigger has not fired"
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: The measurement, the case or the requirement behind it.
