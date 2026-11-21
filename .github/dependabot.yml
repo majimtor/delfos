@@ -76,6 +76,11 @@ updates:
     groups:
       docker-compose:
         patterns: ["*"]
+    ignore:
+      # A PostgreSQL major is tried in a container first and adopted by hand together with the
+      # provider's version, at a quarterly check (plan, section 17).
+      - dependency-name: postgres
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
