@@ -325,9 +325,10 @@ advisory. Releases: `release-please` reads the Conventional Commits on
 version, and tags the version when that pull request merges; the same
 workflow then attaches the Android APK to the release; 1.0.0 marked the
 launch on 2026-11-14 (ADR 0013). Secrets: Neon credentials in Render's
-environment; the Cloudflare API token and account identifier, the
-demo-reset secret and the release token in Actions secrets; nothing in the
-repository.
+environment; the Cloudflare API token and account identifier, the demo-reset
+secret, the release token and the client id and private key of the GitHub App
+that merges Dependabot's updates in Actions secrets, the last two also in
+Dependabot secrets; nothing in the repository.
 
 Image: a two-stage Dockerfile building with Gradle 9.8 on JDK 25 and
 running on a Temurin 25 JRE, with conservative JVM flags and a JVM AOT

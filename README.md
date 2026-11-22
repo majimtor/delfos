@@ -221,6 +221,12 @@ Everything that deploys the demo is declared in the repository:
   `web/public/_headers`; deployed by the `web-deploy` job of the CI
   workflow after the same checks, with `CLOUDFLARE_API_TOKEN` and
   `CLOUDFLARE_ACCOUNT_ID` from the repository secrets.
+- `.github/workflows/dependabot-auto-merge.yml`: merges the patch and minor
+  updates of Dependabot once their checks pass, with `DELFOS_APP_CLIENT_ID`
+  and `DELFOS_APP_PRIVATE_KEY` from the repository secrets, for Actions and
+  for Dependabot: a GitHub App of the maintainer installed on this repository
+  only, with write access to contents, pull requests and workflows, so that
+  the merge runs the workflows of `main`.
 - `.github/workflows/demo-reset.yml`: applies the demo seed again every day
   at 05:50 UTC through `POST /api/v1/demo/reset`, with
   `DELFOS_SEED_RESET_TOKEN` from the repository secrets.

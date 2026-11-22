@@ -1,28 +1,99 @@
 name: Dependabot auto-merge
 
 # Lets the patch and minor groups of Dependabot merge on their own once the required checks pass
-# (ADR 0012); majors wait for a human. The token is the workflow's own, raised to write on the
-# pull request, and the repository must allow auto-merge.
-on: pull_request
+# (ADR 0012); majors wait for a human. Auto-merge is enabled with a token of the repository's own
+# GitHub App, not with the workflow's token: a merge made with the workflow's token creates no
+# workflow run on main, so main would merge but never build, publish or deploy. After each push to
+# main the same token brings the open Dependabot pull requests that fell behind up to date, which
+# the branch protection requires and Dependabot does not do for that alone; that update runs their
+# checks again. The app's client id and private key live in the repository secrets twice, for
+# Actions and for Dependabot, because a run triggered by Dependabot sees only the latter. Without
+# them both jobs end without doing anything, and say so.
+on:
+  pull_request:
+  push:
+    branches: [main]
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+  pull-requests: read
 
 jobs:
   auto-merge:
     name: Enable auto-merge for patch and minor updates
-    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'majimtor/delfos'
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.repository == 'majimtor/delfos'
     runs-on: ubuntu-24.04
+    env:
+      APP_CONFIGURED: ${{ secrets.DELFOS_APP_PRIVATE_KEY != '' }}
     steps:
       - name: Read the update type
         id: metadata
         uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
-      - name: Enable auto-merge
+      - name: Explain a missing app
+        if: env.APP_CONFIGURED != 'true'
+        run: echo "::warning::DELFOS_APP_PRIVATE_KEY is not set in the Dependabot secrets; auto-merge is not enabled."
+      - name: Mint a token of the app
+        id: token
         if: >-
-          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
-          steps.metadata.outputs.update-type == 'version-update:semver-minor'
+          env.APP_CONFIGURED == 'true' &&
+          (steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor')
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          client-id: ${{ secrets.DELFOS_APP_CLIENT_ID }}
+          private-key: ${{ secrets.DELFOS_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-workflows: write
+      - name: Enable auto-merge
+        if: steps.token.outcome == 'success'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.token.outputs.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge --auto --squash "$PR_URL"
+        run: |
+          if [ "$(gh pr view "$PR_URL" --json autoMergeRequest --jq '.autoMergeRequest != null')" = "true" ]; then
+            echo "Auto-merge is already enabled."
+          else
+            gh pr merge --auto --squash "$PR_URL"
+          fi
+
+  update-branches:
+    name: Bring the Dependabot pull requests that fell behind up to date
+    if: github.event_name == 'push' && github.repository == 'majimtor/delfos'
+    runs-on: ubuntu-24.04
+    env:
+      APP_CONFIGURED: ${{ secrets.DELFOS_APP_PRIVATE_KEY != '' }}
+    steps:
+      - name: Explain a missing app
+        if: env.APP_CONFIGURED != 'true'
+        run: echo "::warning::DELFOS_APP_PRIVATE_KEY is not set in the Actions secrets; the pull requests are left as they are."
+      - name: Mint a token of the app
+        id: token
+        if: env.APP_CONFIGURED == 'true'
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          client-id: ${{ secrets.DELFOS_APP_CLIENT_ID }}
+          private-key: ${{ secrets.DELFOS_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-workflows: write
+      - name: Update the branches that are behind main
+        if: steps.token.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh pr list --repo "$REPO" --author app/dependabot --state open --json number,headRefName \
+            --jq '.[] | "\(.number) \(.headRefName)"' |
+          while read -r number head; do
+            behind=$(gh api "repos/$REPO/compare/main...$head" --jq .behind_by)
+            if [ "$behind" -gt 0 ]; then
+              echo "#$number is $behind commits behind main; updating."
+              gh pr update-branch "$number" --repo "$REPO"
+            else
+              echo "#$number is up to date."
+            fi
+          done
