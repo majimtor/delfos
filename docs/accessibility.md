@@ -11,8 +11,9 @@ Spanish, the primary language, and checked for parity in English.
 - Automated: axe-core with the WCAG 2.0, 2.1 and 2.2 rules of levels A and AA
   runs on every page of the end-to-end path (`web/e2e/`), on every pull
   request, and fails the build on any violation; the landing and answer pages
-  are checked in the dark colour scheme too, and a unit test keeps every text
-  pair of the design tokens at 4.5:1 or more (ADR 0017).
+  are checked in the dark colour scheme too, the manager's list and menu are
+  checked at phone width, and a unit test keeps every text pair of the design
+  tokens at 4.5:1 or more (ADR 0017).
 - Manual: a keyboard-only pass (tab order, visible focus, activation with
   Enter and Space, no traps); a review of the accessibility tree in
   Chromium for the name, role and state of every control and for the live

@@ -51,6 +51,14 @@ export const theme = createTheme({
     h5: { fontSize: '1.25rem', fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.3 },
     h6: { fontSize: '1.05rem', fontWeight: 600, lineHeight: 1.4 },
     subtitle1: { fontWeight: 500 },
+    // The way back from a page to its list: a small link, not a label in capitals.
+    overline: {
+      textTransform: 'none',
+      letterSpacing: 0,
+      fontSize: '0.875rem',
+      fontWeight: 500,
+      lineHeight: 1.6,
+    },
     button: { textTransform: 'none', fontWeight: 500 },
   },
   shape: { borderRadius: 6 },

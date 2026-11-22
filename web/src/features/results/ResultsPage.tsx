@@ -2,7 +2,6 @@ import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   Stack,
   ToggleButton,
   ToggleButtonGroup,
@@ -14,6 +13,7 @@ import { FormattedMessage, FormattedTime, useIntl } from 'react-intl'
 import { Link, useParams } from 'react-router'
 import { api, apiBaseUrl } from '../../api/client'
 import { usePageTitle } from '../../app/usePageTitle'
+import { PageSkeleton } from '../../components/PageSkeleton'
 import { QuestionResultView } from './QuestionResultView'
 import { useResults, type Scope } from './useResults'
 import { useResultsEvents } from './useResultsEvents'
@@ -60,9 +60,10 @@ export function ResultsPage({
 
   if (survey.isPending || results.isPending) {
     return (
-      <Box role="status" sx={{ py: 4, textAlign: 'center' }}>
-        <CircularProgress aria-hidden />
-      </Box>
+      <PageSkeleton
+        label={intl.formatMessage({ id: 'results.loading', defaultMessage: 'Loading the results' })}
+        rows={4}
+      />
     )
   }
   if (survey.isError || results.isError) {

@@ -18,7 +18,11 @@ export default defineConfig({
     locale: 'es-ES',
     trace: 'retain-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: /phone\.spec\.ts/ },
+    // The manager's pages at phone width (phone.spec.ts), on the same engine.
+    { name: 'phone', use: { ...devices['Pixel 7'] }, testMatch: /phone\.spec\.ts/ },
+  ],
   webServer: {
     command: `npm run preview -- --port ${port} --strictPort`,
     url: `http://localhost:${port}`,
