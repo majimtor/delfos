@@ -66,6 +66,18 @@ comparable, refreshed while responses arrive.
 - [docs/known-issues.md](docs/known-issues.md): what is known not to work
   or to work within limits, and the figures read at each quarterly check.
 
+## What's next
+
+Delfos is complete for its purpose, and what it could gain next is listed
+with the condition that reopens each item, not with a date. Section 18 of
+[PLAN.md](PLAN.md) holds the omissions with their triggers; the open issues
+[labelled enhancement][candidates] hold the candidates with evidence, from
+the quarterly checks and the known issues; and the board
+[Delfos, next][board] shows which of them have a trigger met.
+
+[candidates]: https://github.com/majimtor/delfos/issues?q=is%3Aissue%20is%3Aopen%20label%3Aenhancement
+[board]: https://github.com/users/majimtor/projects/1
+
 ## Planned layout
 
 | Directory | Content | Language |
