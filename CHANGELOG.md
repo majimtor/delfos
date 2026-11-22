@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0](https://github.com/majimtor/delfos/compare/v1.3.0...v1.4.0) (2026-11-22)
+
+
+### Features
+
+* **web:** adopt the visual identity tokens with a dark colour scheme ([#87](https://github.com/majimtor/delfos/issues/87)) ([a7b36a7](https://github.com/majimtor/delfos/commit/a7b36a7fd32ceb047ed4fb19a4edee051e9cf325))
+* **web:** fit the manager's pages to a phone and tidy their shell ([#93](https://github.com/majimtor/delfos/issues/93)) ([1395953](https://github.com/majimtor/delfos/commit/13959539c3d97ef26573ccf403e80c31fccc77d0))
+* **web:** give the landing page its traits and every page a footer ([#88](https://github.com/majimtor/delfos/issues/88)) ([261b363](https://github.com/majimtor/delfos/commit/261b3631be033c223873cad3984cfa5ec421da54))
+
+
+### Bug Fixes
+
+* **web:** open and close the notch of outlined fields at once for Safari ([#92](https://github.com/majimtor/delfos/issues/92)) ([bdb3e9e](https://github.com/majimtor/delfos/commit/bdb3e9ed4575bc88ebfa9d87c144da7e25db23dc))
+
 ## [1.3.0](https://github.com/majimtor/delfos/compare/v1.2.0...v1.3.0) (2026-11-19)
 
 
