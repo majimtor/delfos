@@ -1,3 +1,4 @@
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
 import {
   Alert,
   Box,
@@ -103,6 +104,7 @@ export function ResultsPage({
           {live && (
             <>
               {' · '}
+              <span className="live-dot" aria-hidden="true" />
               <FormattedMessage id="results.live" defaultMessage="live" />
             </>
           )}
@@ -132,24 +134,32 @@ export function ResultsPage({
           href={`${apiBaseUrl}/api/v1/surveys/${surveyId}/versions/${versionNumber}/export.csv`}
           variant="outlined"
           size="small"
+          startIcon={<FileDownloadOutlinedIcon />}
+          aria-label={intl.formatMessage(
+            {
+              id: 'results.export',
+              defaultMessage: 'CSV, download the responses of version {number}',
+            },
+            { number: versionNumber },
+          )}
         >
-          <FormattedMessage
-            id="results.export"
-            defaultMessage="Download the responses of version {number} (CSV)"
-            values={{ number: versionNumber }}
-          />
+          CSV
         </Button>
         <Button
           component="a"
           href={`${apiBaseUrl}/api/v1/surveys/${surveyId}/versions/${versionNumber}/export.xlsx`}
           variant="outlined"
           size="small"
+          startIcon={<FileDownloadOutlinedIcon />}
+          aria-label={intl.formatMessage(
+            {
+              id: 'results.exportXlsx',
+              defaultMessage: 'Excel, download the responses of version {number}',
+            },
+            { number: versionNumber },
+          )}
         >
-          <FormattedMessage
-            id="results.exportXlsx"
-            defaultMessage="Download the responses of version {number} (Excel)"
-            values={{ number: versionNumber }}
-          />
+          Excel
         </Button>
       </Stack>
       {results.data.questions.map((question) => (
