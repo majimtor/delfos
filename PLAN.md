@@ -244,7 +244,7 @@ or ten thousand responses.
 | Backend | Kotlin 2.4, Spring Boot 4.1, Java 25, Gradle; shared pure Kotlin module | ADR 0002 |
 | Database | PostgreSQL 18 on Neon, Flyway, Hibernate `validate`, JdbcTemplate for aggregates | ADR 0003 |
 | Web | React 19, TypeScript, Vite, React Router, TanStack Query, react-hook-form, FormatJS, MUI with the design tokens of ADR 0017, Vitest, Playwright, axe | ADR 0004, ADR 0017 |
-| Mobile | Kotlin Multiplatform with Compose Multiplatform, Android first, APK on Releases, iOS compiled in CI | ADR 0005 |
+| Mobile | Kotlin Multiplatform with Compose Multiplatform, Android first, the design tokens of ADR 0017 as a Material 3 theme, APK on Releases, iOS compiled in CI | ADR 0005, ADR 0017 |
 | Desktop | None; responsive web with an installable manifest | ADR 0006 |
 | Contract | Hand-written OpenAPI 3.0.3, generated server interfaces and clients, `oasdiff` | ADR 0007 |
 | Authentication | Opaque sessions, cookie and bearer, BCrypt | ADR 0008 |

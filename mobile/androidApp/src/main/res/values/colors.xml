@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The page colours of the design tokens (ADR 0017), for the window before Compose draws. -->
+<resources>
+    <color name="delfos_background">#F4F7F7</color>
+    <color name="delfos_background_dark">#0C1517</color>
+</resources>
