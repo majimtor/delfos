@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The window behind the Compose content: the page colour of the scheme, so that the launch and
+     every transition show the same ground as the screens. -->
+<resources>
+    <style name="Theme.Delfos" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/delfos_background</item>
+    </style>
+</resources>
