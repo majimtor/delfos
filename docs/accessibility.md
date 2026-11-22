@@ -8,9 +8,11 @@ Spanish, the primary language, and checked for parity in English.
 
 ## Method
 
-- Automated: axe-core with the WCAG 2.0, 2.1 and 2.2 rules of levels A and
-  AA runs on every page of the end-to-end path (`web/e2e/`), on every pull
-  request, and fails the build on any violation.
+- Automated: axe-core with the WCAG 2.0, 2.1 and 2.2 rules of levels A and AA
+  runs on every page of the end-to-end path (`web/e2e/`), on every pull
+  request, and fails the build on any violation; the landing and answer pages
+  are checked in the dark colour scheme too, and a unit test keeps every text
+  pair of the design tokens at 4.5:1 or more (ADR 0017).
 - Manual: a keyboard-only pass (tab order, visible focus, activation with
   Enter and Space, no traps); a review of the accessibility tree in
   Chromium for the name, role and state of every control and for the live
@@ -54,8 +56,6 @@ allows for data tables).
 - A scale question is a row of buttons: operable with Tab and Enter, with one
   stop per value where a radio group would offer one. Kept: the VoiceOver pass
   found nothing confusing in it.
-- The theme is light only, while the page allows the browser a dark colour
-  scheme for its native controls.
 - The manager pages (survey list, results, the new-survey form and the
   draft editor) get the automated checks on every pull request and the
   shared fixes. The editor had its own pass on 2026-11-12, with the rules

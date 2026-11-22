@@ -243,7 +243,7 @@ or ten thousand responses.
 | Architecture | One central API, clients through the contract | ADR 0001 |
 | Backend | Kotlin 2.4, Spring Boot 4.1, Java 25, Gradle; shared pure Kotlin module | ADR 0002 |
 | Database | PostgreSQL 18 on Neon, Flyway, Hibernate `validate`, JdbcTemplate for aggregates | ADR 0003 |
-| Web | React 19, TypeScript, Vite, React Router, TanStack Query, react-hook-form, FormatJS, MUI, Vitest, Playwright, axe | ADR 0004 |
+| Web | React 19, TypeScript, Vite, React Router, TanStack Query, react-hook-form, FormatJS, MUI with the design tokens of ADR 0017, Vitest, Playwright, axe | ADR 0004, ADR 0017 |
 | Mobile | Kotlin Multiplatform with Compose Multiplatform, Android first, APK on Releases, iOS compiled in CI | ADR 0005 |
 | Desktop | None; responsive web with an installable manifest | ADR 0006 |
 | Contract | Hand-written OpenAPI 3.0.3, generated server interfaces and clients, `oasdiff` | ADR 0007 |
@@ -397,7 +397,9 @@ Web: WCAG 2.2 level AA (W3C Recommendation of 12 December 2024) on the
 public answer page and the results page, verified with axe in the
 end-to-end test and with a manual checklist (keyboard, focus, contrast,
 screen reader) before launch; the editor is keyboard-operable and axe-clean
-with documented known issues. Mobile: the requirements of EN 301 549
+with documented known issues. Both colour schemes get the axe check on the
+public pages, and every text pair of the design tokens keeps 4.5:1 (ADR
+0017). Mobile: the requirements of EN 301 549
 Annex A for applications, not WCAG, which does not apply to native
 applications (European Commission, checked 2026-11-05).
 

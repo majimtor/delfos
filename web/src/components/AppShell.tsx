@@ -4,17 +4,27 @@ import {
   Button,
   Container,
   FormControl,
+  IconButton,
   InputLabel,
+  ListItemIcon,
+  ListItemText,
+  Menu,
   MenuItem,
   Select,
   Toolbar,
   Typography,
+  useColorScheme,
 } from '@mui/material'
-import { useEffect, useRef } from 'react'
+import DarkModeIcon from '@mui/icons-material/DarkMode'
+import LightModeIcon from '@mui/icons-material/LightMode'
+import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 import { FormattedMessage, useIntl } from 'react-intl'
+import { MODES, type Mode } from '../app/colorScheme'
 import { useLogout, useSession } from '../features/auth/session'
 import { useLocale, type Locale } from '../i18n/locale'
+import { BrandMark } from './BrandMark'
 
 export function AppShell() {
   const { locale, setLocale } = useLocale()
@@ -43,13 +53,21 @@ export function AppShell() {
         <FormattedMessage id="app.skipToContent" defaultMessage="Skip to content" />
       </a>
       <AppBar position="static" color="default" elevation={0} component="header">
-        <Toolbar sx={{ gap: 2 }}>
+        <Toolbar sx={{ gap: 1.5 }}>
           <Typography
             variant="h6"
             component={Link}
             to="/"
-            sx={{ flexGrow: 1, color: 'inherit', textDecoration: 'none' }}
+            sx={{
+              flexGrow: 1,
+              color: 'inherit',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 1,
+            }}
           >
+            <BrandMark />
             <FormattedMessage id="app.title" defaultMessage="Delfos" />
           </Typography>
           {session.data && (
@@ -92,6 +110,7 @@ export function AppShell() {
               </MenuItem>
             </Select>
           </FormControl>
+          <SchemeMenu />
         </Toolbar>
       </AppBar>
       <Container
@@ -105,5 +124,66 @@ export function AppShell() {
         <Outlet />
       </Container>
     </Box>
+  )
+}
+
+/**
+ * The colour scheme: the device's by default, or the one the visitor chooses, remembered per
+ * browser. A menu of three radio items behind one button that names the current choice.
+ */
+function SchemeMenu() {
+  const intl = useIntl()
+  const { mode, setMode } = useColorScheme()
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null)
+  const current: Mode = mode ?? 'system'
+  const label = intl.formatMessage({ id: 'app.scheme', defaultMessage: 'Colour scheme' })
+  const names: Record<Mode, string> = {
+    system: intl.formatMessage({ id: 'app.scheme.system', defaultMessage: 'Same as the device' }),
+    light: intl.formatMessage({ id: 'app.scheme.light', defaultMessage: 'Light' }),
+    dark: intl.formatMessage({ id: 'app.scheme.dark', defaultMessage: 'Dark' }),
+  }
+  const icons: Record<Mode, ReactNode> = {
+    system: <SettingsBrightnessIcon />,
+    light: <LightModeIcon />,
+    dark: <DarkModeIcon />,
+  }
+  const open = Boolean(anchor)
+  return (
+    <>
+      <IconButton
+        id="scheme-button"
+        color="inherit"
+        aria-label={`${label}: ${names[current]}`}
+        aria-haspopup="menu"
+        aria-controls={open ? 'scheme-menu' : undefined}
+        aria-expanded={open ? 'true' : undefined}
+        onClick={(event) => setAnchor(event.currentTarget)}
+      >
+        {icons[current]}
+      </IconButton>
+      <Menu
+        id="scheme-menu"
+        anchorEl={anchor}
+        open={open}
+        onClose={() => setAnchor(null)}
+        slotProps={{ list: { 'aria-labelledby': 'scheme-button' } }}
+      >
+        {MODES.map((candidate) => (
+          <MenuItem
+            key={candidate}
+            role="menuitemradio"
+            aria-checked={candidate === current}
+            selected={candidate === current}
+            onClick={() => {
+              setMode(candidate)
+              setAnchor(null)
+            }}
+          >
+            <ListItemIcon>{icons[candidate]}</ListItemIcon>
+            <ListItemText>{names[candidate]}</ListItemText>
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
   )
 }

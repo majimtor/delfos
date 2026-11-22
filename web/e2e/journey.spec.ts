@@ -43,6 +43,12 @@ test('a stranger answers the sample survey, then manages it and watches the resu
     await expect(page.getByRole('heading', { name: 'Delfos' })).toBeVisible()
     await expect(page).toHaveTitle('Delfos')
     await expectAccessible(page, 'the landing page')
+    // The dark scheme follows the device and gets the same check (ADR 0017).
+    await page.emulateMedia({ colorScheme: 'dark' })
+    await expect(page.locator('html')).toHaveAttribute('data-delfos-scheme', 'dark')
+    await expectAccessible(page, 'the landing page in the dark scheme')
+    await page.emulateMedia({ colorScheme: 'light' })
+    await expect(page.locator('html')).toHaveAttribute('data-delfos-scheme', 'light')
     // The page is installable: it links a manifest that the server serves as such.
     await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
       'href',
@@ -69,6 +75,9 @@ test('a stranger answers the sample survey, then manages it and watches the resu
     await page.getByRole('radio', { name: 'En bicicleta' }).check()
     await expect(licence).toBeHidden()
     await expectAccessible(page, 'the answer page')
+    await page.emulateMedia({ colorScheme: 'dark' })
+    await expectAccessible(page, 'the answer page in the dark scheme')
+    await page.emulateMedia({ colorScheme: 'light' })
   })
 
   await test.step('the response is accepted', async () => {
