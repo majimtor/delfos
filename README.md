@@ -33,7 +33,7 @@ with iOS compiled in CI; what remains is in [PLAN.md](PLAN.md).
 A one-minute recording of the path, from the sample survey to the
 results that update:
 
-[tour.webm](https://github.com/user-attachments/assets/937cb056-7e97-415c-b389-20471704e4b9)
+[tour.webm](https://github.com/user-attachments/assets/852a1125-6e91-4b9f-980e-2620d4243773)
 
 ![The landing page, with the two ways in](docs/media/landing.png)
 
