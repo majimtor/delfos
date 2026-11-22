@@ -1,5 +1,6 @@
 <resources>
     <string name="home_title">Delfos</string>
+    <string name="home_lead">Encuestas con lógica condicional, versiones y resultados en directo.</string>
     <string name="home_intro">Responde una encuesta con el código o el enlace que recibiste.</string>
     <string name="home_code_label">Código o enlace de la encuesta</string>
     <string name="home_code_invalid">Indica el código de una encuesta o pega su enlace.</string>

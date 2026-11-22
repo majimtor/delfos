@@ -1,5 +1,6 @@
 <resources>
     <string name="home_title">Delfos</string>
+    <string name="home_lead">Surveys with conditional logic, versions and live results.</string>
     <string name="home_intro">Answer a survey with the code or the link you received.</string>
     <string name="home_code_label">Survey code or link</string>
     <string name="home_code_invalid">Enter a survey code or paste its link.</string>
