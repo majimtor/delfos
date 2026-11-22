@@ -94,6 +94,15 @@ export const theme = createTheme({
     MuiChip: {
       styleOverrides: { root: { fontWeight: 500 } },
     },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        // Safari repaints the notch of an outlined field wrongly while its legend animates: the
+        // gap stays open after the label returns, or never opens and the floating label crosses
+        // the border, above all on multiline fields (WebKit bug 304070; MUI issues 44988 and
+        // 46891, where the maintainers recommend this). The notch opens and closes at once.
+        notchedOutline: { '& legend': { transition: 'unset' } },
+      },
+    },
     MuiAppBar: {
       styleOverrides: {
         colorDefault: ({ theme }) => ({
