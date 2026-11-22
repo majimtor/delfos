@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   IconButton,
   List,
   ListItem,
@@ -12,6 +11,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
   TextField,
@@ -25,6 +25,7 @@ import { Link, useParams } from 'react-router'
 import { api } from '../../api/client'
 import type { Schemas } from '../../api/types'
 import { usePageTitle } from '../../app/usePageTitle'
+import { PageSkeleton } from '../../components/PageSkeleton'
 
 type Invitation = Schemas['Invitation']
 type CreatedInvitation = Schemas['CreatedInvitation']
@@ -103,9 +104,12 @@ export function InvitationsPage() {
 
   if (survey.isPending || invitations.isPending) {
     return (
-      <Box role="status" sx={{ py: 4, textAlign: 'center' }}>
-        <CircularProgress aria-hidden />
-      </Box>
+      <PageSkeleton
+        label={intl.formatMessage({
+          id: 'invitations.loading',
+          defaultMessage: 'Loading the invitations',
+        })}
+      />
     )
   }
   if (survey.isError || invitations.isError) {
@@ -274,56 +278,62 @@ export function InvitationsPage() {
           <FormattedMessage id="invitations.empty" defaultMessage="No invitations yet." />
         </Typography>
       ) : (
-        <Table size="small" aria-label="invitations">
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                <FormattedMessage id="invitations.column.created" defaultMessage="Created" />
-              </TableCell>
-              <TableCell>
-                <FormattedMessage id="invitations.column.status" defaultMessage="Status" />
-              </TableCell>
-              <TableCell>
-                <FormattedMessage id="invitations.column.used" defaultMessage="Used at" />
-              </TableCell>
-              <TableCell>
-                <FormattedMessage id="invitations.column.actions" defaultMessage="Actions" />
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {items.map((invitation) => (
-              <TableRow key={invitation.id}>
+        <TableContainer>
+          <Table size="small" aria-label="invitations">
+            <TableHead>
+              <TableRow>
                 <TableCell>
-                  <FormattedDate
-                    value={invitation.createdAt}
-                    dateStyle="medium"
-                    timeStyle="short"
-                  />
+                  <FormattedMessage id="invitations.column.created" defaultMessage="Created" />
                 </TableCell>
                 <TableCell>
-                  <StatusChip status={invitation.status} />
+                  <FormattedMessage id="invitations.column.status" defaultMessage="Status" />
                 </TableCell>
                 <TableCell>
-                  {invitation.usedAt && (
-                    <FormattedDate value={invitation.usedAt} dateStyle="medium" timeStyle="short" />
-                  )}
+                  <FormattedMessage id="invitations.column.used" defaultMessage="Used at" />
                 </TableCell>
                 <TableCell>
-                  {invitation.status === 'PENDING' && (
-                    <Button
-                      size="small"
-                      onClick={() => revoke.mutate(invitation.id)}
-                      disabled={revoke.isPending}
-                    >
-                      <FormattedMessage id="invitations.revoke" defaultMessage="Revoke" />
-                    </Button>
-                  )}
+                  <FormattedMessage id="invitations.column.actions" defaultMessage="Actions" />
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {items.map((invitation) => (
+                <TableRow key={invitation.id}>
+                  <TableCell>
+                    <FormattedDate
+                      value={invitation.createdAt}
+                      dateStyle="medium"
+                      timeStyle="short"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <StatusChip status={invitation.status} />
+                  </TableCell>
+                  <TableCell>
+                    {invitation.usedAt && (
+                      <FormattedDate
+                        value={invitation.usedAt}
+                        dateStyle="medium"
+                        timeStyle="short"
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {invitation.status === 'PENDING' && (
+                      <Button
+                        size="small"
+                        onClick={() => revoke.mutate(invitation.id)}
+                        disabled={revoke.isPending}
+                      >
+                        <FormattedMessage id="invitations.revoke" defaultMessage="Revoke" />
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
       {invitations.hasNextPage && (
         <Button

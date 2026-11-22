@@ -1,16 +1,15 @@
 import {
   Alert,
-  Box,
   Button,
   Checkbox,
   Chip,
-  CircularProgress,
   FormControlLabel,
   Paper,
   Stack,
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
   TextField,
@@ -23,6 +22,7 @@ import { FormattedDate, FormattedMessage, useIntl } from 'react-intl'
 import { api } from '../../api/client'
 import type { Problem, Schemas } from '../../api/types'
 import { usePageTitle } from '../../app/usePageTitle'
+import { PageSkeleton } from '../../components/PageSkeleton'
 import { useSession } from '../auth/session'
 
 type Account = Schemas['Account']
@@ -111,9 +111,12 @@ export function AccountsPage() {
   }
   if (accounts.isPending) {
     return (
-      <Box role="status" sx={{ py: 4, textAlign: 'center' }}>
-        <CircularProgress aria-hidden />
-      </Box>
+      <PageSkeleton
+        label={intl.formatMessage({
+          id: 'accounts.loading',
+          defaultMessage: 'Loading the accounts',
+        })}
+      />
     )
   }
   if (accounts.isError) {
@@ -225,85 +228,90 @@ export function AccountsPage() {
           />
         </Alert>
       )}
-      <Table size="small" aria-label="accounts">
-        <TableHead>
-          <TableRow>
-            <TableCell>
-              <FormattedMessage id="accounts.column.username" defaultMessage="Username" />
-            </TableCell>
-            <TableCell>
-              <FormattedMessage id="accounts.column.role" defaultMessage="Role" />
-            </TableCell>
-            <TableCell>
-              <FormattedMessage id="accounts.column.status" defaultMessage="Status" />
-            </TableCell>
-            <TableCell>
-              <FormattedMessage id="accounts.column.created" defaultMessage="Created" />
-            </TableCell>
-            <TableCell>
-              <FormattedMessage id="accounts.column.actions" defaultMessage="Actions" />
-            </TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {items.map((account) => {
-            const self = account.id === session.data?.accountId
-            return (
-              <TableRow key={account.id}>
-                <TableCell>
-                  {account.username}
-                  {self && (
-                    <>
-                      {' '}
-                      <Typography component="span" variant="body2" color="text.secondary">
-                        <FormattedMessage id="accounts.you" defaultMessage="(you)" />
-                      </Typography>
-                    </>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {account.isAdmin ? (
-                    <FormattedMessage id="accounts.role.ADMIN" defaultMessage="Administrator" />
-                  ) : (
-                    <FormattedMessage id="accounts.role.MANAGER" defaultMessage="Manager" />
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    size="small"
-                    color={account.status === 'ACTIVE' ? 'success' : 'default'}
-                    label={
-                      account.status === 'ACTIVE' ? (
-                        <FormattedMessage id="accounts.status.ACTIVE" defaultMessage="Active" />
-                      ) : (
-                        <FormattedMessage id="accounts.status.DISABLED" defaultMessage="Disabled" />
-                      )
-                    }
-                  />
-                </TableCell>
-                <TableCell>
-                  <FormattedDate value={account.createdAt} dateStyle="medium" timeStyle="short" />
-                </TableCell>
-                <TableCell>
-                  {account.status === 'ACTIVE' && !self && (
-                    <Button
+      <TableContainer>
+        <Table size="small" aria-label="accounts">
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <FormattedMessage id="accounts.column.username" defaultMessage="Username" />
+              </TableCell>
+              <TableCell>
+                <FormattedMessage id="accounts.column.role" defaultMessage="Role" />
+              </TableCell>
+              <TableCell>
+                <FormattedMessage id="accounts.column.status" defaultMessage="Status" />
+              </TableCell>
+              <TableCell>
+                <FormattedMessage id="accounts.column.created" defaultMessage="Created" />
+              </TableCell>
+              <TableCell>
+                <FormattedMessage id="accounts.column.actions" defaultMessage="Actions" />
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {items.map((account) => {
+              const self = account.id === session.data?.accountId
+              return (
+                <TableRow key={account.id}>
+                  <TableCell>
+                    {account.username}
+                    {self && (
+                      <>
+                        {' '}
+                        <Typography component="span" variant="body2" color="text.secondary">
+                          <FormattedMessage id="accounts.you" defaultMessage="(you)" />
+                        </Typography>
+                      </>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {account.isAdmin ? (
+                      <FormattedMessage id="accounts.role.ADMIN" defaultMessage="Administrator" />
+                    ) : (
+                      <FormattedMessage id="accounts.role.MANAGER" defaultMessage="Manager" />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
                       size="small"
-                      onClick={() => disable.mutate(account.id)}
-                      disabled={disable.isPending}
-                      aria-label={intl.formatMessage(
-                        { id: 'accounts.disableNamed', defaultMessage: 'Disable {username}' },
-                        { username: account.username },
-                      )}
-                    >
-                      <FormattedMessage id="accounts.disable" defaultMessage="Disable" />
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            )
-          })}
-        </TableBody>
-      </Table>
+                      color={account.status === 'ACTIVE' ? 'success' : 'default'}
+                      label={
+                        account.status === 'ACTIVE' ? (
+                          <FormattedMessage id="accounts.status.ACTIVE" defaultMessage="Active" />
+                        ) : (
+                          <FormattedMessage
+                            id="accounts.status.DISABLED"
+                            defaultMessage="Disabled"
+                          />
+                        )
+                      }
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <FormattedDate value={account.createdAt} dateStyle="medium" timeStyle="short" />
+                  </TableCell>
+                  <TableCell>
+                    {account.status === 'ACTIVE' && !self && (
+                      <Button
+                        size="small"
+                        onClick={() => disable.mutate(account.id)}
+                        disabled={disable.isPending}
+                        aria-label={intl.formatMessage(
+                          { id: 'accounts.disableNamed', defaultMessage: 'Disable {username}' },
+                          { username: account.username },
+                        )}
+                      >
+                        <FormattedMessage id="accounts.disable" defaultMessage="Disable" />
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
       {accounts.hasNextPage && (
         <Button
           onClick={() => void accounts.fetchNextPage()}

@@ -1,24 +1,38 @@
+import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined'
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
+import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined'
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
+import MailOutlinedIcon from '@mui/icons-material/MailOutlined'
+import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
+import PollOutlinedIcon from '@mui/icons-material/PollOutlined'
+import PublishOutlinedIcon from '@mui/icons-material/PublishOutlined'
 import {
   Alert,
-  Box,
   Button,
   Chip,
-  CircularProgress,
+  IconButton,
+  Paper,
   Stack,
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { FormattedDate, FormattedMessage, defineMessages, useIntl } from 'react-intl'
 import { Link, useNavigate } from 'react-router'
 import { api } from '../../api/client'
 import type { Problem, Schemas } from '../../api/types'
 import { usePageTitle } from '../../app/usePageTitle'
+import { EmptyState } from '../../components/EmptyState'
+import { PageSkeleton } from '../../components/PageSkeleton'
 
 type Survey = Schemas['Survey']
 
@@ -40,6 +54,16 @@ const failureMessages = defineMessages({
   generic: { id: 'surveys.error.generic', defaultMessage: 'The action could not be completed.' },
 })
 
+const actionMessages = defineMessages({
+  edit: { id: 'surveys.action.edit', defaultMessage: 'Edit the draft' },
+  publish: { id: 'surveys.action.publish', defaultMessage: 'Publish' },
+  newVersion: { id: 'surveys.action.newVersion', defaultMessage: 'New version' },
+  close: { id: 'surveys.action.close', defaultMessage: 'Close' },
+  results: { id: 'surveys.action.results', defaultMessage: 'Results' },
+  invitations: { id: 'surveys.action.invitations', defaultMessage: 'Invitations' },
+  answerLink: { id: 'surveys.action.answerLink', defaultMessage: 'Public link' },
+})
+
 type Failure = keyof typeof failureMessages
 
 export function SurveysPage() {
@@ -47,6 +71,9 @@ export function SurveysPage() {
   usePageTitle(intl.formatMessage({ id: 'surveys.title', defaultMessage: 'My surveys' }))
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const theme = useTheme()
+  // Below the medium breakpoint the table has no room for its five columns: one card per survey.
+  const compact = useMediaQuery(theme.breakpoints.down('md'))
   const [failure, setFailure] = useState<Failure | null>(null)
   const surveys = useInfiniteQuery({
     queryKey: SURVEYS_QUERY_KEY,
@@ -93,9 +120,10 @@ export function SurveysPage() {
 
   if (surveys.isPending) {
     return (
-      <Box role="status" sx={{ py: 4, textAlign: 'center' }}>
-        <CircularProgress aria-hidden />
-      </Box>
+      <PageSkeleton
+        label={intl.formatMessage({ id: 'surveys.loading', defaultMessage: 'Loading the surveys' })}
+        rows={4}
+      />
     )
   }
   if (surveys.isError) {
@@ -109,6 +137,22 @@ export function SurveysPage() {
     )
   }
   const items: Survey[] = surveys.data.pages.flatMap((page) => page.items)
+  const busy = act.isPending || newVersion.isPending
+  const actionsOf = (survey: Survey, variant: 'icons' | 'text') => (
+    <SurveyActions
+      survey={survey}
+      variant={variant}
+      busy={busy}
+      onPublish={() => act.mutate({ id: survey.id, action: 'publish' })}
+      onClose={() => act.mutate({ id: survey.id, action: 'close' })}
+      onNewVersion={() => newVersion.mutate(survey.id)}
+    />
+  )
+  const newSurvey = (
+    <Button variant="contained" component={Link} to="/surveys/new">
+      <FormattedMessage id="surveys.action.new" defaultMessage="New survey" />
+    </Button>
+  )
 
   return (
     <Stack spacing={3}>
@@ -120,9 +164,7 @@ export function SurveysPage() {
         <Typography variant="h4" component="h1">
           <FormattedMessage id="surveys.title" defaultMessage="My surveys" />
         </Typography>
-        <Button variant="contained" component={Link} to="/surveys/new">
-          <FormattedMessage id="surveys.action.new" defaultMessage="New survey" />
-        </Button>
+        {items.length > 0 && newSurvey}
       </Stack>
       {failure && (
         <Alert severity="error" role="alert" onClose={() => setFailure(null)}>
@@ -130,122 +172,102 @@ export function SurveysPage() {
         </Alert>
       )}
       {items.length === 0 ? (
-        <Typography color="text.secondary">
-          <FormattedMessage id="surveys.empty" defaultMessage="You have no surveys yet." />
-        </Typography>
+        <EmptyState
+          icon={<InboxOutlinedIcon />}
+          title={<FormattedMessage id="surveys.empty" defaultMessage="You have no surveys yet." />}
+          description={
+            <FormattedMessage
+              id="surveys.emptyHint"
+              defaultMessage="Create the first one and share its public link, or invite the people who should answer."
+            />
+          }
+          action={newSurvey}
+        />
+      ) : compact ? (
+        <Stack
+          component="ul"
+          spacing={2}
+          aria-label="surveys"
+          sx={{ listStyle: 'none', m: 0, p: 0 }}
+        >
+          {items.map((survey) => (
+            <Paper
+              component="li"
+              key={survey.id}
+              variant="outlined"
+              sx={{ p: 2, display: 'grid', gap: 1 }}
+            >
+              <Stack
+                direction="row"
+                spacing={1.5}
+                sx={{ alignItems: 'center', justifyContent: 'space-between' }}
+              >
+                <Typography variant="h6" component="h2" lang={survey.language} sx={{ minWidth: 0 }}>
+                  {survey.title}
+                </Typography>
+                <StatusChip survey={survey} />
+              </Stack>
+              <Typography variant="body2" color="text.secondary">
+                <FormattedMessage
+                  id="surveys.card.meta"
+                  defaultMessage="{count, plural, one {# response} other {# responses}} · updated {date}"
+                  values={{
+                    count: survey.responseCount,
+                    date: (
+                      <FormattedDate
+                        value={survey.updatedAt}
+                        dateStyle="medium"
+                        timeStyle="short"
+                      />
+                    ),
+                  }}
+                />
+              </Typography>
+              {actionsOf(survey, 'text')}
+            </Paper>
+          ))}
+        </Stack>
       ) : (
-        <Table size="small" aria-label="surveys">
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                <FormattedMessage id="surveys.column.title" defaultMessage="Title" />
-              </TableCell>
-              <TableCell>
-                <FormattedMessage id="surveys.column.status" defaultMessage="Status" />
-              </TableCell>
-              <TableCell align="right">
-                <FormattedMessage id="surveys.column.responses" defaultMessage="Responses" />
-              </TableCell>
-              <TableCell>
-                <FormattedMessage id="surveys.column.updated" defaultMessage="Updated" />
-              </TableCell>
-              <TableCell>
-                <FormattedMessage id="surveys.column.actions" defaultMessage="Actions" />
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {items.map((survey) => (
-              <TableRow key={survey.id}>
-                <TableCell lang={survey.language}>{survey.title}</TableCell>
+        <TableContainer>
+          <Table size="small" aria-label="surveys">
+            <TableHead>
+              <TableRow>
                 <TableCell>
-                  <StatusChip survey={survey} />
-                </TableCell>
-                <TableCell align="right">{survey.responseCount}</TableCell>
-                <TableCell>
-                  <FormattedDate value={survey.updatedAt} dateStyle="medium" timeStyle="short" />
+                  <FormattedMessage id="surveys.column.title" defaultMessage="Title" />
                 </TableCell>
                 <TableCell>
-                  <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
-                    {survey.hasDraft && survey.status !== 'CLOSED' && (
-                      <Button size="small" component={Link} to={`/surveys/${survey.id}/draft`}>
-                        <FormattedMessage
-                          id="surveys.action.edit"
-                          defaultMessage="Edit the draft"
-                        />
-                      </Button>
-                    )}
-                    {survey.hasDraft && survey.status !== 'CLOSED' && (
-                      <Button
-                        size="small"
-                        onClick={() => act.mutate({ id: survey.id, action: 'publish' })}
-                        disabled={act.isPending}
-                      >
-                        <FormattedMessage id="surveys.action.publish" defaultMessage="Publish" />
-                      </Button>
-                    )}
-                    {survey.status === 'PUBLISHED' && !survey.hasDraft && (
-                      <Button
-                        size="small"
-                        onClick={() => newVersion.mutate(survey.id)}
-                        disabled={newVersion.isPending}
-                      >
-                        <FormattedMessage
-                          id="surveys.action.newVersion"
-                          defaultMessage="New version"
-                        />
-                      </Button>
-                    )}
-                    {survey.status === 'PUBLISHED' && (
-                      <Button
-                        size="small"
-                        onClick={() => act.mutate({ id: survey.id, action: 'close' })}
-                        disabled={act.isPending}
-                      >
-                        <FormattedMessage id="surveys.action.close" defaultMessage="Close" />
-                      </Button>
-                    )}
-                    {survey.publishedVersionNumber !== undefined && (
-                      <Button
-                        size="small"
-                        component={Link}
-                        to={`/surveys/${survey.id}/versions/${survey.publishedVersionNumber}/results`}
-                      >
-                        <FormattedMessage id="surveys.action.results" defaultMessage="Results" />
-                      </Button>
-                    )}
-                    {survey.respondentMode === 'INVITED' && (
-                      <Button
-                        size="small"
-                        component={Link}
-                        to={`/surveys/${survey.id}/invitations`}
-                      >
-                        <FormattedMessage
-                          id="surveys.action.invitations"
-                          defaultMessage="Invitations"
-                        />
-                      </Button>
-                    )}
-                    {survey.status !== 'DRAFT' && (
-                      <Button
-                        size="small"
-                        component={Link}
-                        to={`/s/${survey.publicId}`}
-                        target="_blank"
-                        rel="noopener"
-                      >
-                        <FormattedMessage
-                          id="surveys.action.answerLink"
-                          defaultMessage="Public link"
-                        />
-                      </Button>
-                    )}
-                  </Stack>
+                  <FormattedMessage id="surveys.column.status" defaultMessage="Status" />
+                </TableCell>
+                <TableCell align="right">
+                  <FormattedMessage id="surveys.column.responses" defaultMessage="Responses" />
+                </TableCell>
+                <TableCell>
+                  <FormattedMessage id="surveys.column.updated" defaultMessage="Updated" />
+                </TableCell>
+                <TableCell>
+                  <FormattedMessage id="surveys.column.actions" defaultMessage="Actions" />
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {items.map((survey) => (
+                <TableRow key={survey.id}>
+                  <TableCell lang={survey.language}>{survey.title}</TableCell>
+                  <TableCell>
+                    <StatusChip survey={survey} />
+                  </TableCell>
+                  <TableCell align="right">{survey.responseCount}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                    <FormattedDate value={survey.updatedAt} dateStyle="medium" timeStyle="short" />
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap', py: 0.5 }}>
+                    {actionsOf(survey, 'icons')}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
       {surveys.hasNextPage && (
         <Button
@@ -256,6 +278,123 @@ export function SurveysPage() {
           <FormattedMessage id="surveys.loadMore" defaultMessage="Load more" />
         </Button>
       )}
+    </Stack>
+  )
+}
+
+/**
+ * The actions a survey allows in its state. In the table they are icon buttons with a tooltip and
+ * an accessible name, so a row stays one line; on a card they are text buttons, since a touch
+ * screen shows no tooltip.
+ */
+function SurveyActions({
+  survey,
+  variant,
+  busy,
+  onPublish,
+  onClose,
+  onNewVersion,
+}: {
+  survey: Survey
+  variant: 'icons' | 'text'
+  busy: boolean
+  onPublish: () => void
+  onClose: () => void
+  onNewVersion: () => void
+}) {
+  const intl = useIntl()
+  const draftOpen = survey.hasDraft && survey.status !== 'CLOSED'
+  const actions: {
+    key: keyof typeof actionMessages
+    icon: ReactNode
+    to?: string
+    onClick?: () => void
+    external?: boolean
+  }[] = []
+  if (draftOpen)
+    actions.push({
+      key: 'edit',
+      icon: <EditOutlinedIcon fontSize="small" />,
+      to: `/surveys/${survey.id}/draft`,
+    })
+  if (draftOpen)
+    actions.push({
+      key: 'publish',
+      icon: <PublishOutlinedIcon fontSize="small" />,
+      onClick: onPublish,
+    })
+  if (survey.status === 'PUBLISHED' && !survey.hasDraft) {
+    actions.push({
+      key: 'newVersion',
+      icon: <ContentCopyOutlinedIcon fontSize="small" />,
+      onClick: onNewVersion,
+    })
+  }
+  if (survey.status === 'PUBLISHED')
+    actions.push({ key: 'close', icon: <LockOutlinedIcon fontSize="small" />, onClick: onClose })
+  if (survey.publishedVersionNumber !== undefined) {
+    actions.push({
+      key: 'results',
+      icon: <PollOutlinedIcon fontSize="small" />,
+      to: `/surveys/${survey.id}/versions/${survey.publishedVersionNumber}/results`,
+    })
+  }
+  if (survey.respondentMode === 'INVITED') {
+    actions.push({
+      key: 'invitations',
+      icon: <MailOutlinedIcon fontSize="small" />,
+      to: `/surveys/${survey.id}/invitations`,
+    })
+  }
+  if (survey.status !== 'DRAFT') {
+    actions.push({
+      key: 'answerLink',
+      icon: <OpenInNewOutlinedIcon fontSize="small" />,
+      to: `/s/${survey.publicId}`,
+      external: true,
+    })
+  }
+  return (
+    <Stack
+      direction="row"
+      spacing={variant === 'icons' ? 0 : 1}
+      useFlexGap
+      sx={{ flexWrap: 'wrap' }}
+    >
+      {actions.map(({ key, icon, to, onClick, external }) => {
+        const label = intl.formatMessage(actionMessages[key])
+        const linkProps = to
+          ? { component: Link, to, ...(external ? { target: '_blank', rel: 'noopener' } : {}) }
+          : {}
+        if (variant === 'icons') {
+          return (
+            <Tooltip key={key} title={label}>
+              <IconButton
+                aria-label={label}
+                size="small"
+                color="primary"
+                onClick={onClick}
+                disabled={Boolean(onClick) && busy}
+                {...linkProps}
+              >
+                {icon}
+              </IconButton>
+            </Tooltip>
+          )
+        }
+        return (
+          <Button
+            key={key}
+            size="small"
+            startIcon={icon}
+            onClick={onClick}
+            disabled={Boolean(onClick) && busy}
+            {...linkProps}
+          >
+            {label}
+          </Button>
+        )
+      })}
     </Stack>
   )
 }
