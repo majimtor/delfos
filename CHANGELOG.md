@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/majimtor/delfos/compare/v1.4.0...v1.5.0) (2026-11-22)
+
+
+### Features
+
+* **mobile:** adopt the design tokens with IBM Plex Sans and the page colours ([#95](https://github.com/majimtor/delfos/issues/95)) ([6c1ad99](https://github.com/majimtor/delfos/commit/6c1ad994bfe5c4daa4b0763dccc7572b5b2ec3cc))
+* **mobile:** give the screens the mark, the cards, the shares and the segmented scale ([#96](https://github.com/majimtor/delfos/issues/96)) ([ae77795](https://github.com/majimtor/delfos/commit/ae77795b7591a1310bad04ebb97b419f423d8a1a))
+
 ## [1.4.0](https://github.com/majimtor/delfos/compare/v1.3.0...v1.4.0) (2026-11-22)
 
 
