@@ -17,7 +17,7 @@ test('the tour: answer the sample survey, manage it and watch the results move',
 }, testInfo) => {
   await test.step('landing', async () => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { name: 'Delfos' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('conditional logic')
     await settle(page, 3_000)
     await page.getByRole('link', { name: 'Answer a sample survey' }).click()
     await expect(page.getByRole('heading', { name: 'Urban mobility' })).toBeVisible()
