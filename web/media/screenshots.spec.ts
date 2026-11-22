@@ -17,7 +17,7 @@ test('landing, answer page, survey list and results', async ({ page }, testInfo)
     page.screenshot({ path: path.join(mediaDir, `${name}.png`), fullPage })
 
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Delfos' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('conditional logic')
   await shot('landing')
 
   await page.getByRole('link', { name: 'Answer a sample survey' }).click()
