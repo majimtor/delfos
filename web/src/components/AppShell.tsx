@@ -25,6 +25,7 @@ import { MODES, type Mode } from '../app/colorScheme'
 import { useLogout, useSession } from '../features/auth/session'
 import { useLocale, type Locale } from '../i18n/locale'
 import { BrandMark } from './BrandMark'
+import { SiteFooter } from './SiteFooter'
 
 export function AppShell() {
   const { locale, setLocale } = useLocale()
@@ -123,6 +124,7 @@ export function AppShell() {
       >
         <Outlet />
       </Container>
+      <SiteFooter />
     </Box>
   )
 }

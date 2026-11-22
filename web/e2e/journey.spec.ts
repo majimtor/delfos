@@ -40,7 +40,7 @@ test('a stranger answers the sample survey, then manages it and watches the resu
 }) => {
   await test.step('the landing page leads to the sample survey', async () => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { name: 'Delfos' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('lógica condicional')
     await expect(page).toHaveTitle('Delfos')
     await expectAccessible(page, 'the landing page')
     // The dark scheme follows the device and gets the same check (ADR 0017).
