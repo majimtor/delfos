@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,7 +31,9 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import com.manuelalejandro.delfos.definition.QuestionType
 import com.manuelalejandro.delfos.mobile.answer.display
 import com.manuelalejandro.delfos.mobile.api.NumberStats
@@ -127,7 +129,7 @@ private fun Results(results: VersionResults, padding: androidx.compose.foundatio
 
 @Composable
 private fun QuestionCard(question: QuestionResult) {
-    Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
+    OutlinedCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
         Column(Modifier.padding(16.dp)) {
             Text(question.text, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
             Text(
@@ -153,14 +155,23 @@ private fun QuestionCard(question: QuestionResult) {
 /** One count with its share of the answers as a bar; the bar repeats the numbers, so it stays out of the accessibility tree. */
 @Composable
 private fun CountBar(label: String, count: Int, total: Int) {
+    val share = if (total > 0) count.toFloat() / total else 0f
     Column(Modifier.padding(top = 10.dp)) {
         Row(Modifier.fillMaxWidth()) {
             Text(label, modifier = Modifier.weight(1f))
-            Text(count.toString(), style = MaterialTheme.typography.bodyMedium)
+            Text(
+                "$count · ${(share * 100).roundToInt()} %",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
+        Spacer(Modifier.height(6.dp))
         LinearProgressIndicator(
-            progress = { if (total > 0) count.toFloat() / total else 0f },
-            modifier = Modifier.fillMaxWidth().padding(top = 4.dp).clearAndSetSemantics { },
+            progress = { share },
+            strokeCap = StrokeCap.Round,
+            gapSize = 0.dp,
+            drawStopIndicator = {},
+            modifier = Modifier.fillMaxWidth().height(8.dp).clearAndSetSemantics { },
         )
     }
 }

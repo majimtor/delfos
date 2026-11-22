@@ -53,6 +53,12 @@ comparable, refreshed while responses arrive.
 
 ![Results of a survey, with a distribution per question](docs/media/results.png)
 
+The same survey on the Android application: the scale as one control,
+and the question a rule revealed after an earlier answer; the manager's
+list and the results are there too.
+
+![The Android application answering the sample survey](docs/media/mobile.png)
+
 ## Where to look
 
 - [PLAN.md](PLAN.md): what gets built, in which order, with which stack and

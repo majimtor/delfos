@@ -16,7 +16,11 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -42,7 +46,7 @@ import com.manuelalejandro.delfos.mobile.resources.scale_labels
 import org.jetbrains.compose.resources.stringResource
 
 /** One question of the survey, rendered by type with its hint and its errors; same semantics as the web client. */
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 internal fun QuestionField(
     question: Question,
@@ -107,20 +111,37 @@ internal fun QuestionField(
                 modifier = Modifier.widthIn(max = 240.dp),
             )
             QuestionType.SCALE -> {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.selectableGroup(),
-                ) {
-                    scaleValues(question).forEach { n ->
-                        val selected = value.number == n.toDouble()
-                        FilterChip(
-                            selected = selected,
-                            onClick = { onChange(AnswerValue(numberText = n.toString())) },
-                            label = { Text(n.toString()) },
-                            enabled = enabled,
-                            modifier = Modifier.semantics { role = Role.RadioButton },
-                        )
+                val values = scaleValues(question)
+                if (values.size <= SEGMENTED_SCALE_MAX) {
+                    // A short scale reads as one control, as on the web; Material keeps segmented rows to five.
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        values.forEachIndexed { index, n ->
+                            SegmentedButton(
+                                selected = value.number == n.toDouble(),
+                                onClick = { onChange(AnswerValue(numberText = n.toString())) },
+                                shape = SegmentedButtonDefaults.itemShape(index = index, count = values.size),
+                                icon = {},
+                                enabled = enabled,
+                                label = { Text(n.toString()) },
+                            )
+                        }
+                    }
+                } else {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.selectableGroup(),
+                    ) {
+                        values.forEach { n ->
+                            val selected = value.number == n.toDouble()
+                            FilterChip(
+                                selected = selected,
+                                onClick = { onChange(AnswerValue(numberText = n.toString())) },
+                                label = { Text(n.toString()) },
+                                enabled = enabled,
+                                modifier = Modifier.semantics { role = Role.RadioButton },
+                            )
+                        }
                     }
                 }
                 val minLabel = question.minLabel
@@ -165,6 +186,8 @@ private fun ChoiceRow(modifier: Modifier, label: String, control: @Composable ()
         Text(label, style = MaterialTheme.typography.bodyLarge)
     }
 }
+
+private const val SEGMENTED_SCALE_MAX = 5
 
 private fun scaleValues(question: Question): List<Int> {
     val min = question.effectiveScaleMin.toInt()

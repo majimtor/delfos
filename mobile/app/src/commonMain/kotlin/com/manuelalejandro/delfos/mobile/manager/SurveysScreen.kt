@@ -1,6 +1,10 @@
 package com.manuelalejandro.delfos.mobile.manager
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,12 +17,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -54,6 +58,7 @@ import com.manuelalejandro.delfos.mobile.resources.surveys_title
 import com.manuelalejandro.delfos.mobile.session.SessionManager
 import com.manuelalejandro.delfos.mobile.session.SessionState
 import com.manuelalejandro.delfos.mobile.ui.BackArrow
+import com.manuelalejandro.delfos.mobile.ui.delfosColors
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -93,11 +98,17 @@ internal fun SurveysScreen(
                 OutlinedButton(onClick = viewModel::load) { Text(stringResource(Res.string.answer_retry)) }
             }
             state.surveys.isEmpty() -> Centered(padding) { Text(stringResource(Res.string.surveys_empty), textAlign = TextAlign.Center) }
-            else -> LazyColumn(contentPadding = padding, modifier = Modifier.fillMaxSize()) {
-                items(state.surveys, key = { it.id }) { survey ->
-                    SurveyRow(survey, onOpenResults)
-                    HorizontalDivider()
-                }
+            else -> LazyColumn(
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    top = padding.calculateTopPadding() + 8.dp,
+                    end = 16.dp,
+                    bottom = padding.calculateBottomPadding() + 16.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                items(state.surveys, key = { it.id }) { survey -> SurveyCard(survey, onOpenResults) }
                 if (state.nextCursor != null) {
                     item {
                         Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
@@ -112,32 +123,52 @@ internal fun SurveysScreen(
     }
 }
 
+/** One survey: its title, its state as a chip, its figures, and the way to its results when it has some. */
 @Composable
-private fun SurveyRow(survey: Survey, onOpenResults: (ResultsRoute) -> Unit) {
+private fun SurveyCard(survey: Survey, onOpenResults: (ResultsRoute) -> Unit) {
     val version = survey.publishedVersionNumber
-    val status = when (survey.status) {
-        "PUBLISHED" -> stringResource(Res.string.surveys_status_published)
-        "CLOSED" -> stringResource(Res.string.surveys_status_closed)
-        else -> stringResource(Res.string.surveys_status_draft)
-    }
     val responses = pluralStringResource(Res.plurals.surveys_responses, survey.responseCount, survey.responseCount.toString())
     val openLabel = stringResource(Res.string.surveys_open_results)
-    ListItem(
-        headlineContent = { Text(survey.title) },
-        supportingContent = { Text("$status · $responses") },
-        trailingContent = {
+    OutlinedCard(
+        modifier = if (version != null) {
+            Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = openLabel) {
+                onOpenResults(ResultsRoute(survey.id, version, survey.title))
+            }
+        } else {
+            Modifier.fillMaxWidth()
+        },
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(survey.title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                Spacer(Modifier.width(12.dp))
+                StatusChip(survey.status)
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(responses, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(12.dp))
             Text(
                 if (version != null) openLabel else stringResource(Res.string.surveys_not_published),
                 color = if (version != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.labelLarge,
             )
-        },
-        modifier = if (version != null) {
-            Modifier.clickable(role = Role.Button, onClickLabel = openLabel) { onOpenResults(ResultsRoute(survey.id, version, survey.title)) }
-        } else {
-            Modifier
-        },
-    )
+        }
+    }
+}
+
+/** The state of a survey in the colours the web gives it: published went well, a draft waits, closed rests. */
+@Composable
+private fun StatusChip(status: String) {
+    val colours = MaterialTheme.colorScheme
+    val extra = MaterialTheme.delfosColors
+    val (label, container, content) = when (status) {
+        "PUBLISHED" -> Triple(stringResource(Res.string.surveys_status_published), extra.successContainer, extra.onSuccessContainer)
+        "CLOSED" -> Triple(stringResource(Res.string.surveys_status_closed), colours.surfaceContainerHigh, colours.onSurfaceVariant)
+        else -> Triple(stringResource(Res.string.surveys_status_draft), colours.tertiaryContainer, colours.onTertiaryContainer)
+    }
+    Surface(color = container, contentColor = content, shape = RoundedCornerShape(50)) {
+        Text(label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
+    }
 }
 
 @Composable

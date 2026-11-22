@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.manuelalejandro.delfos.mobile.resources.Res
+import com.manuelalejandro.delfos.mobile.ui.BrandMark
 import com.manuelalejandro.delfos.mobile.resources.answer_retry
 import com.manuelalejandro.delfos.mobile.resources.wake_body
 import com.manuelalejandro.delfos.mobile.resources.wake_elapsed
@@ -40,6 +41,8 @@ internal fun WakeScreen(viewModel: WakeViewModel, content: @Composable () -> Uni
         WakeUiState.Ready -> content()
         is WakeUiState.Waking -> Waiting(current)
         WakeUiState.Failed -> Centered {
+            BrandMark(size = 48.dp)
+            Spacer(Modifier.height(24.dp))
             Text(
                 stringResource(Res.string.wake_failed),
                 textAlign = TextAlign.Center,
@@ -54,6 +57,8 @@ internal fun WakeScreen(viewModel: WakeViewModel, content: @Composable () -> Uni
 @Composable
 private fun Waiting(state: WakeUiState.Waking) {
     Centered {
+        BrandMark(size = 48.dp)
+        Spacer(Modifier.height(24.dp))
         // A plain spinner until the first probe fails; then the explanation, announced once. The counter is visual only.
         if (state.attempts > 0) {
             Text(
