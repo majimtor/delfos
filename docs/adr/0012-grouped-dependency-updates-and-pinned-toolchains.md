@@ -18,7 +18,13 @@ runs `gh pr merge --auto`, with required status checks recommended.
 Dependabot version updates, weekly, with one group per ecosystem (Gradle,
 npm, GitHub Actions, Docker). Patch and minor updates merge automatically
 when the required checks pass; major updates wait for a human and for the
-migration notes. Tool versions are pinned once per ecosystem: the Gradle
+migration notes. The automatic merge is enabled with a token of the
+repository's own GitHub App, installed on this repository alone: a merge made
+with the workflow's own token runs no workflow on `main` (verified on
+2026-11-22 on five merges), so `main` would merge without being built,
+published or deployed. After each push to `main` the same token brings the
+Dependabot pull requests that fell behind up to date, as the branch
+protection requires. Tool versions are pinned once per ecosystem: the Gradle
 toolchain and wrapper, `.node-version` and `engines`, lockfiles installed
 with `npm ci`. GitHub Actions are referenced by commit SHA with the version
 in a comment.
@@ -38,6 +44,8 @@ in a comment.
   machine; supply-chain exposure of CI reduced.
 - Negative: grouped updates can hide which dependency broke a build;
   pinned Actions need their SHA refreshed, which Dependabot also does.
+  The app's private key is a secret to rotate if exposed, held twice because
+  a run triggered by Dependabot reads only the Dependabot secrets.
 - Strongest argument against: automatic merging without a reviewer is
   still merging without a reviewer. The checks are the reviewer for patch
   and minor; anything else waits.
@@ -49,5 +57,6 @@ exceeds an hour of review.
 
 ## Links
 
-ADR 0013. Dependabot options reference and automation guide
-(docs.github.com, 2026-11-05).
+ADR 0013. Dependabot options reference and automation guide (docs.github.com,
+2026-11-05); triggering a workflow from a workflow and authenticating with a
+GitHub App in a workflow (docs.github.com, 2026-11-22).
