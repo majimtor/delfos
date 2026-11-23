@@ -82,7 +82,7 @@ export function WaitForApi({
             <CircularProgress aria-hidden />
           </Box>
           {elapsed > 0 && (
-            <Typography color="text.secondary" sx={{ mt: 1 }} aria-hidden>
+            <Typography color="textSecondary" sx={{ mt: 1 }} aria-hidden>
               <FormattedMessage
                 id="wait.elapsed"
                 defaultMessage="Waiting for {seconds} seconds."

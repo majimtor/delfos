@@ -39,7 +39,7 @@ export function Landing() {
         </Typography>
         <Typography
           variant="body1"
-          color="text.secondary"
+          color="textSecondary"
           sx={{ fontSize: '1.1rem', maxWidth: '58ch' }}
         >
           <FormattedMessage
@@ -109,7 +109,7 @@ export function Landing() {
       </Box>
 
       <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="textSecondary">
           <Typography
             component="span"
             variant="body2"
@@ -169,7 +169,7 @@ function Trait({
       <Typography variant="h6" component="h2">
         {title}
       </Typography>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" color="textSecondary">
         {children}
       </Typography>
     </Box>

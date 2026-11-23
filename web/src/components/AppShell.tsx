@@ -97,7 +97,7 @@ export function AppShell() {
                   <FormattedMessage id="app.nav.accounts" defaultMessage="Accounts" />
                 </Button>
               )}
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="textSecondary">
                 {session.data.username}
               </Typography>
               <Button color="inherit" onClick={signOut} disabled={logout.isPending}>

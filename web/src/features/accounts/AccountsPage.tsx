@@ -259,7 +259,7 @@ export function AccountsPage() {
                     {self && (
                       <>
                         {' '}
-                        <Typography component="span" variant="body2" color="text.secondary">
+                        <Typography component="span" variant="body2" color="textSecondary">
                           <FormattedMessage id="accounts.you" defaultMessage="(you)" />
                         </Typography>
                       </>

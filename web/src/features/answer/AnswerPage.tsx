@@ -173,7 +173,7 @@ function SurveyForm({ publicId, survey, invitation }: FormProps) {
         {survey.title}
       </Typography>
       {survey.description && (
-        <Typography color="text.secondary" sx={{ mb: 3 }} lang={survey.language}>
+        <Typography color="textSecondary" sx={{ mb: 3 }} lang={survey.language}>
           {survey.description}
         </Typography>
       )}
