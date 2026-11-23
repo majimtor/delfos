@@ -11,10 +11,11 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { FormattedMessage, FormattedTime, useIntl } from 'react-intl'
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { api, apiBaseUrl } from '../../api/client'
 import { usePageTitle } from '../../app/usePageTitle'
 import { PageSkeleton } from '../../components/PageSkeleton'
+import { ParentLink } from '../../components/ParentLink'
 import { QuestionResultView } from './QuestionResultView'
 import { useResults, type Scope } from './useResults'
 import { useResultsEvents } from './useResultsEvents'
@@ -81,14 +82,9 @@ export function ResultsPage({
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography
-          variant="overline"
-          component={Link}
-          to="/surveys"
-          sx={{ textDecoration: 'none' }}
-        >
+        <ParentLink to="/surveys">
           <FormattedMessage id="app.nav.surveys" defaultMessage="My surveys" />
-        </Typography>
+        </ParentLink>
         <Typography variant="h4" component="h1" lang={survey.data.language}>
           {survey.data.title}
         </Typography>
