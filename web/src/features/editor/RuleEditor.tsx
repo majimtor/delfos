@@ -12,6 +12,8 @@ import {
   Stack,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { FormattedMessage, useIntl, type IntlShape } from 'react-intl'
 import type { DraftAction, DraftQuestion, VisibilityRule } from './draft'
@@ -139,7 +141,7 @@ export function RuleEditor({ question, questions, rules, errorsAt, onEdit }: Pro
                 onChange={(event) =>
                   onEdit({ type: 'setRuleMatch', id, match: event.target.value as MatchMode })
                 }
-                sx={{ maxWidth: 280 }}
+                sx={{ maxWidth: { sm: 280 } }}
               >
                 <MenuItem value="ALL">
                   <FormattedMessage id="rules.match.ALL" defaultMessage="all of them" />
@@ -226,15 +228,24 @@ function ConditionRow({
     { id: 'rules.condition', defaultMessage: 'Condition {number}' },
     { number },
   )
+  const removeLabel = intl.formatMessage(
+    { id: 'rules.removeCondition', defaultMessage: 'Remove condition {number}' },
+    { number },
+  )
+  // Below the medium breakpoint the row is a column of full-width fields that never wraps: a
+  // wrapping column takes the width of its longest text and overflows the card. The removal is
+  // then a button with its label, instead of an icon left alone under the fields.
+  const theme = useTheme()
+  const stacked = useMediaQuery(theme.breakpoints.down('md'))
 
   return (
     <Stack
       role="group"
       aria-label={conditionLabel}
       direction={{ xs: 'column', md: 'row' }}
-      spacing={1}
+      spacing={{ xs: 2, md: 1 }}
       useFlexGap
-      sx={{ flexWrap: 'wrap', alignItems: { md: 'flex-start' } }}
+      sx={{ flexWrap: { md: 'wrap' }, alignItems: { md: 'flex-start' } }}
     >
       <TextField
         select
@@ -244,7 +255,7 @@ function ConditionRow({
         onChange={(event) =>
           onEdit({ type: 'setConditionSource', id: targetId, index, sourceKey: event.target.value })
         }
-        sx={{ minWidth: 220, flexGrow: 1 }}
+        sx={{ minWidth: { md: 220 }, flexGrow: 1 }}
         {...helper('sourceQuestionKey')}
       >
         {sourceChoices.map((q) => (
@@ -266,7 +277,7 @@ function ConditionRow({
             operator: event.target.value as ConditionOperator,
           })
         }
-        sx={{ minWidth: 180 }}
+        sx={{ minWidth: { md: 180 } }}
         {...helper('operator')}
       >
         {operatorChoices.map((operator) => (
@@ -281,17 +292,25 @@ function ConditionRow({
         setValue={setValue}
         {...helper('value', true)}
       />
-      <IconButton
-        size="small"
-        onClick={() => onEdit({ type: 'removeCondition', id: targetId, index })}
-        aria-label={intl.formatMessage(
-          { id: 'rules.removeCondition', defaultMessage: 'Remove condition {number}' },
-          { number },
-        )}
-        sx={{ alignSelf: { md: 'center' } }}
-      >
-        <DeleteOutlinedIcon fontSize="small" />
-      </IconButton>
+      {stacked ? (
+        <Button
+          size="small"
+          startIcon={<DeleteOutlinedIcon />}
+          onClick={() => onEdit({ type: 'removeCondition', id: targetId, index })}
+          sx={{ alignSelf: 'flex-start' }}
+        >
+          {removeLabel}
+        </Button>
+      ) : (
+        <IconButton
+          size="small"
+          onClick={() => onEdit({ type: 'removeCondition', id: targetId, index })}
+          aria-label={removeLabel}
+          sx={{ alignSelf: 'center' }}
+        >
+          <DeleteOutlinedIcon fontSize="small" />
+        </IconButton>
+      )}
     </Stack>
   )
 }
@@ -324,7 +343,7 @@ function ValueControl({ condition, source, setValue, error, helperText }: ValueP
       slotProps={{ htmlInput: { step: 'any' } }}
       error={error}
       helperText={field !== 'max' ? helperText : undefined}
-      sx={{ width: 140 }}
+      sx={{ width: { xs: '100%', md: 140 } }}
     />
   )
   switch (shapeOf(condition.operator)) {
@@ -340,7 +359,7 @@ function ValueControl({ condition, source, setValue, error, helperText }: ValueP
           onChange={(event) => setValue({ optionKey: event.target.value })}
           error={error}
           helperText={helperText}
-          sx={{ minWidth: 180 }}
+          sx={{ minWidth: { md: 180 } }}
         >
           {options.map((option) => (
             <MenuItem key={option.key} value={option.key}>
