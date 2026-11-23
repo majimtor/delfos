@@ -21,10 +21,11 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { FormattedDate, FormattedMessage, useIntl } from 'react-intl'
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { api } from '../../api/client'
 import type { Schemas } from '../../api/types'
 import { usePageTitle } from '../../app/usePageTitle'
+import { ParentLink } from '../../components/ParentLink'
 import { PageSkeleton } from '../../components/PageSkeleton'
 
 type Invitation = Schemas['Invitation']
@@ -140,14 +141,9 @@ export function InvitationsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography
-          variant="overline"
-          component={Link}
-          to="/surveys"
-          sx={{ textDecoration: 'none' }}
-        >
+        <ParentLink to="/surveys">
           <FormattedMessage id="app.nav.surveys" defaultMessage="My surveys" />
-        </Typography>
+        </ParentLink>
         <Typography variant="h4" component="h1">
           <FormattedMessage id="invitations.title" defaultMessage="Invitations" />
         </Typography>

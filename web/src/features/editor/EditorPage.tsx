@@ -16,6 +16,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { api } from '../../api/client'
 import type { FieldError, Problem, Schemas, SurveyVersion } from '../../api/types'
 import { usePageTitle } from '../../app/usePageTitle'
+import { ParentLink } from '../../components/ParentLink'
 import {
   QUESTION_TYPES,
   draftReducer,
@@ -213,14 +214,9 @@ function DraftEditor({ surveyId, survey, draft }: EditorProps) {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography
-          variant="overline"
-          component={Link}
-          to="/surveys"
-          sx={{ textDecoration: 'none' }}
-        >
+        <ParentLink to="/surveys">
           <FormattedMessage id="app.nav.surveys" defaultMessage="My surveys" />
-        </Typography>
+        </ParentLink>
         <Typography variant="h4" component="h1" lang={survey.language}>
           {survey.title}
         </Typography>
@@ -232,7 +228,7 @@ function DraftEditor({ surveyId, survey, draft }: EditorProps) {
           />
           {survey.publishedVersionNumber !== undefined && (
             <>
-              {' '}
+              {'. '}
               <FormattedMessage
                 id="editor.supersedes"
                 defaultMessage="Version {published} is published and keeps receiving responses; publishing this draft makes it version {number}."
