@@ -174,7 +174,7 @@ export function QuestionEditor({
         </Stack>
         {isChoice(question.type) && (
           <Stack
-            spacing={1}
+            spacing={2}
             role="group"
             aria-label={intl.formatMessage({ id: 'editor.options', defaultMessage: 'Options' })}
           >
