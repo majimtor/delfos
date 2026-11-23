@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/majimtor/delfos/compare/v1.6.0...v1.6.1) (2026-11-23)
+
+
+### Bug Fixes
+
+* **web:** theme the link back to the surveys and punctuate the draft note ([#101](https://github.com/majimtor/delfos/issues/101)) ([04ab8f5](https://github.com/majimtor/delfos/commit/04ab8f5554b0f4d69d740ea769d3767f5509267f))
+
 ## [1.6.0](https://github.com/majimtor/delfos/compare/v1.5.0...v1.6.0) (2026-11-23)
 
 
