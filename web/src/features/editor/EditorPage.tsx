@@ -220,7 +220,7 @@ function DraftEditor({ surveyId, survey, draft }: EditorProps) {
         <Typography variant="h4" component="h1" lang={survey.language}>
           {survey.title}
         </Typography>
-        <Typography color="text.secondary">
+        <Typography color="textSecondary">
           <FormattedMessage
             id="editor.draftNumber"
             defaultMessage="Draft of version {number}"
@@ -311,7 +311,7 @@ function DraftEditor({ surveyId, survey, draft }: EditorProps) {
         </Alert>
       )}
       {state.questions.length === 0 && (
-        <Typography color="text.secondary">
+        <Typography color="textSecondary">
           <FormattedMessage id="editor.empty" defaultMessage="The draft has no questions yet." />
         </Typography>
       )}

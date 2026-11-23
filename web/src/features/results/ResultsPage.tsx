@@ -88,7 +88,7 @@ export function ResultsPage({
         <Typography variant="h4" component="h1" lang={survey.data.language}>
           {survey.data.title}
         </Typography>
-        <Typography color="text.secondary" role="status" aria-live="polite">
+        <Typography color="textSecondary" role="status" aria-live="polite">
           <FormattedMessage
             id="results.summary"
             defaultMessage="{count, plural, one {# response} other {# responses}} · updated at {time}"

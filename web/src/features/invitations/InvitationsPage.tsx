@@ -147,7 +147,7 @@ export function InvitationsPage() {
         <Typography variant="h4" component="h1">
           <FormattedMessage id="invitations.title" defaultMessage="Invitations" />
         </Typography>
-        <Typography color="text.secondary" lang={survey.data.language}>
+        <Typography color="textSecondary" lang={survey.data.language}>
           {survey.data.title}
         </Typography>
       </Box>
@@ -270,7 +270,7 @@ export function InvitationsPage() {
         </Paper>
       )}
       {items.length === 0 ? (
-        <Typography color="text.secondary">
+        <Typography color="textSecondary">
           <FormattedMessage id="invitations.empty" defaultMessage="No invitations yet." />
         </Typography>
       ) : (

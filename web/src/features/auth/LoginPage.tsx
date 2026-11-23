@@ -42,7 +42,7 @@ export function LoginPage() {
         <Typography variant="h4" component="h1">
           <FormattedMessage id="login.title" defaultMessage="Log in" />
         </Typography>
-        <Typography color="text.secondary">
+        <Typography color="textSecondary">
           <FormattedMessage
             id="login.demoHint"
             defaultMessage="Demo accounts: demo-manager, demo-manager-2 and demo-admin, all with the password delfos-demo."

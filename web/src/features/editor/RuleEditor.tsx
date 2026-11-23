@@ -101,7 +101,7 @@ export function RuleEditor({ question, questions, rules, errorsAt, onEdit }: Pro
         <FormattedMessage id="rules.legend" defaultMessage="Visibility" />
       </Typography>
       {sources.length === 0 ? (
-        <Typography color="text.secondary" variant="body2">
+        <Typography color="textSecondary" variant="body2">
           <FormattedMessage
             id="rules.always"
             defaultMessage="Always shown: there is no earlier question to depend on."

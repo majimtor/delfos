@@ -36,7 +36,7 @@ export function SiteFooter() {
         >
           <FormattedMessage id="footer.accessibility" defaultMessage="Accessibility" />
         </Link>
-        <Typography variant="body2" color="text.secondary" sx={{ marginLeft: { sm: 'auto' } }}>
+        <Typography variant="body2" color="textSecondary" sx={{ marginLeft: { sm: 'auto' } }}>
           <Link href={`${repository}/releases`} color="inherit" underline="hover">
             <FormattedMessage
               id="footer.version"
