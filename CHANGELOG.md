@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.0](https://github.com/majimtor/delfos/compare/v1.5.0...v1.6.0) (2026-11-23)
+
+
+### Features
+
+* **web:** draw the results as charts and load the manager's pages on demand ([#100](https://github.com/majimtor/delfos/issues/100)) ([3f8d19d](https://github.com/majimtor/delfos/commit/3f8d19d49130eb582176303fe6ae0e80bd6b49ab))
+
+
+### Bug Fixes
+
+* **web:** serve a favicon.ico and refresh the README pictures ([#98](https://github.com/majimtor/delfos/issues/98)) ([c954543](https://github.com/majimtor/delfos/commit/c954543ef9640a1a171302e5dae2930a0c139f15))
+
 ## [1.5.0](https://github.com/majimtor/delfos/compare/v1.4.0...v1.5.0) (2026-11-22)
 
 
