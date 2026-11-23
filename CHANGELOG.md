@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.2](https://github.com/majimtor/delfos/compare/v1.6.1...v1.6.2) (2026-11-23)
+
+
+### Bug Fixes
+
+* **web:** ask Typography for the secondary colour in the form it applies ([#104](https://github.com/majimtor/delfos/issues/104)) ([bff2cfb](https://github.com/majimtor/delfos/commit/bff2cfb545c8998f074bfe4d0146c6c1c016f0ae))
+* **web:** keep the editor's fields apart and inside the card on phones ([#105](https://github.com/majimtor/delfos/issues/105)) ([6444b6d](https://github.com/majimtor/delfos/commit/6444b6dfa72a447a960f59eb8f87983f94bb1a0c))
+
 ## [1.6.1](https://github.com/majimtor/delfos/compare/v1.6.0...v1.6.1) (2026-11-23)
 
 
