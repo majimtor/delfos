@@ -1,19 +1,6 @@
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  LinearProgress,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-  Typography,
-} from '@mui/material'
+import { Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { FormattedDate, FormattedMessage, FormattedNumber } from 'react-intl'
 import { api } from '../../api/client'
 import type { QuestionResult } from './useResults'
@@ -84,9 +71,7 @@ export function QuestionResultView({
           <OptionBars options={result.options} total={result.answerCount} />
         )}
         {comparable && result.number && <NumberStats stats={result.number} />}
-        {comparable && result.distribution && (
-          <Distribution distribution={result.distribution} total={result.answerCount} />
-        )}
+        {comparable && result.distribution && <Distribution distribution={result.distribution} />}
         {comparable && result.type === 'TEXT' && result.answerCount > 0 && (
           <TextAnswers
             surveyId={surveyId}
@@ -100,6 +85,31 @@ export function QuestionResultView({
   )
 }
 
+/** The share of the answers as a horizontal bar; the figures next to it carry the data, the bar repeats them. */
+function Bar({ share }: { share: number }) {
+  return (
+    <Box
+      aria-hidden="true"
+      sx={{
+        mt: 0.5,
+        height: 8,
+        borderRadius: 999,
+        overflow: 'hidden',
+        bgcolor: 'rgba(var(--delfos-palette-primary-mainChannel) / 0.15)',
+      }}
+    >
+      <Box
+        sx={{
+          width: `${share * 100}%`,
+          height: '100%',
+          borderRadius: 999,
+          bgcolor: 'primary.main',
+        }}
+      />
+    </Box>
+  )
+}
+
 function OptionBars({
   options,
   total,
@@ -108,19 +118,28 @@ function OptionBars({
   total: number
 }) {
   return (
-    <Stack spacing={1} sx={{ mt: 1 }}>
+    <Stack spacing={1.25} sx={{ mt: 1.5 }}>
       {options.map((option) => {
         const share = total > 0 ? option.count / total : 0
         return (
           <Box key={option.key}>
-            <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-              <Typography variant="body2">{option.label}</Typography>
-              <Typography variant="body2" color="text.secondary">
+            <Stack
+              direction="row"
+              sx={{ justifyContent: 'space-between', alignItems: 'baseline', gap: 1 }}
+            >
+              <Typography variant="body2" sx={{ minWidth: 0 }}>
+                {option.label}
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}
+              >
                 {option.count} ·{' '}
                 <FormattedNumber value={share} style="percent" maximumFractionDigits={0} />
               </Typography>
             </Stack>
-            <LinearProgress variant="determinate" value={share * 100} aria-label={option.label} />
+            <Bar share={share} />
           </Box>
         )
       })}
@@ -128,68 +147,107 @@ function OptionBars({
   )
 }
 
-function NumberStats({ stats }: { stats: NonNullable<QuestionResult['number']> }) {
+/** One figure with its label above, as a tile; three of them describe a numeric question. */
+function Stat({ label, value }: { label: ReactNode; value: ReactNode }) {
   return (
-    <Table size="small" sx={{ maxWidth: 360, mt: 1 }}>
-      <TableBody>
-        <TableRow>
-          <TableCell>
-            <FormattedMessage id="results.mean" defaultMessage="Mean" />
-          </TableCell>
-          <TableCell align="right">
-            <FormattedNumber value={stats.mean} maximumFractionDigits={2} />
-          </TableCell>
-        </TableRow>
-        <TableRow>
-          <TableCell>
-            <FormattedMessage id="results.min" defaultMessage="Minimum" />
-          </TableCell>
-          <TableCell align="right">
-            <FormattedNumber value={stats.min} maximumFractionDigits={2} />
-          </TableCell>
-        </TableRow>
-        <TableRow>
-          <TableCell>
-            <FormattedMessage id="results.max" defaultMessage="Maximum" />
-          </TableCell>
-          <TableCell align="right">
-            <FormattedNumber value={stats.max} maximumFractionDigits={2} />
-          </TableCell>
-        </TableRow>
-      </TableBody>
-    </Table>
+    <Box>
+      <Typography variant="caption" component="div" color="text.secondary">
+        {label}
+      </Typography>
+      <Typography variant="h6" component="div" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+        {value}
+      </Typography>
+    </Box>
   )
 }
 
+function NumberStats({ stats }: { stats: NonNullable<QuestionResult['number']> }) {
+  return (
+    <Box
+      sx={{
+        mt: 1.5,
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+        gap: 2,
+        maxWidth: 420,
+      }}
+    >
+      <Stat
+        label={<FormattedMessage id="results.mean" defaultMessage="Mean" />}
+        value={<FormattedNumber value={stats.mean} maximumFractionDigits={2} />}
+      />
+      <Stat
+        label={<FormattedMessage id="results.min" defaultMessage="Minimum" />}
+        value={<FormattedNumber value={stats.min} maximumFractionDigits={2} />}
+      />
+      <Stat
+        label={<FormattedMessage id="results.max" defaultMessage="Maximum" />}
+        value={<FormattedNumber value={stats.max} maximumFractionDigits={2} />}
+      />
+    </Box>
+  )
+}
+
+/**
+ * The scale as a histogram: one column per value, scaled to the most chosen one, with the count
+ * above and the value below. The picture is named by its figures, which is what assistive
+ * technology reads; the labels inside it are decoration.
+ */
 function Distribution({
   distribution,
-  total,
 }: {
   distribution: NonNullable<QuestionResult['distribution']>
-  total: number
 }) {
+  const max = Math.max(1, ...distribution.map((entry) => entry.count))
+  const summary = distribution.map((entry) => `${entry.value}: ${entry.count}`).join(', ')
   return (
-    <Stack spacing={0.5} sx={{ mt: 1 }}>
-      {distribution.map((entry) => {
-        const share = total > 0 ? entry.count / total : 0
-        return (
-          <Stack key={entry.value} direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <Typography variant="body2" sx={{ width: 24, textAlign: 'right' }}>
-              {entry.value}
-            </Typography>
-            <LinearProgress
-              variant="determinate"
-              value={share * 100}
-              sx={{ flexGrow: 1 }}
-              aria-label={String(entry.value)}
-            />
-            <Typography variant="body2" color="text.secondary" sx={{ width: 32 }}>
-              {entry.count}
-            </Typography>
-          </Stack>
-        )
-      })}
-    </Stack>
+    <Box
+      role="img"
+      aria-label={summary}
+      sx={{
+        mt: 2,
+        display: 'grid',
+        gridTemplateColumns: `repeat(${distribution.length}, minmax(0, 1fr))`,
+        gap: 1,
+        height: 150,
+      }}
+    >
+      {distribution.map((entry) => (
+        <Box
+          key={entry.value}
+          aria-hidden="true"
+          sx={{
+            display: 'grid',
+            gridTemplateRows: 'auto 1fr auto',
+            justifyItems: 'center',
+            alignItems: 'end',
+            gap: 0.5,
+            minWidth: 0,
+          }}
+        >
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ fontVariantNumeric: 'tabular-nums' }}
+          >
+            {entry.count}
+          </Typography>
+          <Box
+            sx={{
+              width: '100%',
+              maxWidth: 48,
+              height: `${entry.count > 0 ? Math.max((entry.count / max) * 100, 4) : 2}%`,
+              borderRadius: '4px 4px 0 0',
+              bgcolor:
+                entry.count > 0
+                  ? 'primary.main'
+                  : 'rgba(var(--delfos-palette-primary-mainChannel) / 0.15)',
+            }}
+          />
+          <Typography variant="body2">{entry.value}</Typography>
+        </Box>
+      ))}
+    </Box>
   )
 }
 

@@ -31,6 +31,24 @@ body {
   left: 8px;
 }
 
+/* The results page says "live" with a dot that breathes while the event stream is open. */
+.live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: middle;
+  background: var(--delfos-palette-success-main);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
 /* Visitors who ask for less motion get none of the spinners and transitions. */
 @media (prefers-reduced-motion: reduce) {
   *,

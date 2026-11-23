@@ -192,7 +192,7 @@ describe('ResultsPage', () => {
     const age = screen.getByRole('region', { name: 'Edad' })
     expect(within(age).getByText('30,5')).toBeTruthy()
     const mood = screen.getByRole('region', { name: 'Ánimo' })
-    expect(within(mood).getByLabelText('5')).toBeTruthy()
+    expect(within(mood).getByRole('img', { name: '1: 0, 2: 0, 3: 1, 4: 1, 5: 1' })).toBeTruthy()
 
     await waitFor(() =>
       expect(etagsReceived.filter((e) => e === '"v1-3"').length).toBeGreaterThan(0),
@@ -207,13 +207,13 @@ describe('ResultsPage', () => {
     renderPage()
     await screen.findByText('Colores')
     const link = screen.getByRole('link', {
-      name: 'Descargar las respuestas de la versión 1 (CSV)',
+      name: 'CSV, descargar las respuestas de la versión 1',
     })
     expect(link.getAttribute('href')).toBe(
       'http://localhost:8080/api/v1/surveys/a/versions/1/export.csv',
     )
     const workbook = screen.getByRole('link', {
-      name: 'Descargar las respuestas de la versión 1 (Excel)',
+      name: 'Excel, descargar las respuestas de la versión 1',
     })
     expect(workbook.getAttribute('href')).toBe(
       'http://localhost:8080/api/v1/surveys/a/versions/1/export.xlsx',
