@@ -54,7 +54,7 @@ export function QuestionField({ question, value, errors, missing, onChange }: Pr
       {question.required && (
         <>
           {' '}
-          <Typography component="span" color="text.secondary">
+          <Typography component="span" color="textSecondary">
             <FormattedMessage id="answer.required" defaultMessage="(required)" />
           </Typography>
         </>
@@ -173,12 +173,7 @@ export function QuestionField({ question, value, errors, missing, onChange }: Pr
             ))}
           </ToggleButtonGroup>
           {(question.minLabel || question.maxLabel) && (
-            <Typography
-              id={scaleLabelsId}
-              variant="caption"
-              color="text.secondary"
-              sx={{ mt: 0.5 }}
-            >
+            <Typography id={scaleLabelsId} variant="caption" color="textSecondary" sx={{ mt: 0.5 }}>
               {question.minLabel ?? ''} · {question.maxLabel ?? ''}
             </Typography>
           )}

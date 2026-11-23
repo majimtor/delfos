@@ -39,7 +39,7 @@ export function QuestionResultView({
           >
             {result.text}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="textSecondary">
             <FormattedMessage
               id="results.answerCount"
               defaultMessage="{count, plural, one {# answer} other {# answers}}"
@@ -60,7 +60,7 @@ export function QuestionResultView({
           )}
         </Stack>
         {!comparable && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="textSecondary">
             <FormattedMessage
               id="results.notComparable"
               defaultMessage="This question changed between versions, so its answers are not aggregated."
@@ -132,7 +132,7 @@ function OptionBars({
               </Typography>
               <Typography
                 variant="body2"
-                color="text.secondary"
+                color="textSecondary"
                 sx={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}
               >
                 {option.count} ·{' '}
@@ -151,7 +151,7 @@ function OptionBars({
 function Stat({ label, value }: { label: ReactNode; value: ReactNode }) {
   return (
     <Box>
-      <Typography variant="caption" component="div" color="text.secondary">
+      <Typography variant="caption" component="div" color="textSecondary">
         {label}
       </Typography>
       <Typography variant="h6" component="div" sx={{ fontVariantNumeric: 'tabular-nums' }}>
@@ -227,7 +227,7 @@ function Distribution({
         >
           <Typography
             variant="caption"
-            color="text.secondary"
+            color="textSecondary"
             sx={{ fontVariantNumeric: 'tabular-nums' }}
           >
             {entry.count}
@@ -301,7 +301,7 @@ function TextAnswers({
       {items.map((item) => (
         <Typography key={item.responseId} component="li" variant="body2" lang={language}>
           {item.answer.text}{' '}
-          <Typography component="span" variant="caption" color="text.secondary">
+          <Typography component="span" variant="caption" color="textSecondary">
             <FormattedDate value={item.submittedAt} dateStyle="short" timeStyle="short" />
           </Typography>
         </Typography>

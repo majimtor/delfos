@@ -207,7 +207,7 @@ export function SurveysPage() {
                 </Typography>
                 <StatusChip survey={survey} />
               </Stack>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="textSecondary">
                 <FormattedMessage
                   id="surveys.card.meta"
                   defaultMessage="{count, plural, one {# response} other {# responses}} · updated {date}"
