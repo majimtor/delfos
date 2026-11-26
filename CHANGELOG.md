@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/majimtor/delfos/compare/v1.6.2...v1.7.0) (2026-11-26)
+
+
+### Features
+
+* **api:** give the workbook export a bold frozen header, column widths and date cells ([#111](https://github.com/majimtor/delfos/issues/111)) ([6918c73](https://github.com/majimtor/delfos/commit/6918c739db491ea21eb71a570094c3cb36b892df))
+
 ## [1.6.2](https://github.com/majimtor/delfos/compare/v1.6.1...v1.6.2) (2026-11-23)
 
 
