@@ -1,0 +1,14 @@
+# Overrides for the CI workflow, and for a try from source: the two images built from this
+# checkout instead of pulled from the registry.
+# `docker compose -f compose.yaml -f compose.ci.yaml up -d --build`
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: deploy/web.Dockerfile
+    image: delfos-web:local
+  api:
+    build:
+      context: ../..
+      dockerfile: deploy/Dockerfile
+    image: delfos-api:local

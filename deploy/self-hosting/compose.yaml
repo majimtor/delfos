@@ -1,0 +1,53 @@
+# Delfos on one machine, run by someone else (ADR 0018): the web image as the edge, with TLS for the
+# site address, the API and PostgreSQL, from the images each release publishes. Copy `.env.example`
+# to `.env`, fill it in, then `docker compose up -d`; the first start takes about a minute while the
+# database is prepared. The demo seed stays off: an instance holds its own data.
+services:
+  web:
+    image: ghcr.io/majimtor/delfos-web:${DELFOS_VERSION:-latest}
+    environment:
+      DELFOS_SITE_ADDRESS: ${DELFOS_SITE_ADDRESS:?the address Caddy serves, such as delfos.example.org, or :80 for plain HTTP}
+      DELFOS_API_UPSTREAM: api:8080
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  api:
+    image: ghcr.io/majimtor/delfos-api:${DELFOS_VERSION:-latest}
+    environment:
+      DELFOS_DB_URL: jdbc:postgresql://db:5432/delfos
+      DELFOS_DB_USERNAME: delfos
+      DELFOS_DB_PASSWORD: ${DELFOS_DB_PASSWORD:?the password of the database, chosen once}
+      DELFOS_ADMIN_USERNAME: ${DELFOS_ADMIN_USERNAME:-}
+      DELFOS_ADMIN_PASSWORD: ${DELFOS_ADMIN_PASSWORD:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: delfos
+      POSTGRES_USER: delfos
+      POSTGRES_PASSWORD: ${DELFOS_DB_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U delfos -d delfos"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:

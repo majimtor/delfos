@@ -253,6 +253,14 @@ Everything that deploys the demo is declared in the repository:
   to the API container (ADR 0018); built and looked at by the `web-image`
   job on every run and, like the API's image, pushed to the GitHub
   registry from `main`. Each release tags both images with its version.
+- `deploy/self-hosting/`: Delfos on one machine run by someone else, from
+  the published images: `compose.yaml` with the web as the edge, the API
+  and the database, `.env.example` with what to fill in (the site address,
+  the version, the database password and the first administrator, created
+  at the first start only), `smoke.sh` to check an instance, and
+  `compose.ci.yaml` to build both images from a checkout instead; the
+  `self-hosting` job of the CI workflow starts it that way and runs the
+  smoke on every run (ADR 0018). The guide for operators is #114.
 - `deploy/quarterly-check.sh`: measures the demo for the quarterly check of
   the plan (section 17) and prints the figures for `docs/known-issues.md`;
   it needs `curl` and `python3`, and uses `gh` when present.
