@@ -1,3 +1,4 @@
+# The build context of deploy/Dockerfile, the API's; the web image has its own next to its Dockerfile.
 .git
 .github
 docs

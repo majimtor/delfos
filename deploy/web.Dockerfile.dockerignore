@@ -1,0 +1,16 @@
+# The build context of deploy/web.Dockerfile (BuildKit reads the ignore file named after the
+# Dockerfile): the web, the contract and the version, nothing else of the repository.
+.git
+.github
+docs
+mobile
+api
+shared
+**/build
+**/.gradle
+**/.kotlin
+**/node_modules
+web/dist
+web/test-results
+web/playwright-report
+*.md

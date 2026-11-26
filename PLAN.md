@@ -317,22 +317,27 @@ simulator of a `macos-15` runner; API tests with Testcontainers (Docker is
 present on the `ubuntu-24.04` runner, checked 2026-11-05); `oasdiff
 breaking`; web build in
 both languages with the untranslated-keys check; CodeQL (eligible for
-public repositories, checked 2026-11-10); container image build and push
-to the GitHub registry on `main`; the end-to-end path with Playwright and
-axe against a locally seeded API. Every gate blocks the merge; none is
+public repositories, checked 2026-11-10); the two container images built
+on every run, the web's served and looked at, and pushed to the GitHub
+registry from `main`; the end-to-end path with Playwright and axe against
+a locally seeded API. Every gate blocks the merge; none is
 advisory. Releases: `release-please` reads the Conventional Commits on
 `main`, keeps a release pull request open with the changelog and the next
 version, and tags the version when that pull request merges; the same
-workflow then attaches the Android APK to the release; 1.0.0 marked the
-launch on 2026-11-14 (ADR 0013). Secrets: Neon credentials in Render's
+workflow then attaches the Android APK to the release and tags the two
+images of the released commit with the version and `latest` (ADR 0018);
+1.0.0 marked the launch on 2026-11-14 (ADR 0013). Secrets: Neon credentials in Render's
 environment; the Cloudflare API token and account identifier, the demo-reset
 secret, the release token and the client id and private key of the GitHub App
 that merges Dependabot's updates in Actions secrets, the last two also in
 Dependabot secrets; nothing in the repository.
 
-Image: a two-stage Dockerfile building with Gradle 9.8 on JDK 25 and
-running on a Temurin 25 JRE, with conservative JVM flags and a JVM AOT
-cache produced by a training run at build time. Measured on 2026-11-10 on
+Images: for the API, a two-stage Dockerfile building with Gradle 9.8 on JDK 25
+and running on a Temurin 25 JRE, with conservative JVM flags and a JVM AOT
+cache produced by a training run at build time; for the web, since S6, the
+built files served by Caddy, which terminates TLS and passes the API's paths
+to the API container (`deploy/web.Dockerfile`, `deploy/Caddyfile`, ADR 0018);
+the demo uses only the first. Measured on 2026-11-10 on
 a 512 MB free instance: 133 MB resident at rest, 47 seconds from a sleeping
 instance to the first response, of which about 39 seconds are JVM startup
 on 0.1 CPU.

@@ -206,6 +206,40 @@ jobs:
       - name: Lint, format, messages, tests and build
         run: npm run check
 
+  web-image:
+    name: Web image
+    runs-on: ubuntu-24.04
+    needs: [web]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build the image
+        run: docker build --file deploy/web.Dockerfile --tag ghcr.io/${{ github.repository }}-web:${{ github.sha }} .
+      - name: Serve it and look
+        # Plain HTTP on a port, the API upstream pointing at a closed port: the page and a deep link
+        # answer with the files and the headers, a built asset is cacheable, and an API path is
+        # passed on (and refused by the closed port) instead of answered by the fallback.
+        run: |
+          docker run --detach --name web --publish 8081:80 --env DELFOS_API_UPSTREAM=127.0.0.1:9 ghcr.io/${{ github.repository }}-web:${{ github.sha }}
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://localhost:8081/ && break; sleep 1; done
+          curl -sS -D headers.txt -o index.html http://localhost:8081/surveys
+          grep -q "^HTTP/1.1 200" headers.txt
+          grep -qi "^content-type: text/html" headers.txt
+          grep -qi "^content-security-policy: .*connect-src 'self';" headers.txt
+          asset=$(grep -oE '/assets/[^"]+\.js' index.html | head -1)
+          curl -sS -D - -o /dev/null "http://localhost:8081$asset" | grep -qi "^cache-control: public, max-age=31536000, immutable"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8081/api/v1/public/surveys/none)" = "502"
+          docker rm -f web
+      - name: Push the image from main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+          docker tag ghcr.io/${{ github.repository }}-web:${{ github.sha }} ghcr.io/${{ github.repository }}-web:main
+          docker push ghcr.io/${{ github.repository }}-web:${{ github.sha }}
+          docker push ghcr.io/${{ github.repository }}-web:main
+
   web-deploy:
     name: Web deploy
     runs-on: ubuntu-24.04
