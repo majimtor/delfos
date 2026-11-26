@@ -224,6 +224,16 @@ The screenshots replace the committed ones; the video lands in
 `web/test-results/media/tour.webm`. Look at both before committing or
 publishing them.
 
+## Run it yourself
+
+Delfos runs on one machine of your own from the images each release
+publishes: the web with a certificate of its own, the API and a PostgreSQL
+database, started together with Docker Compose from
+`deploy/self-hosting/`. [Running Delfos yourself](docs/self-hosting.md)
+covers the first start, the variables, backups, upgrades and what an
+instance stores. It is free under the MIT licence and comes without a
+guarantee of support.
+
 ## Deployment
 
 Everything that deploys the demo is declared in the repository:
@@ -278,6 +288,5 @@ The decision and the measured numbers are in ADR 0016.
 ## Licence
 
 MIT. See [LICENSE](LICENSE). Delfos is free to run on your own machines
-under that licence, without a guarantee of support; the milestone
-[Self-hosting](https://github.com/majimtor/delfos/milestone/1) prepares the
-images, the compose file and the guide for it.
+under that licence, without a guarantee of support: see
+[Running Delfos yourself](docs/self-hosting.md).
