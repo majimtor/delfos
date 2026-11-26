@@ -451,6 +451,7 @@ slice has a definition of done that a stranger can verify.
 | S3 Invitations, administration, live updates | Invited mode with single-use tokens; account management for administrators; server-sent events if the proxy test passes; XLSX export; installable manifest; known-issues document | 8 / 12 / 20 | 1 / 1 / 2 |
 | S4 Mobile | Shared module gains Android and iOS targets; local evaluator passing the conformance suite; Compose application to answer surveys and view results; APK on Releases by CI; iOS compiled on a macOS runner | 20 / 35 / 60 | 2 / 4 / 6 |
 | S5 Optional, by trigger | Aggregated PDF report, performance tests, mutation testing, native image experiment | 8 / 15 / 30 | 1 / 2 / 3 |
+| S6 Self-hosting | Approved on 2026-11-26 (#112, #113, #114): versioned images of the API and the web on each release; a compose for an operator with Caddy, TLS, the web and the API on one origin, the database, the seed off and a first administrator from the environment; the operator's guide with backups, upgrades and the note of the data stored. Email and single sign-on stay candidates by trigger (#115, #116) | 10 / 14 / 20 | 1 / 2 / 2 |
 
 Totals as first written, kept for the record: to the public threshold
 (S0 + S1a) 118 / 167 / 233 hours, that is 12 / 17 / 23 weeks; to launch
@@ -595,7 +596,8 @@ Update procedure per piece:
 | Native image | The measured wake-up matters after keep-alive and the wait screen |
 | Offline response | A product requirement; the rule format already allows a client evaluator |
 | Metrics backend and tracing | A second service or a real incident |
-| Desktop client | ADR 0006 |
+| Desktop client | ADR 0006; the web installed from the browser is what covers the desktop (#117) |
+| Single sign-on with OpenID Connect or SAML | An institution asks for it for a self-hosted instance (#116) |
 
 ## 19. Open decisions
 
