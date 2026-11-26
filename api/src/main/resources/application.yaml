@@ -45,6 +45,10 @@ delfos:
     enabled: ${DELFOS_SEED_ENABLED:false}
     # Shared secret of POST /demo/reset; empty means the operation does not exist.
     reset-token: ${DELFOS_SEED_RESET_TOKEN:}
+  admin:
+    # The first administrator of an instance that has no account yet (ADR 0018); both or none.
+    username: ${DELFOS_ADMIN_USERNAME:}
+    password: ${DELFOS_ADMIN_PASSWORD:}
   limits:
     public-per-minute: ${DELFOS_LIMIT_PUBLIC_PER_MINUTE:120}
     login-per-minute: ${DELFOS_LIMIT_LOGIN_PER_MINUTE:10}

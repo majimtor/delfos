@@ -396,6 +396,12 @@ GitHub after 60 days without repository activity (checked 2026-11-05), so the
 seed is reset by hand at the quarterly check, and the API still reseeds at
 every start.
 
+Since S6 an instance run by someone else comes from the same images with
+`deploy/self-hosting/compose.yaml`: the web image as the edge with TLS,
+the API with the seed off and a first administrator from the environment,
+PostgreSQL with a volume; `smoke.sh` checks it, and the CI workflow starts
+it from a checkout on every run (ADR 0018).
+
 ## 13. Accessibility and internationalisation
 
 Web: WCAG 2.2 level AA (W3C Recommendation of 12 December 2024) on the

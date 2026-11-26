@@ -240,6 +240,31 @@ jobs:
           docker push ghcr.io/${{ github.repository }}-web:${{ github.sha }}
           docker push ghcr.io/${{ github.repository }}-web:main
 
+  self-hosting:
+    name: Self-hosting compose
+    runs-on: ubuntu-24.04
+    needs: [api, web]
+    defaults:
+      run:
+        working-directory: deploy/self-hosting
+    env:
+      DELFOS_SITE_ADDRESS: ":80"
+      DELFOS_DB_PASSWORD: ci-database-password
+      DELFOS_ADMIN_USERNAME: operator
+      DELFOS_ADMIN_PASSWORD: ci-administrator-password
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build the images from this commit and start the instance
+        run: docker compose -f compose.yaml -f compose.ci.yaml up -d --build --quiet-pull
+      - name: Smoke
+        run: ./smoke.sh http://localhost operator ci-administrator-password
+      - name: Logs
+        if: failure()
+        run: docker compose -f compose.yaml -f compose.ci.yaml logs --no-color | tail -n 200
+      - name: Stop the instance
+        if: always()
+        run: docker compose -f compose.yaml -f compose.ci.yaml down --volumes
+
   web-deploy:
     name: Web deploy
     runs-on: ubuntu-24.04
