@@ -24,6 +24,7 @@ class CsvExport(questions: List<Question>) {
         is Cell.Text -> safe(cell.value)
         is Cell.Number -> plain(cell.value)
         is Cell.Flag -> if (cell.value) "1" else "0"
+        is Cell.Timestamp -> cell.value.toString()
         Cell.Empty -> ""
     }
 
