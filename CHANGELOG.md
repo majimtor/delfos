@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.0](https://github.com/majimtor/delfos/compare/v1.7.0...v1.8.0) (2026-11-26)
+
+
+### Features
+
+* **deploy:** compose for an operator with TLS, one origin and a first administrator from the environment ([#122](https://github.com/majimtor/delfos/issues/122)) ([d46f295](https://github.com/majimtor/delfos/commit/d46f29575a81302730f15efa5de207ff5bfed4c2))
+* **deploy:** publish a web image served by Caddy and tag both images with the version on release ([#120](https://github.com/majimtor/delfos/issues/120)) ([8252a82](https://github.com/majimtor/delfos/commit/8252a82584657c40909debf4e67482e83529574a))
+
 ## [1.7.0](https://github.com/majimtor/delfos/compare/v1.6.2...v1.7.0) (2026-11-26)
 
 
