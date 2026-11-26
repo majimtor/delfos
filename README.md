@@ -264,4 +264,7 @@ The decision and the measured numbers are in ADR 0016.
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). Delfos is free to run on your own machines
+under that licence, without a guarantee of support; the milestone
+[Self-hosting](https://github.com/majimtor/delfos/milestone/1) prepares the
+images, the compose file and the guide for it.
