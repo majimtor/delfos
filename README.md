@@ -248,6 +248,11 @@ Everything that deploys the demo is declared in the repository:
 - `.github/workflows/demo-reset.yml`: applies the demo seed again every day
   at 05:50 UTC through `POST /api/v1/demo/reset`, with
   `DELFOS_SEED_RESET_TOKEN` from the repository secrets.
+- `deploy/web.Dockerfile` and `deploy/Caddyfile`: the web for an instance
+  run by someone else, served by Caddy with TLS and the API's paths passed
+  to the API container (ADR 0018); built and looked at by the `web-image`
+  job on every run and, like the API's image, pushed to the GitHub
+  registry from `main`. Each release tags both images with its version.
 - `deploy/quarterly-check.sh`: measures the demo for the quarterly check of
   the plan (section 17) and prints the figures for `docs/known-issues.md`;
   it needs `curl` and `python3`, and uses `gh` when present.

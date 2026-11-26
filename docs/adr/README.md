@@ -28,6 +28,7 @@ Template: [0000-adr-template.md](0000-adr-template.md).
 | [0015](0015-english-codebase-with-a-bilingual-interface.md) | English codebase with a bilingual interface | accepted |
 | [0016](0016-hosting-on-free-tiers-with-the-web-on-cloudflare-workers.md) | Hosting on free tiers with the web on Cloudflare Workers | accepted |
 | [0017](0017-visual-identity-and-design-tokens.md) | Visual identity and design tokens | accepted |
+| [0018](0018-self-hosting-with-published-images-and-a-caddy-edge.md) | Self-hosting with published images and a Caddy edge | accepted |
 
 To add a record: copy the template to `NNNN-title-in-kebab-case.md` with the
 next number, fill every section, add the row above, and merge it in the same

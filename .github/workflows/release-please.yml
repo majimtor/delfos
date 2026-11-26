@@ -1,8 +1,9 @@
 name: Release
 
 # Keeps a release pull request open with the changelog and the next version computed from the
-# Conventional Commits on main, tags the version when that pull request merges (ADR 0013), and
-# attaches the Android application to the release it creates.
+# Conventional Commits on main, tags the version when that pull request merges (ADR 0013), attaches
+# the Android application to the release it creates, and tags the container images of the released
+# commit with the version (ADR 0018).
 on:
   push:
     branches: [main]
@@ -52,3 +53,44 @@ jobs:
         run: |
           cp mobile/androidApp/build/outputs/apk/release/androidApp-release.apk "delfos-${TAG}.apk"
           gh release upload "$TAG" "delfos-${TAG}.apk" --clobber
+
+  images:
+    name: Images on the release
+    needs: [release-please]
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+    env:
+      TAG: ${{ needs.release-please.outputs.tag_name }}
+      REPOSITORY: ${{ github.repository }}
+    steps:
+      - name: Log in to the registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+      - name: Tag the images of this commit with the version
+        # The CI workflow of the same push builds the images and pushes them tagged with the commit;
+        # this waits for them, up to 25 minutes, so that the release carries the bits that passed the
+        # checks, and adds the version tag and `latest`.
+        run: |
+          version="${TAG#v}"
+          for name in api web; do
+            image="ghcr.io/${REPOSITORY}-${name}"
+            for i in $(seq 1 50); do
+              docker manifest inspect "${image}:${{ github.sha }}" > /dev/null 2>&1 && break
+              sleep 30
+            done
+            docker pull "${image}:${{ github.sha }}"
+            docker tag "${image}:${{ github.sha }}" "${image}:${version}"
+            docker tag "${image}:${{ github.sha }}" "${image}:latest"
+            docker push "${image}:${version}"
+            docker push "${image}:latest"
+          done
+      - name: Name the images on the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${TAG#v}"
+          gh release view "$TAG" --repo "$REPOSITORY" --json body --jq .body > notes.md
+          printf '\n## Images\n\n- `ghcr.io/%s-api:%s`\n- `ghcr.io/%s-web:%s`\n' "$REPOSITORY" "$version" "$REPOSITORY" "$version" >> notes.md
+          gh release edit "$TAG" --repo "$REPOSITORY" --notes-file notes.md
