@@ -771,8 +771,10 @@ paths:
         The same rows and columns as the CSV export, as an Office Open XML
         workbook with one sheet named Responses: texts as inline strings,
         which a spreadsheet never evaluates, numbers and the 1 or 0 of a
-        multiple choice as numbers, the submission time as text in ISO 8601
-        UTC. Built whole before the response starts.
+        multiple choice as numbers, the submission time as a date cell in UTC
+        shown to the second. The header row is bold and stays in view, and
+        each column is as wide as its longest content, within limits. Built
+        whole before the response starts.
       responses:
         "200":
           description: The workbook, offered as an attachment named `<publicId>-v<n>.xlsx`.
